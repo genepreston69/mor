@@ -636,39 +636,72 @@ table.detail tr:last-child td { border-bottom: none; }
 .narrative-card .flag.bad { background: var(--bad-bg); color: var(--bad); }
 .narrative-card .flag.good { background: var(--good-bg); color: var(--good); }
 
-/* USER COMMENT BOXES */
-.comment-box {
-  background: #ffffff;
+/* PER-ITEM NOTE BUTTONS */
+.note-btn {
+  background: none;
   border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 14px 18px;
-  margin-top: 14px;
-  margin-bottom: 32px;
-}
-.comment-box .cb-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-.comment-box .cb-label {
-  font-size: 10px;
-  font-weight: 600;
+  border-radius: 4px;
+  padding: 1px 7px;
+  font-size: 11px;
   color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+  cursor: pointer;
+  opacity: 0.45;
+  transition: opacity 0.15s, border-color 0.15s, background 0.15s;
+  vertical-align: middle;
+  white-space: nowrap;
+  line-height: 1.4;
 }
-.comment-box .cb-saved {
-  font-size: 10px;
-  color: var(--good);
+.note-btn:hover { opacity: 1; border-color: var(--teal); color: var(--teal); }
+.note-btn.has-note {
+  opacity: 1;
+  background: var(--warn-bg);
+  border-color: var(--warn);
+  color: #b07a1f;
   font-weight: 600;
-  opacity: 0;
-  transition: opacity 0.3s;
 }
-.comment-box .cb-saved.show { opacity: 1; }
-.comment-box textarea {
+.note-btn .note-ico { font-size: 11px; }
+.narrative-card h3 .note-btn { float: right; margin-top: -1px; }
+.insight .note-btn { position: absolute; top: 10px; right: 10px; }
+.insight { position: relative; }
+.opp-card .note-btn { float: right; }
+.cat-name .note-btn { margin-left: auto; }
+table.detail td .note-btn { float: right; margin-left: 6px; }
+.callout-table td .note-btn { float: right; margin-left: 6px; }
+
+/* NOTE MODAL */
+.note-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28,43,54,0.45);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.note-overlay.hidden { display: none; }
+.note-panel {
+  background: #ffffff;
+  border-radius: 8px;
+  width: 480px;
+  max-width: 92vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  padding: 20px 24px;
+}
+.note-panel h4 {
+  font-family: Georgia, serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+.note-panel .note-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.note-panel textarea {
   width: 100%;
-  min-height: 64px;
+  min-height: 100px;
   border: 1px solid var(--border);
   border-radius: 4px;
   padding: 10px 12px;
@@ -679,13 +712,49 @@ table.detail tr:last-child td { border-bottom: none; }
   background: #f7f9fb;
   resize: vertical;
   outline: none;
-  transition: border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s;
 }
-.comment-box textarea:focus {
-  border-color: var(--teal);
+.note-panel textarea:focus { border-color: var(--teal); background: #fff; }
+.note-panel textarea::placeholder { color: var(--muted-2); }
+.note-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+.note-actions .right { display: flex; gap: 8px; }
+.note-btn-save {
+  background: var(--teal-dark);
+  color: #ffffff;
+  border: none;
+  padding: 7px 18px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.note-btn-save:hover { background: var(--teal); }
+.note-btn-cancel {
   background: #ffffff;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 7px 14px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
 }
-.comment-box textarea::placeholder { color: var(--muted-2); }
+.note-btn-cancel:hover { color: var(--ink); border-color: var(--ink); }
+.note-btn-delete {
+  background: none;
+  border: none;
+  color: var(--bad);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.note-btn-delete:hover { text-decoration: underline; }
 
 /* UNFAVORABLE LINE ITEM CALLOUTS */
 .callout-table {
@@ -953,13 +1022,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="volume-commentary"></div>
-  <div class="comment-box" id="comment-volume">
-    <div class="cb-header">
-      <span class="cb-label">Your Notes — Volume</span>
-      <span class="cb-saved" id="cb-saved-volume">Saved</span>
-    </div>
-    <textarea placeholder="Add your notes on volume, census, and payor mix..." oninput="saveComment('volume')"></textarea>
-  </div>
 
   <div class="section-head">
     <h2>Top Opportunities</h2>
@@ -981,13 +1043,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="revenue-commentary"></div>
-  <div class="comment-box" id="comment-revenue">
-    <div class="cb-header">
-      <span class="cb-label">Your Notes — Revenue</span>
-      <span class="cb-saved" id="cb-saved-revenue">Saved</span>
-    </div>
-    <textarea placeholder="Add your notes on revenue performance..." oninput="saveComment('revenue')"></textarea>
-  </div>
 
   <div class="section-head">
     <h2>Strategic Insights</h2>
@@ -995,13 +1050,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div class="insight-grid" id="insight-grid"></div>
-  <div class="comment-box" id="comment-insights">
-    <div class="cb-header">
-      <span class="cb-label">Your Notes — Strategic Insights</span>
-      <span class="cb-saved" id="cb-saved-insights">Saved</span>
-    </div>
-    <textarea placeholder="Add your strategic observations and action items..." oninput="saveComment('insights')"></textarea>
-  </div>
 
   <div class="section-head">
     <h2>Operating Expense Drill-Down</h2>
@@ -1040,13 +1088,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="expense-commentary"></div>
-  <div class="comment-box" id="comment-expenses">
-    <div class="cb-header">
-      <span class="cb-label">Your Notes — Expenses</span>
-      <span class="cb-saved" id="cb-saved-expenses">Saved</span>
-    </div>
-    <textarea placeholder="Add your notes on expense variances and action items..." oninput="saveComment('expenses')"></textarea>
-  </div>
 
   <div class="section-head">
     <h2>Trended Performance</h2>
@@ -1060,6 +1101,22 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     Variances shown as Budget − Actual (favorable when actual is below budget for expenses)
   </footer>
 
+</div>
+
+<!-- Note Modal -->
+<div class="note-overlay hidden" id="note-modal" onclick="if(event.target===this)closeNoteModal()">
+  <div class="note-panel">
+    <h4 id="note-modal-title"></h4>
+    <div class="note-sub">Add your note for this item. Notes are saved in your browser.</div>
+    <textarea id="note-modal-textarea" placeholder="Type your note here..."></textarea>
+    <div class="note-actions">
+      <button class="note-btn-delete" id="note-modal-delete" onclick="deleteNoteFromModal()" style="display:none">Delete Note</button>
+      <div class="right">
+        <button class="note-btn-cancel" onclick="closeNoteModal()">Cancel</button>
+        <button class="note-btn-save" onclick="saveNoteFromModal()">Save Note</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1109,45 +1166,77 @@ function setStaffedBeds(n) {
 // =========================================================================
 const STORAGE_KEY = 'highland_mor_data_v2';
 const STORAGE_META_KEY = 'highland_mor_meta_v2';
-const COMMENTS_KEY = 'highland_mor_comments';
+const NOTES_KEY = 'highland_mor_notes';
 
 // =========================================================================
-// USER COMMENTS — per-section notes persisted to localStorage
+// PER-ITEM NOTES — modal-based notes on individual commentary items
 // =========================================================================
-let commentTimers = {};
+let _noteCurrentKey = '';
 
-function saveComment(section) {
-  const textarea = document.querySelector('#comment-' + section + ' textarea');
-  if (!textarea) return;
-  // Debounce: save 500ms after user stops typing
-  clearTimeout(commentTimers[section]);
-  commentTimers[section] = setTimeout(() => {
-    try {
-      const raw = localStorage.getItem(COMMENTS_KEY);
-      const comments = raw ? JSON.parse(raw) : {};
-      comments[section] = textarea.value;
-      localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
-      // Flash "Saved" indicator
-      const badge = document.getElementById('cb-saved-' + section);
-      if (badge) {
-        badge.classList.add('show');
-        setTimeout(() => badge.classList.remove('show'), 1500);
-      }
-    } catch (e) { console.warn('Comment save failed:', e); }
-  }, 500);
+function getNotes() {
+  try { return JSON.parse(localStorage.getItem(NOTES_KEY)) || {}; }
+  catch (e) { return {}; }
 }
 
-function loadComments() {
-  try {
-    const raw = localStorage.getItem(COMMENTS_KEY);
-    if (!raw) return;
-    const comments = JSON.parse(raw);
-    for (const [section, text] of Object.entries(comments)) {
-      const textarea = document.querySelector('#comment-' + section + ' textarea');
-      if (textarea && text) textarea.value = text;
+function saveNote(key, text) {
+  const notes = getNotes();
+  if (text && text.trim()) notes[key] = text.trim();
+  else delete notes[key];
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+}
+
+function noteBtn(key, label) {
+  const has = getNotes()[key] ? ' has-note' : '';
+  const safeLabel = label.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  return '<button class="note-btn' + has + '" data-note-key="' + key +
+    '" onclick="event.stopPropagation();openNoteModal(\'' + key + '\',\'' + safeLabel + '\')">' +
+    '<span class="note-ico">' + (has ? '📝' : '📝') + '</span>' +
+    (has ? ' Note' : '') + '</button>';
+}
+
+function openNoteModal(key, label) {
+  _noteCurrentKey = key;
+  const notes = getNotes();
+  const existing = notes[key] || '';
+  document.getElementById('note-modal-title').textContent = label;
+  document.getElementById('note-modal-textarea').value = existing;
+  document.getElementById('note-modal-delete').style.display = existing ? 'inline-block' : 'none';
+  document.getElementById('note-modal').classList.remove('hidden');
+  document.getElementById('note-modal-textarea').focus();
+}
+
+function closeNoteModal() {
+  document.getElementById('note-modal').classList.add('hidden');
+  _noteCurrentKey = '';
+}
+
+function saveNoteFromModal() {
+  const text = document.getElementById('note-modal-textarea').value;
+  saveNote(_noteCurrentKey, text);
+  // Update all matching buttons on the page
+  document.querySelectorAll('.note-btn[data-note-key="' + _noteCurrentKey + '"]').forEach(btn => {
+    if (text && text.trim()) {
+      btn.classList.add('has-note');
+      btn.innerHTML = '<span class="note-ico">📝</span> Note';
+    } else {
+      btn.classList.remove('has-note');
+      btn.innerHTML = '<span class="note-ico">📝</span>';
     }
-  } catch (e) { console.warn('Comment load failed:', e); }
+  });
+  closeNoteModal();
 }
+
+function deleteNoteFromModal() {
+  document.getElementById('note-modal-textarea').value = '';
+  saveNoteFromModal();
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && !document.getElementById('note-modal').classList.contains('hidden')) {
+    closeNoteModal();
+  }
+});
 
 function toggleUpload() {
   const grid = document.getElementById('upload-grid');
@@ -1225,10 +1314,8 @@ function clearStored() {
   if (!confirm('Clear all loaded data and notes? You will need to re-upload your source files.')) return;
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(STORAGE_META_KEY);
-  localStorage.removeItem(COMMENTS_KEY);
+  localStorage.removeItem(NOTES_KEY);
   DATA = {};
-  // Clear comment textareas
-  document.querySelectorAll('.comment-box textarea').forEach(ta => { ta.value = ''; });
   // Reset upload UI
   ['drop-analytic','drop-deck'].forEach(id => {
     const el = document.getElementById(id);
@@ -1728,7 +1815,7 @@ function renderCallouts() {
     '<tbody>' + flagged.map(f => {
       const pctLabel = f.pctOver === null ? 'Unbudgeted' : '+' + (f.pctOver*100).toFixed(0) + '%';
       return '<tr>' +
-        '<td><span class="cl-gl">' + f.gl + '</span><span class="cl-name">' + f.desc + '</span></td>' +
+        '<td><span class="cl-gl">' + f.gl + '</span><span class="cl-name">' + f.desc + '</span> ' + noteBtn('callout:' + f.gl, f.desc) + '</td>' +
         '<td><span class="cl-cat">' + f.category + '</span></td>' +
         '<td>' + fmt$(f.act) + '</td>' +
         '<td>' + fmt$(f.bud) + '</td>' +
@@ -1862,7 +1949,7 @@ function renderOpps() {
     const cls = fav ? 'fav' : 'unfav';
     const lbl = fav ? 'Favorable to budget' : 'Unfavorable to budget';
     return `<div class="opp-card ${cls}">
-      <div class="opp-cat">${c.name}</div>
+      <div class="opp-cat">${c.name} ${noteBtn('opp:' + c.name, c.name)}</div>
       <div class="opp-amt">${fmt$(Math.abs(c.mar_var))}</div>
       <div class="opp-line">${lbl} · ${fmt$(c.mar_act)} actual</div>
     </div>`;
@@ -1892,7 +1979,7 @@ function renderInsights() {
     } else {
       context = '.';
     }
-    insights.push({ type: ebFav ? 'good' : 'bad', ico: ebFav ? '🚀' : '⚠️',
+    insights.push({ type: ebFav ? 'good' : 'bad', ico: ebFav ? '🚀' : '⚠️', noteKey: 'insight:EBITDA',
       body: '<strong>EBITDA margin of ' + ebMargin + '%</strong> (budget ' + ebMarginBud + '%) on ' + fmt$(nr.mar_act) + ' net revenue. EBITDA ' + (ebFav ? 'beat' : 'missed') + ' budget by ' + fmt$(Math.abs(ebVar)) + context });
   }
 
@@ -1908,7 +1995,7 @@ function renderInsights() {
         payorNote = ' Medicaid concentration at ' + (medicaid.act * 100).toFixed(0) + '% of admissions is the structural driver.';
       }
     }
-    insights.push({ type: ppdFav ? 'good' : 'warn', ico: '💎',
+    insights.push({ type: ppdFav ? 'good' : 'warn', ico: '💎', noteKey: 'insight:PPD',
       body: '<strong>Net revenue per patient day of ' + fmtPPD(nrPpd) + '</strong> ' + (ppdFav ? 'beat' : 'fell short of') + ' the ' + fmtPPD(nrPpdBud) + ' budget by ' + fmtPPD(Math.abs(nrPpd - nrPpdBud)) + '.' + payorNote });
   }
 
@@ -1955,11 +2042,12 @@ function renderInsights() {
     else if (Math.abs(varPct) > 15) type = 'bad';
     else type = 'warn';
 
-    insights.push({ type, ico, body });
+    insights.push({ type, ico, body, noteKey: 'insight:' + cat.name });
   }
 
   document.getElementById('insight-grid').innerHTML = insights.map(i => `
     <div class="insight ${i.type}">
+      ${noteBtn(i.noteKey, i.noteKey.replace('insight:',''))}
       <div class="ico">${i.ico}</div>
       <div class="body">${i.body}</div>
     </div>
@@ -1992,8 +2080,9 @@ function renderRevenue() {
 
 // ---- Dynamic Commentary Renderers ----
 
-function narrativeCard(cls, title, bullets) {
-  return '<div class="narrative-card ' + cls + '"><h3>' + title + '</h3><ul>' +
+function narrativeCard(cls, title, bullets, noteKey) {
+  const nb = noteKey ? ' ' + noteBtn(noteKey, title) : '';
+  return '<div class="narrative-card ' + cls + '"><h3>' + title + nb + '</h3><ul>' +
     bullets.map(b => '<li>' + b + '</li>').join('') + '</ul></div>';
 }
 function flag(cls, label) { return '<span class="flag ' + cls + '">' + label + '</span>'; }
@@ -2089,10 +2178,10 @@ function renderVolumeCommentary() {
   }
 
   el.innerHTML = '<div class="narrative-block"><div class="narrative-grid">' +
-    narrativeCard(adcFav ? 'good' : 'bad', 'ADC', adcBullets) +
-    narrativeCard(losFav ? 'good' : 'bad', 'LOS', losBullets) +
-    narrativeCard(occ.act >= occ.bud ? 'good' : 'warn', 'Occupancy', occBullets) +
-    narrativeCard(medicaid && medicaid.act >= 0.70 ? 'good' : 'warn', 'Payor Mix', payorBullets) +
+    narrativeCard(adcFav ? 'good' : 'bad', 'ADC', adcBullets, 'vol:ADC') +
+    narrativeCard(losFav ? 'good' : 'bad', 'LOS', losBullets, 'vol:LOS') +
+    narrativeCard(occ.act >= occ.bud ? 'good' : 'warn', 'Occupancy', occBullets, 'vol:Occupancy') +
+    narrativeCard(medicaid && medicaid.act >= 0.70 ? 'good' : 'warn', 'Payor Mix', payorBullets, 'vol:Payor Mix') +
   '</div></div>';
 }
 
@@ -2131,8 +2220,8 @@ function renderRevenueCommentary() {
   ];
 
   el.innerHTML = '<div class="narrative-block"><div class="narrative-grid">' +
-    narrativeCard(nrFav ? 'good' : 'bad', 'Net Revenue', nrBullets) +
-    narrativeCard(ytdVar >= 0 ? 'good' : 'warn', 'YTD Performance', ytdBullets) +
+    narrativeCard(nrFav ? 'good' : 'bad', 'Net Revenue', nrBullets, 'rev:Net Revenue') +
+    narrativeCard(ytdVar >= 0 ? 'good' : 'warn', 'YTD Performance', ytdBullets, 'rev:YTD Performance') +
   '</div></div>';
 }
 
@@ -2183,7 +2272,7 @@ function renderExpenseCommentary() {
       bullets.push(flag('good','Win') + 'Zero contract labor — a meaningful operational achievement.');
     }
 
-    cards.push(narrativeCard(cls, cat.name, bullets));
+    cards.push(narrativeCard(cls, cat.name, bullets, 'exp:' + cat.name));
   }
 
   el.innerHTML = '<div class="narrative-block"><div class="narrative-grid">' + cards.join('') + '</div></div>';
@@ -2238,7 +2327,7 @@ function renderCategories() {
                                    : `<span class="var-up">${fmtPct(varPct)}</span>`);
 
     html += `<tr class="cat-row" onclick="toggleDetail(${idx})">
-      <td><div class="cat-name"><span class="arrow">▶</span>${c.name}</div></td>
+      <td><div class="cat-name"><span class="arrow">▶</span>${c.name} ${noteBtn('cat:' + c.name, c.name)}</div></td>
       <td>${fmt(marAct)}</td>
       <td>${fmt(marBud)}</td>
       <td>${varDisplay}</td>
@@ -2276,7 +2365,7 @@ function renderCategories() {
           const yVarHtml = Math.abs(d.ytd_var) < 100 ? `<span class="var-flat">${fmtD(Math.abs(yVar))}</span>` :
                            (d.ytd_var > 0 ? `<span class="var-down">${fmtD(Math.abs(yVar))}</span>` : `<span class="var-up">${fmtD(Math.abs(yVar))}</span>`);
           return `<tr>
-            <td><span class="gl-tag">${d.gl}</span>${d.desc}</td>
+            <td><span class="gl-tag">${d.gl}</span>${d.desc} ${noteBtn('gl:' + d.gl, d.desc)}</td>
             <td>${fmtD(dMarA)}</td>
             <td>${fmtD(dMarB)}</td>
             <td>${dVarHtml}</td>
@@ -2303,7 +2392,6 @@ function toggleDetail(idx) {
 
 document.getElementById('staffed-beds-input').value = getStaffedBeds();
 loadStored();
-loadComments();
 render();
 </script>
 </body>
