@@ -2123,9 +2123,8 @@ function renderInsights() {
 
   document.getElementById('insight-grid').innerHTML = insights.map(i => `
     <div class="insight ${i.type}">
-      ${noteBtn(i.noteKey, i.noteKey.replace('insight:',''))}
       <div class="ico">${i.ico}</div>
-      <div class="body">${i.body}${noteCallout(i.noteKey)}</div>
+      <div class="body">${i.body}</div>
     </div>
   `).join('');
 }
