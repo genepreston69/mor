@@ -950,16 +950,17 @@ footer {
 /* PRINT STYLES */
 @media print {
   @page {
-    size: letter portrait;
-    margin: 0.5in;
+    size: letter landscape;
+    margin: 0.25in;
   }
 
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
   html, body {
     background: #ffffff !important;
-    font-size: 11px !important;
-    line-height: 1.4 !important;
+    font-size: 10px !important;
+    line-height: 1.35 !important;
+    width: 100% !important;
   }
 
   /* Hide interactive / non-printable elements */
@@ -977,70 +978,202 @@ footer {
   button,
   input[type="file"] { display: none !important; }
 
-  /* Re-show header text elements hidden by the button rule */
-  .header-bar { display: block !important; background: var(--teal-dark) !important; padding: 12px 0 !important; }
-  .header-inner { padding: 0 0.5in !important; }
-  .brand { display: flex !important; }
+  /* Header — compact single-line banner */
+  .header-bar { display: block !important; background: var(--teal-dark) !important; padding: 6px 0 !important; }
+  .header-inner { max-width: 100% !important; padding: 0 0.25in !important; }
+  .brand { display: flex !important; padding: 6px 12px !important; }
+  .brand .logo { width: 28px !important; height: 28px !important; font-size: 14px !important; }
+  .brand .name { font-size: 14px !important; }
+  .brand .tag { font-size: 8px !important; }
   .header-right { display: flex !important; }
-  .date-stamp { display: block !important; }
+  .date-stamp { display: block !important; font-size: 11px !important; }
 
-  /* Container */
+  /* Container — full width, minimal padding */
   .container {
     max-width: 100% !important;
-    padding: 12px 0 0 !important;
+    padding: 8px 0 0 !important;
   }
 
   /* Page title */
-  .page-title { font-size: 22px !important; margin-bottom: 2px !important; }
-  .page-sub { font-size: 11px !important; margin-bottom: 12px !important; }
+  .page-title { font-size: 20px !important; margin-bottom: 1px !important; }
+  .page-sub { font-size: 10px !important; margin-bottom: 8px !important; }
 
-  /* Section heads */
-  .section-head { margin-top: 18px !important; }
-  .section-head h2 { font-size: 15px !important; }
+  /* Section heads — compact */
+  .section-head { margin-top: 10px !important; margin-bottom: 6px !important; padding-top: 4px !important; }
+  .section-head h2 { font-size: 13px !important; }
+  .section-head .desc { font-size: 9px !important; }
+  .section-divider { margin-bottom: 6px !important; }
 
-  /* KPI grid — 6 across on print */
+  /* KPI grid — 6 across, compact */
   .kpi-grid {
     grid-template-columns: repeat(6, 1fr) !important;
-    gap: 8px !important;
+    gap: 6px !important;
+    margin-bottom: 10px !important;
   }
-  .kpi { padding: 10px !important; }
-  .kpi .label { font-size: 9px !important; }
-  .kpi .value { font-size: 18px !important; }
+  .kpi { padding: 8px !important; border-radius: 4px !important; }
+  .kpi .label { font-size: 8px !important; }
+  .kpi .value { font-size: 16px !important; }
+  .kpi .sub { font-size: 9px !important; }
 
-  /* Cards and grids */
-  .split-grid { gap: 8px !important; }
-  .mini-card { padding: 10px !important; box-shadow: none !important; border: 1px solid #ddd !important; }
-  .opp-grid, .insight-grid { gap: 8px !important; }
-  .opp-card, .insight-card { padding: 10px !important; box-shadow: none !important; border: 1px solid #ddd !important; }
-  .rev-grid { gap: 8px !important; }
-  .rev-card { padding: 10px !important; box-shadow: none !important; border: 1px solid #ddd !important; }
+  /* Volume / Payor / Service — 3 columns full width */
+  .split-grid {
+    grid-template-columns: 1.3fr 1fr 1fr !important;
+    gap: 6px !important;
+    margin-bottom: 10px !important;
+  }
+  .mini-card {
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    overflow: visible !important;
+  }
+  .mini-card .mc-head { font-size: 10px !important; padding: 4px 8px !important; }
+  .mini-card table { font-size: 9px !important; }
+  .mini-card table th,
+  .mini-card table td { padding: 2px 6px !important; }
 
-  /* Tables */
-  .cat-wrap { overflow: visible !important; }
-  .cats { font-size: 10px !important; }
-  .cats th, .cats td { padding: 4px 8px !important; }
+  /* Opportunity cards — 3 across */
+  .opp-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+    margin-bottom: 10px !important;
+  }
+  .opp-card {
+    padding: 8px !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    overflow: visible !important;
+  }
+  .opp-card .opp-label { font-size: 9px !important; }
+  .opp-card .opp-val { font-size: 14px !important; }
+  .opp-card .opp-sub { font-size: 8px !important; }
 
-  /* Trend grids */
-  .trend-grid-lg, .trend-grid-sm { overflow: visible !important; }
-  .trend-grid-lg table, .trend-grid-sm table { font-size: 9px !important; }
+  /* Revenue bridge — 4 across */
+  .rev-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+    margin-bottom: 10px !important;
+  }
+  .rev-card {
+    padding: 8px !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    overflow: visible !important;
+  }
+
+  /* Insight grid — 2 across */
+  .insight-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 6px !important;
+    margin-bottom: 10px !important;
+  }
+  .insight-card {
+    padding: 8px !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    overflow: visible !important;
+  }
+
+  /* Expense table — full width, no truncation */
+  .cat-wrap {
+    overflow: visible !important;
+    margin-bottom: 10px !important;
+    border-radius: 0 !important;
+  }
+  table.cats {
+    width: 100% !important;
+    font-size: 9px !important;
+    table-layout: auto !important;
+  }
+  table.cats thead th {
+    padding: 3px 6px !important;
+    font-size: 8px !important;
+    white-space: nowrap !important;
+  }
+  table.cats td {
+    padding: 3px 6px !important;
+    white-space: nowrap !important;
+  }
+  /* GL detail rows */
+  table.detail { font-size: 8px !important; }
+  table.detail th, table.detail td { padding: 2px 5px !important; }
+  .detail-wrap { overflow: visible !important; }
+
+  /* Variance callouts */
+  .callout-wrap {
+    overflow: visible !important;
+    margin-bottom: 10px !important;
+  }
+  .callout-table { font-size: 9px !important; }
+  .callout-table th, .callout-table td { padding: 3px 6px !important; }
 
   /* Commentary blocks */
-  .commentary { font-size: 11px !important; padding: 10px !important; box-shadow: none !important; border: 1px solid #ddd !important; }
+  .commentary {
+    font-size: 10px !important;
+    padding: 8px !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    margin-bottom: 10px !important;
+  }
 
-  /* Callouts */
-  .callout { padding: 8px 12px !important; box-shadow: none !important; border: 1px solid #ddd !important; }
+  /* Trend grids — use full landscape width */
+  .trend-grid-lg {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+    overflow: visible !important;
+    margin-bottom: 8px !important;
+  }
+  .trend-grid-sm {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+    overflow: visible !important;
+    margin-bottom: 10px !important;
+  }
+  .trend-grid-lg table, .trend-grid-sm table {
+    font-size: 8px !important;
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+  .trend-grid-lg th, .trend-grid-lg td,
+  .trend-grid-sm th, .trend-grid-sm td {
+    padding: 2px 4px !important;
+    white-space: nowrap !important;
+  }
+  .trend-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    overflow: visible !important;
+  }
 
-  /* Avoid page breaks inside key sections */
-  .kpi-grid, .split-grid, .opp-grid, .rev-grid, .insight-grid { break-inside: avoid; }
-  .mini-card, .opp-card, .rev-card, .insight-card, .callout, .commentary { break-inside: avoid; }
+  /* Remove all overflow:hidden that causes truncation */
+  [style*="overflow"],
+  .card, .mini-card, .opp-card, .rev-card, .insight-card, .trend-card,
+  .cat-wrap, .detail-wrap, .callout-wrap { overflow: visible !important; }
+
+  /* Page break logic */
+  .section-head { break-after: avoid !important; }
+  .section-divider { break-after: avoid !important; }
+  .kpi-grid { break-inside: avoid !important; }
+  .split-grid { break-inside: avoid !important; }
+  .mini-card, .opp-card, .rev-card, .insight-card { break-inside: avoid !important; }
+  .callout, .commentary { break-inside: avoid !important; }
+  /* Allow the expense table to break across pages — it can be long */
+  .cat-wrap { break-inside: auto !important; }
+  /* Keep each category row + its GL detail together */
+  .cat-group { break-inside: avoid !important; }
+  /* Keep trend grids together when possible */
+  .trend-grid-lg, .trend-grid-sm { break-inside: auto !important; }
 
   /* Expand all collapsed GL rows so full detail prints */
   .gl-rows { display: table-row !important; }
   .gl-rows td { display: table-cell !important; }
   tr.gl-row { display: table-row !important; }
 
+  /* Note rows */
+  .note-callout-row { break-inside: avoid !important; }
+
   /* Footer */
-  footer { margin-top: 12px !important; padding-top: 8px !important; }
+  footer { margin-top: 8px !important; padding-top: 6px !important; font-size: 9px !important; }
 }
 </style>
 <script>/* SheetJS xlsx 0.18.5 — inlined for offline use, no external CDN dependency */
