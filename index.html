@@ -638,26 +638,27 @@ table.detail tr:last-child td { border-bottom: none; }
 
 /* PER-ITEM NOTE BUTTONS */
 .note-btn {
-  background: none;
+  background: #f7f9fb;
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 1px 7px;
+  padding: 3px 10px;
   font-size: 11px;
-  color: var(--muted);
+  font-weight: 600;
+  color: var(--teal-dark);
   cursor: pointer;
-  opacity: 0.45;
-  transition: opacity 0.15s, border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
   vertical-align: middle;
   white-space: nowrap;
   line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
-.note-btn:hover { opacity: 1; border-color: var(--teal); color: var(--teal); }
+.note-btn:hover { background: #eef2f5; border-color: var(--teal); color: var(--teal); }
 .note-btn.has-note {
-  opacity: 1;
   background: var(--warn-bg);
   border-color: var(--warn);
   color: #b07a1f;
-  font-weight: 600;
 }
 .note-btn .note-ico { font-size: 11px; }
 .narrative-card h3 .note-btn { float: right; margin-top: -1px; }
@@ -1190,8 +1191,8 @@ function noteBtn(key, label) {
   const safeLabel = label.replace(/'/g, "\\'").replace(/"/g, '&quot;');
   return '<button class="note-btn' + has + '" data-note-key="' + key +
     '" onclick="event.stopPropagation();openNoteModal(\'' + key + '\',\'' + safeLabel + '\')">' +
-    '<span class="note-ico">' + (has ? '📝' : '📝') + '</span>' +
-    (has ? ' Note' : '') + '</button>';
+    '<span class="note-ico">📝</span>' +
+    (has ? 'Edit Note' : 'Add Note') + '</button>';
 }
 
 function openNoteModal(key, label) {
@@ -1217,10 +1218,10 @@ function saveNoteFromModal() {
   document.querySelectorAll('.note-btn[data-note-key="' + _noteCurrentKey + '"]').forEach(btn => {
     if (text && text.trim()) {
       btn.classList.add('has-note');
-      btn.innerHTML = '<span class="note-ico">📝</span> Note';
+      btn.innerHTML = '<span class="note-ico">📝</span>Edit Note';
     } else {
       btn.classList.remove('has-note');
-      btn.innerHTML = '<span class="note-ico">📝</span>';
+      btn.innerHTML = '<span class="note-ico">📝</span>Add Note';
     }
   });
   closeNoteModal();
