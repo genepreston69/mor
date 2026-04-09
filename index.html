@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Highland Hospital — MOR Deep Dive | March 2026</title>
+<title>MOR Deep Dive</title>
 <style>
 :root {
   --bg: #eef2f5;
@@ -791,15 +791,15 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 </head>
 <body>
 
-<div class="top-banner">HIGHLAND HOSPITAL · BEHAVIORAL HEALTH · MOR DEEP DIVE</div>
+<div class="top-banner" id="top-banner">MOR DEEP DIVE</div>
 
 <div class="header-bar">
   <div class="header-inner">
     <div class="brand">
-      <div class="logo">H</div>
+      <div class="logo" id="brand-logo">H</div>
       <div>
-        <div class="name">Highland Hospital</div>
-        <div class="tag">A Summit BHC Facility</div>
+        <div class="name" id="brand-name">Hospital</div>
+        <div class="tag" id="brand-tag">MOR Dashboard</div>
       </div>
     </div>
     <div class="header-right">
@@ -826,7 +826,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <div class="icon">📊</div>
           <div class="text">
             <div class="name" id="name-analytic">Click to select file</div>
-            <div class="meta" id="meta-analytic">Source: Highland Month End Analytic export</div>
+            <div class="meta" id="meta-analytic">Source: Month End Analytic export (.xlsx)</div>
           </div>
           <input type="file" accept=".xlsx,.xls" onchange="handleFile(event,'analytic')">
         </div>
@@ -905,14 +905,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   <div class="section-head">
     <h2>Top Opportunities</h2>
-    <span class="desc">Largest absolute variances vs. budget · March</span>
+    <span class="desc" id="opp-desc">Largest absolute variances vs. budget</span>
   </div>
   <div class="section-divider"></div>
   <div class="opp-grid" id="opp-grid"></div>
 
   <div class="section-head">
     <h2>Net Revenue Bridge</h2>
-    <span class="desc">Gross to net · WV Directed Payment Program tied to Managed Medicaid</span>
+    <span class="desc" id="rev-bridge-desc">Gross to net · Supplemental revenue and contractual adjustments</span>
   </div>
   <div class="section-divider"></div>
   <div class="rev-grid" id="rev-grid"></div>
@@ -938,11 +938,11 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   <div class="section-divider"></div>
   <div class="cat-wrap">
     <table class="cats">
-      <thead>
+      <thead id="cat-thead">
         <tr>
           <th>Category</th>
-          <th>Mar Actual</th>
-          <th>Mar Budget</th>
+          <th>Actual</th>
+          <th>Budget</th>
           <th>Variance</th>
           <th>Var %</th>
           <th>YTD Actual</th>
@@ -977,8 +977,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   <div class="trend-grid-lg" id="trend-lg"></div>
   <div class="trend-grid-sm" id="trend-sm"></div>
 
-  <footer>
-    Source: 033126_127 Highland Month End Analytic · Generated April 8, 2026 · Variances shown as Budget − Actual (favorable when actual is below budget for expenses)
+  <footer id="page-footer">
+    Variances shown as Budget − Actual (favorable when actual is below budget for expenses)
   </footer>
 
 </div>
@@ -995,12 +995,17 @@ function getDaysInMonth() {
     const adc = DATA.deck.volume.find(v => v.label === 'ADC');
     if (ipDays && adc && adc.act > 0) return Math.round(ipDays.act / adc.act);
   }
-  // Fallback: derive from monthly_act array position
+  // Fallback: derive from monthly_act array position with leap year support
   if (DATA.patient_days && DATA.patient_days.monthly_act) {
     const idx = getCurrentMonthIdx();
-    const acts = DATA.patient_days.monthly_act;
-    // Use common month lengths
-    const mdays = [31,28,31,30,31,30,31,31,30,31,30,31];
+    // Determine year from period string or current date
+    let year = new Date().getFullYear();
+    if (DATA.period) {
+      const ym = DATA.period.match(/(20\d{2})/);
+      if (ym) year = parseInt(ym[1], 10);
+    }
+    const isLeap = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+    const mdays = [31, isLeap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     return mdays[idx] || 31;
   }
   return 31;
@@ -1376,15 +1381,20 @@ function setView(v) {
 }
 
 function sparkline(monthly_act, monthly_bud, color) {
-  const vals = monthly_act.slice(0,3);
-  const buds = monthly_bud.slice(0,3);
+  // Show trailing months with data (up to 3)
+  const curIdx = getCurrentMonthIdx();
+  const start = Math.max(0, curIdx - 2);
+  const end = curIdx + 1;
+  const vals = monthly_act.slice(start, end);
+  const buds = monthly_bud.slice(start, end);
   const all = vals.concat(buds).filter(v => v !== 0);
   if (all.length === 0) return '';
   const min = Math.min(...all, 0);
   const max = Math.max(...all);
   const range = max - min || 1;
   const w = 90, h = 30;
-  const step = w / 2;
+  const count = vals.length;
+  const step = count > 1 ? w / (count - 1) : 0;
   const pts = vals.map((v,i) => `${i*step+2},${h - ((v-min)/range)*(h-4) - 2}`).join(' ');
   const budPts = buds.map((v,i) => `${i*step+2},${h - ((v-min)/range)*(h-4) - 2}`).join(' ');
   return `<svg class="spark" width="${w}" height="${h}">
@@ -1505,17 +1515,17 @@ function renderTrends() {
       actArr = it.src.monthly_act;
       budArr = it.src.monthly_bud;
       currentVal = fmtNum(it.src.mar_act);
-      currentLabel = 'March · ' + fmtNum(it.src.mar_act) + ' actual vs ' + fmtNum(it.src.mar_bud) + ' bud';
+      currentLabel = getMonthName() + ' · ' + fmtNum(it.src.mar_act) + ' actual vs ' + fmtNum(it.src.mar_bud) + ' bud';
     } else if (isP) {
       actArr = ppdize(it.src.monthly_act, pdAct);
       budArr = ppdize(it.src.monthly_bud, pdBud);
       currentVal = fmtPPD(it.src.ppd_mar);
-      currentLabel = 'March · ' + fmtPPD(it.src.ppd_mar) + ' / patient day';
+      currentLabel = getMonthName() + ' · ' + fmtPPD(it.src.ppd_mar) + ' / patient day';
     } else {
       actArr = it.src.monthly_act;
       budArr = it.src.monthly_bud;
       currentVal = fmt$(it.src.mar_act);
-      currentLabel = 'March · ' + fmt$(it.src.mar_act) + ' actual vs ' + fmt$(it.src.mar_bud) + ' budget';
+      currentLabel = getMonthName() + ' · ' + fmt$(it.src.mar_act) + ' actual vs ' + fmt$(it.src.mar_bud) + ' budget';
     }
     return '<div class="trend-card">' +
       '<div class="tc-head"><div class="tc-title">' + it.title + '</div><div class="tc-val">' + currentVal + '</div></div>' +
@@ -1547,7 +1557,7 @@ function renderTrends() {
     const arrow = c.mar_var > 0 ? '▼ ' : '▲ ';
     return '<div class="trend-card sm">' +
       '<div class="tc-head"><div class="tc-title">' + c.name + '</div><div class="tc-val">' + currentVal + '</div></div>' +
-      '<div class="tc-sub">Mar · ' + arrow + fmt$(Math.abs(c.mar_var)) + ' vs bud</div>' +
+      '<div class="tc-sub">' + getMonthShort() + ' · ' + arrow + fmt$(Math.abs(c.mar_var)) + ' vs bud</div>' +
       lineChart(actArr, budArr, 260, 100, color) +
     '</div>';
   }).join('');
@@ -1612,17 +1622,41 @@ function hasData() {
   return DATA && DATA.patient_days && DATA.categories && DATA.categories.length > 0;
 }
 
+function getMonthName() {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return months[getCurrentMonthIdx()] || '';
+}
+
+function getMonthShort() {
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[getCurrentMonthIdx()] || '';
+}
+
 function updateHeader() {
   const el = document.getElementById('header-meta');
   if (!hasData()) {
     el.innerHTML = '<span class="dot"></span> Upload source files to begin';
     return;
   }
+  const facility = DATA.facility || 'Hospital';
   const period = DATA.period || '';
   const days = DATA.patient_days ? Math.round(DATA.patient_days.mar_act) : 0;
-  const reportDays = DATA.patient_days && DATA.patient_days.monthly_act ? DATA.patient_days.monthly_act.filter(v => v > 0).length : 0;
-  const facility = DATA.facility || 'Hospital';
+  const monthName = getMonthName();
+
   el.innerHTML = '<span class="dot"></span> ' + period + ' · ' + facility + ' · ' + days.toLocaleString() + ' IP days';
+
+  // Update page title and branding
+  document.title = facility + ' — MOR Deep Dive | ' + monthName;
+  document.getElementById('top-banner').textContent = facility.toUpperCase() + ' · MOR DEEP DIVE';
+  document.getElementById('brand-logo').textContent = facility.charAt(0).toUpperCase();
+  document.getElementById('brand-name').textContent = facility;
+  document.getElementById('brand-tag').textContent = period || 'MOR Dashboard';
+
+  // Update footer
+  const footer = document.getElementById('page-footer');
+  const today = new Date();
+  const genDate = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  footer.textContent = 'Source: ' + facility + ' Month End Analytic · Generated ' + genDate + ' · Variances shown as Budget − Actual (favorable when actual is below budget for expenses)';
 }
 
 function render() {
@@ -1662,18 +1696,18 @@ function renderKPIs() {
     { c:'c1', label:'Net Revenue',
       val: isP ? fmtPPD(nr.ppd_mar) : fmt$(nr.mar_act),
       delta: 'Budget ' + (isP ? fmtPPD(nr.ppd_bud) : fmt$(nr.mar_bud)),
-      pill: '+' + fmt$(Math.abs(nr.mar_act - nr.mar_bud)),
-      pillGood: nr.mar_act > nr.mar_bud },
+      pill: (nr.mar_act >= nr.mar_bud ? '▲ ' : '▼ ') + fmt$(Math.abs(nr.mar_act - nr.mar_bud)),
+      pillGood: nr.mar_act >= nr.mar_bud },
     { c:'c2', label:'Total OpEx',
       val: isP ? fmtPPD(op.ppd_mar) : fmt$(op.mar_act),
       delta: 'Budget ' + (isP ? fmtPPD(op.ppd_bud) : fmt$(op.mar_bud)),
-      pill: (op.mar_act < op.mar_bud ? '▼ ' : '▲ ') + fmt$(Math.abs(op.mar_bud - op.mar_act)),
-      pillGood: op.mar_act < op.mar_bud },
+      pill: (op.mar_act <= op.mar_bud ? '▼ ' : '▲ ') + fmt$(Math.abs(op.mar_bud - op.mar_act)),
+      pillGood: op.mar_act <= op.mar_bud },
     { c:'c3', label:'EBITDA',
       val: isP ? fmtPPD(eb.ppd_mar) : fmt$(eb.mar_act),
       delta: 'Budget ' + (isP ? fmtPPD(eb.ppd_bud) : fmt$(eb.mar_bud)),
-      pill: '+' + fmt$(Math.abs(eb.mar_act - eb.mar_bud)),
-      pillGood: eb.mar_act > eb.mar_bud },
+      pill: (eb.mar_act >= eb.mar_bud ? '▲ ' : '▼ ') + fmt$(Math.abs(eb.mar_act - eb.mar_bud)),
+      pillGood: eb.mar_act >= eb.mar_bud },
     { c:'c4', label:'EBITDA Margin',
       val: ebMargin.toFixed(1) + '%',
       delta: 'Budget ' + ebMarginBud.toFixed(1) + '%',
@@ -1716,25 +1750,93 @@ function renderOpps() {
 
 function renderInsights() {
   const cats = DATA.categories;
-  const taxes = cats.find(c => c.name === 'Taxes');
-  const profFees = cats.find(c => c.name === 'Professional Fees');
-  const supplies = cats.find(c => c.name === 'Supplies');
-  const purchSvc = cats.find(c => c.name === 'Purchased Services');
-  const repairs = cats.find(c => c.name === 'Repairs & Maintenance');
-  const nrPpd = DATA.net_revenue.ppd_mar;
-  const nrPpdBud = DATA.net_revenue.ppd_bud;
-  const ebMargin = (DATA.ebitda.mar_act / DATA.net_revenue.mar_act * 100).toFixed(1);
+  const nr = DATA.net_revenue;
+  const eb = DATA.ebitda;
+  const pd = DATA.patient_days;
+  const monthName = getMonthName();
+  const insights = [];
 
-  const insights = [
-    { type:'good', ico:'🚀', body:`<strong>EBITDA margin of ${ebMargin}%</strong> on ${fmt$(DATA.net_revenue.mar_act)} net revenue. EBITDA beat budget by ${fmt$(DATA.ebitda.mar_act - DATA.ebitda.mar_bud)} despite a 62-day census shortfall — this is rate/mix execution, not volume luck.`},
-    { type:'good', ico:'💎', body:`<strong>Net revenue per patient day of ${fmtPPD(nrPpd)}</strong> beat the ${fmtPPD(nrPpdBud)} budget by ${fmtPPD(nrPpd-nrPpdBud)}. Managed Medicaid concentration at 74% of days is the structural driver. Protect the referral mix.`},
-    { type:'warn', ico:'🧾', body:`<strong>Taxes ${fmt$(Math.abs(taxes.mar_var))} favorable</strong> looks great, but the budget loaded ${fmt$(taxes.mar_bud)} for the WV provider tax that didn't post in March. This is timing, not a win — expect a Q2 catch-up.`},
-    { type:'bad', ico:'⚕️', body:`<strong>Pro Fees ${fmt$(Math.abs(profFees.mar_var))} unfavorable</strong> driven entirely by Dr. Stipends (${fmt$(profFees.details[0].mar_act)} on ${fmt$(profFees.details[0].mar_bud)} budget). Per CFO note, this is a GL mapping issue — fix before Q2 close so it stops distorting variance optics.`},
-    { type:'good', ico:'📦', body:`<strong>Supplies ${fmt$(supplies.mar_var)} favorable</strong> at ${fmtPPD(supplies.ppd_mar)}/PPD vs ${fmtPPD(supplies.ppd_bud)} budget. Variable cost discipline is real — supplies are flexing correctly with census.`},
-    { type:'good', ico:'🛠️', body:`<strong>Purchased Services ${fmt$(purchSvc.mar_var)} favorable</strong> driven by IT consulting and contract timing. Discretionary in nature, providing budget flex into Q2 if census ramp needs support spend.`},
-    { type:'warn', ico:'🔧', body:`<strong>R&M ${fmt$(repairs.mar_var)} favorable</strong> — but this is a 4th-floor expansion environment. R&M underspend in this phase is more likely deferred work than savings. Validate facility readiness work is on schedule.`},
-    { type:'good', ico:'👥', body:`<strong>Zero contract labor</strong> is a meaningful operational achievement. This line was a significant cost driver at many comparable facilities and continues to run clean here.`},
-  ];
+  // 1. EBITDA margin insight
+  if (nr.mar_act && nr.mar_act !== 0) {
+    const ebMargin = (eb.mar_act / nr.mar_act * 100).toFixed(1);
+    const ebMarginBud = nr.mar_bud !== 0 ? (eb.mar_bud / nr.mar_bud * 100).toFixed(1) : '—';
+    const ebVar = eb.mar_act - eb.mar_bud;
+    const ebFav = ebVar >= 0;
+    const pdVar = pd.mar_act - pd.mar_bud;
+    let context = '';
+    if (ebFav && pdVar < 0) {
+      context = ' despite a ' + Math.abs(Math.round(pdVar)) + '-day census shortfall — rate/mix execution offset volume headwinds.';
+    } else if (ebFav) {
+      context = ' — strong operational execution.';
+    } else {
+      context = '.';
+    }
+    insights.push({ type: ebFav ? 'good' : 'bad', ico: ebFav ? '🚀' : '⚠️',
+      body: '<strong>EBITDA margin of ' + ebMargin + '%</strong> (budget ' + ebMarginBud + '%) on ' + fmt$(nr.mar_act) + ' net revenue. EBITDA ' + (ebFav ? 'beat' : 'missed') + ' budget by ' + fmt$(Math.abs(ebVar)) + context });
+  }
+
+  // 2. Net revenue PPD insight
+  const nrPpd = nr.ppd_mar;
+  const nrPpdBud = nr.ppd_bud;
+  if (nrPpd && nrPpdBud && nrPpdBud !== 0) {
+    const ppdFav = nrPpd >= nrPpdBud;
+    let payorNote = '';
+    if (DATA.deck) {
+      const medicaid = DATA.deck.payor_mix.find(p => p.label === 'Medicaid');
+      if (medicaid && medicaid.act >= 0.50) {
+        payorNote = ' Medicaid concentration at ' + (medicaid.act * 100).toFixed(0) + '% of admissions is the structural driver.';
+      }
+    }
+    insights.push({ type: ppdFav ? 'good' : 'warn', ico: '💎',
+      body: '<strong>Net revenue per patient day of ' + fmtPPD(nrPpd) + '</strong> ' + (ppdFav ? 'beat' : 'fell short of') + ' the ' + fmtPPD(nrPpdBud) + ' budget by ' + fmtPPD(Math.abs(nrPpd - nrPpdBud)) + '.' + payorNote });
+  }
+
+  // 3. Generate insights for top expense categories by absolute variance
+  const sorted = cats.slice().sort((a, b) => Math.abs(b.mar_var) - Math.abs(a.mar_var));
+  const icons = { 'Salaries & Wages':'👥', 'Benefits':'🏥', 'Contract Labor':'👥', 'Purchased Services':'🛠️',
+    'Professional Fees':'⚕️', 'Supplies':'📦', 'Utilities':'💡', 'Repairs & Maintenance':'🔧',
+    'Rent / Lease':'🏢', 'Insurance':'🛡️', 'Marketing':'📣', 'Taxes':'🧾', 'Other Operating':'📋' };
+
+  for (const cat of sorted.slice(0, 6)) {
+    const fav = cat.mar_var > 0;
+    const varAbs = Math.abs(cat.mar_var);
+    if (varAbs < 500) continue; // skip immaterial variances
+    const varPct = cat.mar_bud !== 0 ? (cat.mar_var / Math.abs(cat.mar_bud) * 100) : 0;
+    const ico = icons[cat.name] || '📊';
+
+    let body = '<strong>' + cat.name + ' ' + fmt$(varAbs) + ' ' + (fav ? 'favorable' : 'unfavorable') + '</strong>';
+    body += ' (' + fmt$(cat.mar_act) + ' actual vs ' + fmt$(cat.mar_bud) + ' budget)';
+
+    // PPD context
+    if (pd.mar_act > 0) {
+      body += ' at ' + fmtPPD(cat.ppd_mar) + '/PPD vs ' + fmtPPD(cat.ppd_bud) + ' budget.';
+    } else {
+      body += '.';
+    }
+
+    // Top driver from detail lines
+    if (cat.details.length > 0) {
+      const topDetail = cat.details[0]; // already sorted by |mar_var|
+      if (Math.abs(topDetail.mar_var) > 1000) {
+        const dFav = topDetail.mar_var > 0;
+        body += ' Top driver: ' + topDetail.desc + ' (' + fmt$(Math.abs(topDetail.mar_var)) + ' ' + (dFav ? 'favorable' : 'unfavorable') + ').';
+      }
+    }
+
+    // Contract labor zero check
+    if (cat.name === 'Contract Labor' && cat.mar_act === 0 && cat.mar_bud >= 0) {
+      body += ' Zero contract labor is a meaningful operational achievement.';
+    }
+
+    let type;
+    if (fav && varAbs > 20000) type = 'good';
+    else if (fav) type = 'good';
+    else if (Math.abs(varPct) > 15) type = 'bad';
+    else type = 'warn';
+
+    insights.push({ type, ico, body });
+  }
+
   document.getElementById('insight-grid').innerHTML = insights.map(i => `
     <div class="insight ${i.type}">
       <div class="ico">${i.ico}</div>
@@ -1755,7 +1857,7 @@ function renderRevenue() {
   const cards = [
     { l:'IP Gross Revenue', v: f(ipg.mar_act), s:`Bud ${f(ipg.mar_bud)}` },
     { l:'IP Contractuals', v: f(ipc.mar_act), s:`${fmt$(ipc.mar_bud-ipc.mar_act)} favorable` },
-    { l:'Supplemental (DSH/HDAA)', v: f(Math.abs(sup.mar_act)), s:`WV Directed Payment Program` },
+    { l:'Supplemental (DSH/HDAA)', v: f(Math.abs(sup.mar_act)), s: sup.desc || 'Directed Payment / Supplemental Revenue' },
     { l:'Net Revenue', v: f(nr.mar_act), s:`${fmt$(nr.mar_act-nr.mar_bud)} favorable to budget` },
   ];
   document.getElementById('rev-grid').innerHTML = cards.map(c => `
@@ -1890,7 +1992,7 @@ function renderRevenueCommentary() {
   // Net Revenue card
   const nrBullets = [
     '<strong>Net Revenue of ' + fmt$(nr.mar_act) + (nrFav ? ' exceeded' : ' fell short of') + ' the ' + fmt$(nr.mar_bud) + ' budget</strong> by ' + fmt$(Math.abs(nrVar)) + ' ' + (nrFav ? 'favorable' : 'unfavorable') + '.',
-    'Net revenue per patient day of <strong>' + fmtPPD(nr.ppd_mar) + ' vs ' + fmtPPD(nr.ppd_bud) + ' budget (' + (nr.ppd_mar > nr.ppd_bud ? '+' : '') + ((nr.ppd_mar - nr.ppd_bud) / nr.ppd_bud * 100).toFixed(1) + '%)</strong>.',
+    'Net revenue per patient day of <strong>' + fmtPPD(nr.ppd_mar) + ' vs ' + fmtPPD(nr.ppd_bud) + ' budget (' + (nr.ppd_bud !== 0 ? ((nr.ppd_mar > nr.ppd_bud ? '+' : '') + ((nr.ppd_mar - nr.ppd_bud) / nr.ppd_bud * 100).toFixed(1) + '%') : '—') + ')</strong>.',
     'IP Gross Revenue of ' + fmt$(ipg.mar_act) + ' vs ' + fmt$(ipg.mar_bud) + ' budget — ' + fmt$(Math.abs(ipg.mar_act - ipg.mar_bud)) + ' ' + (ipg.mar_act >= ipg.mar_bud ? 'favorable' : 'unfavorable') + '.',
   ];
   if (Math.abs(pdVar) > 0) {
@@ -1973,6 +2075,14 @@ function renderCategories() {
   const pdY = DATA.patient_days.ytd_act;
   const pdYBud = DATA.patient_days.ytd_bud;
   const tbody = document.getElementById('cat-tbody');
+  const ms = getMonthShort();
+
+  // Update table header with current month
+  document.getElementById('cat-thead').innerHTML = '<tr><th>Category</th><th>' + ms + ' Actual</th><th>' + ms + ' Budget</th><th>Variance</th><th>Var %</th><th>YTD Actual</th><th>YTD Var</th><th>3-Mo Trend</th><th>Status</th></tr>';
+
+  // Update opportunity section description
+  const oppDesc = document.getElementById('opp-desc');
+  if (oppDesc) oppDesc.textContent = 'Largest absolute variances vs. budget · ' + getMonthName();
 
   const sorted = DATA.categories.slice().sort((a,b) => Math.abs(b.mar_var) - Math.abs(a.mar_var));
 
@@ -2023,8 +2133,8 @@ function renderCategories() {
       <table class="detail">
         <thead><tr>
           <th>Line Item</th>
-          <th>Mar Actual</th>
-          <th>Mar Budget</th>
+          <th>${ms} Actual</th>
+          <th>${ms} Budget</th>
           <th>Variance</th>
           <th>$ / PPD</th>
           <th>YTD Actual</th>
