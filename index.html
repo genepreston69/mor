@@ -924,6 +924,122 @@ footer {
   cursor: pointer; font-weight: 600; font-size: 0.95rem;
 }
 .empty-state .es-btn:hover { opacity: .9; }
+
+/* PRINT BUTTON */
+.print-btn {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--teal-dark);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.print-btn:hover { background: var(--bg); }
+.print-btn .print-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* PRINT STYLES */
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 0.5in;
+  }
+
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  html, body {
+    background: #ffffff !important;
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Hide interactive / non-printable elements */
+  .top-banner,
+  .upload-panel,
+  .tab-bar,
+  .empty-state,
+  .note-overlay,
+  .print-btn,
+  .refresh-btn,
+  .section-pill,
+  .note-btn,
+  .note-edit-btn,
+  .note-delete-btn,
+  button,
+  input[type="file"] { display: none !important; }
+
+  /* Re-show header text elements hidden by the button rule */
+  .header-bar { display: block !important; background: var(--teal-dark) !important; padding: 12px 0 !important; }
+  .header-inner { padding: 0 0.5in !important; }
+  .brand { display: flex !important; }
+  .header-right { display: flex !important; }
+  .date-stamp { display: block !important; }
+
+  /* Container */
+  .container {
+    max-width: 100% !important;
+    padding: 12px 0 0 !important;
+  }
+
+  /* Page title */
+  .page-title { font-size: 22px !important; margin-bottom: 2px !important; }
+  .page-sub { font-size: 11px !important; margin-bottom: 12px !important; }
+
+  /* Section heads */
+  .section-head { margin-top: 18px !important; }
+  .section-head h2 { font-size: 15px !important; }
+
+  /* KPI grid — 6 across on print */
+  .kpi-grid {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 8px !important;
+  }
+  .kpi { padding: 10px !important; }
+  .kpi .label { font-size: 9px !important; }
+  .kpi .value { font-size: 18px !important; }
+
+  /* Cards and grids */
+  .split-grid { gap: 8px !important; }
+  .mini-card { padding: 10px !important; box-shadow: none !important; border: 1px solid #ddd !important; }
+  .opp-grid, .insight-grid { gap: 8px !important; }
+  .opp-card, .insight-card { padding: 10px !important; box-shadow: none !important; border: 1px solid #ddd !important; }
+  .rev-grid { gap: 8px !important; }
+  .rev-card { padding: 10px !important; box-shadow: none !important; border: 1px solid #ddd !important; }
+
+  /* Tables */
+  .cat-wrap { overflow: visible !important; }
+  .cats { font-size: 10px !important; }
+  .cats th, .cats td { padding: 4px 8px !important; }
+
+  /* Trend grids */
+  .trend-grid-lg, .trend-grid-sm { overflow: visible !important; }
+  .trend-grid-lg table, .trend-grid-sm table { font-size: 9px !important; }
+
+  /* Commentary blocks */
+  .commentary { font-size: 11px !important; padding: 10px !important; box-shadow: none !important; border: 1px solid #ddd !important; }
+
+  /* Callouts */
+  .callout { padding: 8px 12px !important; box-shadow: none !important; border: 1px solid #ddd !important; }
+
+  /* Avoid page breaks inside key sections */
+  .kpi-grid, .split-grid, .opp-grid, .rev-grid, .insight-grid { break-inside: avoid; }
+  .mini-card, .opp-card, .rev-card, .insight-card, .callout, .commentary { break-inside: avoid; }
+
+  /* Expand all collapsed GL rows so full detail prints */
+  .gl-rows { display: table-row !important; }
+  .gl-rows td { display: table-cell !important; }
+  tr.gl-row { display: table-row !important; }
+
+  /* Footer */
+  footer { margin-top: 12px !important; padding-top: 8px !important; }
+}
 </style>
 <script>/* SheetJS xlsx 0.18.5 — inlined for offline use, no external CDN dependency */
 /*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
@@ -1021,6 +1137,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     </div>
     <div class="tab-meta">
       <span id="header-meta"><span class="dot"></span> Upload source files to begin</span>
+      <button class="print-btn" onclick="printReport()"><span class="print-icon">⎙</span> Print</button>
       <button class="refresh-btn">↻ Refresh</button>
     </div>
   </div>
@@ -1165,6 +1282,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 let DATA = {};
 let view = 'dollars';
 const BEDS_KEY = 'highland_mor_beds';
+
+function printReport() {
+  // Expand all collapsed GL detail rows so they appear in print
+  document.querySelectorAll('.gl-row').forEach(r => r.style.display = 'table-row');
+  // Small delay to let DOM update before print dialog
+  setTimeout(() => window.print(), 100);
+}
 
 function getDaysInMonth() {
   // Derive from patient days and ADC if deck data available
