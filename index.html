@@ -927,19 +927,21 @@ footer {
 
 /* PRINT BUTTON */
 .print-btn {
-  background: #ffffff;
-  border: 1px solid var(--border);
-  color: var(--teal-dark);
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: #ffffff;
   font-size: 12px;
   font-weight: 600;
-  padding: 7px 14px;
+  padding: 8px 18px;
   border-radius: 6px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  letter-spacing: 0.3px;
+  transition: background 0.15s;
 }
-.print-btn:hover { background: var(--bg); }
+.print-btn:hover { background: rgba(255,255,255,0.25); }
 .print-btn .print-icon {
   font-size: 14px;
   line-height: 1;
@@ -1083,6 +1085,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div class="header-right">
       <div class="section-pill">MOR DEEP DIVE</div>
       <div class="date-stamp" id="date-stamp"></div>
+      <button class="print-btn" onclick="printReport()"><span class="print-icon">⎙</span> Print</button>
     </div>
   </div>
 </div>
@@ -1137,7 +1140,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     </div>
     <div class="tab-meta">
       <span id="header-meta"><span class="dot"></span> Upload source files to begin</span>
-      <button class="print-btn" onclick="printReport()"><span class="print-icon">⎙</span> Print</button>
       <button class="refresh-btn">↻ Refresh</button>
     </div>
   </div>
