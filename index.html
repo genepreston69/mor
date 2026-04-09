@@ -636,6 +636,57 @@ table.detail tr:last-child td { border-bottom: none; }
 .narrative-card .flag.bad { background: var(--bad-bg); color: var(--bad); }
 .narrative-card .flag.good { background: var(--good-bg); color: var(--good); }
 
+/* USER COMMENT BOXES */
+.comment-box {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin-top: 14px;
+  margin-bottom: 32px;
+}
+.comment-box .cb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.comment-box .cb-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.comment-box .cb-saved {
+  font-size: 10px;
+  color: var(--good);
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.comment-box .cb-saved.show { opacity: 1; }
+.comment-box textarea {
+  width: 100%;
+  min-height: 64px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 10px 12px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: #f7f9fb;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.comment-box textarea:focus {
+  border-color: var(--teal);
+  background: #ffffff;
+}
+.comment-box textarea::placeholder { color: var(--muted-2); }
+
 /* UNFAVORABLE LINE ITEM CALLOUTS */
 .callout-table {
   width: 100%; border-collapse: collapse; margin-bottom: 32px;
@@ -902,6 +953,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="volume-commentary"></div>
+  <div class="comment-box" id="comment-volume">
+    <div class="cb-header">
+      <span class="cb-label">Your Notes — Volume</span>
+      <span class="cb-saved" id="cb-saved-volume">Saved</span>
+    </div>
+    <textarea placeholder="Add your notes on volume, census, and payor mix..." oninput="saveComment('volume')"></textarea>
+  </div>
 
   <div class="section-head">
     <h2>Top Opportunities</h2>
@@ -923,6 +981,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="revenue-commentary"></div>
+  <div class="comment-box" id="comment-revenue">
+    <div class="cb-header">
+      <span class="cb-label">Your Notes — Revenue</span>
+      <span class="cb-saved" id="cb-saved-revenue">Saved</span>
+    </div>
+    <textarea placeholder="Add your notes on revenue performance..." oninput="saveComment('revenue')"></textarea>
+  </div>
 
   <div class="section-head">
     <h2>Strategic Insights</h2>
@@ -930,6 +995,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div class="insight-grid" id="insight-grid"></div>
+  <div class="comment-box" id="comment-insights">
+    <div class="cb-header">
+      <span class="cb-label">Your Notes — Strategic Insights</span>
+      <span class="cb-saved" id="cb-saved-insights">Saved</span>
+    </div>
+    <textarea placeholder="Add your strategic observations and action items..." oninput="saveComment('insights')"></textarea>
+  </div>
 
   <div class="section-head">
     <h2>Operating Expense Drill-Down</h2>
@@ -968,6 +1040,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="expense-commentary"></div>
+  <div class="comment-box" id="comment-expenses">
+    <div class="cb-header">
+      <span class="cb-label">Your Notes — Expenses</span>
+      <span class="cb-saved" id="cb-saved-expenses">Saved</span>
+    </div>
+    <textarea placeholder="Add your notes on expense variances and action items..." oninput="saveComment('expenses')"></textarea>
+  </div>
 
   <div class="section-head">
     <h2>Trended Performance</h2>
@@ -1030,6 +1109,45 @@ function setStaffedBeds(n) {
 // =========================================================================
 const STORAGE_KEY = 'highland_mor_data_v2';
 const STORAGE_META_KEY = 'highland_mor_meta_v2';
+const COMMENTS_KEY = 'highland_mor_comments';
+
+// =========================================================================
+// USER COMMENTS — per-section notes persisted to localStorage
+// =========================================================================
+let commentTimers = {};
+
+function saveComment(section) {
+  const textarea = document.querySelector('#comment-' + section + ' textarea');
+  if (!textarea) return;
+  // Debounce: save 500ms after user stops typing
+  clearTimeout(commentTimers[section]);
+  commentTimers[section] = setTimeout(() => {
+    try {
+      const raw = localStorage.getItem(COMMENTS_KEY);
+      const comments = raw ? JSON.parse(raw) : {};
+      comments[section] = textarea.value;
+      localStorage.setItem(COMMENTS_KEY, JSON.stringify(comments));
+      // Flash "Saved" indicator
+      const badge = document.getElementById('cb-saved-' + section);
+      if (badge) {
+        badge.classList.add('show');
+        setTimeout(() => badge.classList.remove('show'), 1500);
+      }
+    } catch (e) { console.warn('Comment save failed:', e); }
+  }, 500);
+}
+
+function loadComments() {
+  try {
+    const raw = localStorage.getItem(COMMENTS_KEY);
+    if (!raw) return;
+    const comments = JSON.parse(raw);
+    for (const [section, text] of Object.entries(comments)) {
+      const textarea = document.querySelector('#comment-' + section + ' textarea');
+      if (textarea && text) textarea.value = text;
+    }
+  } catch (e) { console.warn('Comment load failed:', e); }
+}
 
 function toggleUpload() {
   const grid = document.getElementById('upload-grid');
@@ -1104,10 +1222,13 @@ function saveStored(updates, fileType, fileName) {
 }
 
 function clearStored() {
-  if (!confirm('Clear all loaded data? You will need to re-upload your source files.')) return;
+  if (!confirm('Clear all loaded data and notes? You will need to re-upload your source files.')) return;
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(STORAGE_META_KEY);
+  localStorage.removeItem(COMMENTS_KEY);
   DATA = {};
+  // Clear comment textareas
+  document.querySelectorAll('.comment-box textarea').forEach(ta => { ta.value = ''; });
   // Reset upload UI
   ['drop-analytic','drop-deck'].forEach(id => {
     const el = document.getElementById(id);
@@ -2182,6 +2303,7 @@ function toggleDetail(idx) {
 
 document.getElementById('staffed-beds-input').value = getStaffedBeds();
 loadStored();
+loadComments();
 render();
 </script>
 </body>
