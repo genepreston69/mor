@@ -597,6 +597,45 @@ table.detail tr:last-child td { border-bottom: none; }
 .trend-legend .lg-swatch { width: 14px; height: 2px; border-radius: 1px; }
 
 
+/* NARRATIVE COMMENTARY */
+.narrative-block { margin-bottom: 32px; }
+.narrative-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+}
+.narrative-card {
+  background: #ffffff; border: 1px solid var(--border);
+  border-left: 4px solid var(--teal); border-radius: 6px;
+  padding: 14px 18px 16px;
+}
+.narrative-card.warn { border-left-color: var(--warn); }
+.narrative-card.bad { border-left-color: var(--bad); }
+.narrative-card.good { border-left-color: var(--good); }
+.narrative-card.neutral { border-left-color: var(--muted); }
+.narrative-card h3 {
+  font-family: Georgia, serif; font-size: 14px; font-weight: 700;
+  color: var(--ink); margin-bottom: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.narrative-card ul { list-style: none; padding: 0; margin: 0; }
+.narrative-card li {
+  position: relative; padding-left: 16px; margin-bottom: 8px;
+  font-size: 12.5px; line-height: 1.55; color: var(--ink-2);
+}
+.narrative-card li::before {
+  content: '•'; position: absolute; left: 4px;
+  color: var(--teal); font-weight: 700;
+}
+.narrative-card li:last-child { margin-bottom: 0; }
+.narrative-card li strong { color: var(--ink); font-weight: 700; }
+.narrative-card .flag {
+  display: inline-block; background: var(--warn-bg); color: #b07a1f;
+  padding: 1px 7px; border-radius: 3px; font-size: 9.5px;
+  font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  margin-right: 5px; vertical-align: middle;
+}
+.narrative-card .flag.bad { background: var(--bad-bg); color: var(--bad); }
+.narrative-card .flag.good { background: var(--good-bg); color: var(--good); }
+
 /* UNFAVORABLE LINE ITEM CALLOUTS */
 .callout-grid {
   display: grid; grid-template-columns: repeat(3, 1fr);
@@ -836,6 +875,50 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
 
   <div class="section-head">
+    <h2>Volume Commentary</h2>
+    <span class="desc">Census, length-of-stay, and payor mix narrative · March 2026</span>
+  </div>
+  <div class="section-divider"></div>
+  <div class="narrative-block">
+    <div class="narrative-grid">
+      <div class="narrative-card bad">
+        <h3>ADC</h3>
+        <ul>
+          <li>ADC of <strong>90.6 was 2.0 days unfavorable</strong> to the 92.6 budget. Acute ADC was essentially at budget; the gap is concentrated in service-line composition.</li>
+          <li>Detox ADC ran approximately 0.2 days unfavorable to budget — monitor referral patterns and clinical pathway throughput.</li>
+          <li>Adolescent ADC favorable by ~1.0 day; Adult ADC unfavorable by ~0.8 day. Net census mix is roughly stable but Adult softness is the watch item.</li>
+          <li>Equivalent ADC of 92.1 vs 95.7 budget — confirms the 2-day shortfall is real and not a measurement artifact.</li>
+        </ul>
+      </div>
+      <div class="narrative-card good">
+        <h3>LOS</h3>
+        <ul>
+          <li>ALOS of <strong>10.85 days</strong> against approximately 11.1 days budget — favorable LOS management continues.</li>
+          <li>ALOS down meaningfully versus prior year, primarily attributable to fewer long-term chronic patients and the PRTF closure.</li>
+          <li>Watch item: ADC trending flat while admissions volume has shifted upward year-over-year — the math implies continued LOS compression. Validate that discharge planning is aligned with clinical readiness, not throughput pressure.</li>
+        </ul>
+      </div>
+      <div class="narrative-card neutral">
+        <h3>OP Visits</h3>
+        <ul>
+          <li>N/A — Highland operates as a pure inpatient acute facility. Outpatient lines remain at zero for all services (PHP, IOP, Traditional, ECT/SLE).</li>
+          <li>Strategic question worth surfacing: with 4th-floor expansion and bed reopening underway, is there a step-down OP component that could be developed as a discharge pathway? PHP/IOP would extend the care continuum and capture revenue currently lost to community providers.</li>
+        </ul>
+      </div>
+      <div class="narrative-card good">
+        <h3>Payor Mix</h3>
+        <ul>
+          <li><strong>Managed Medicaid mix of 74% of patient days</strong> remains the primary engine of financial outperformance and the highest-leverage variable in the facility.</li>
+          <li>This concentration qualifies Highland for the WV Directed Payment Program supplemental — a <strong>$27.5M annualized revenue mechanism</strong> structurally tied to Managed Medicaid volume.</li>
+          <li>Net revenue per patient day of approximately $2,298 runs ~18% above the budgeted $1,943/PPD. Medicare FFS at 5.8% of admissions remains a rate headwind; at current Medicaid concentration, the DPP mechanism more than compensates.</li>
+          <li><span class="flag good">Protect</span>The Managed Medicaid referral mix is the single most important financial variable to defend. Any erosion below 70% would trigger material DPP exposure.</li>
+          <li>Commercial mix at 16.5% — modest opportunity to grow this slice incrementally without disturbing the Medicaid base.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-head">
     <h2>Top Opportunities</h2>
     <span class="desc">Largest absolute variances vs. budget · March</span>
   </div>
@@ -848,6 +931,58 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div class="rev-grid" id="rev-grid"></div>
+
+  <div class="section-head">
+    <h2>Revenue Commentary</h2>
+    <span class="desc">Net revenue, deductions, and bad debt narrative · March 2026</span>
+  </div>
+  <div class="section-divider"></div>
+  <div class="narrative-block">
+    <div class="narrative-grid">
+      <div class="narrative-card good">
+        <h3>Net Revenue</h3>
+        <ul>
+          <li><strong>Net Revenue of $6.46M exceeded budget</strong> — continued strong revenue performance driven by the Managed Medicaid concentration and DPP supplemental payments.</li>
+          <li>The bridge: rate/mix execution more than offset a 62-day census shortfall. Managed Medicaid contractuals ran favorable due to the underlying mix; volume was the headwind.</li>
+          <li>Net revenue per patient day of approximately <strong>$2,298 vs $1,943 budget (+18%)</strong> — this is a structural advantage, not a one-time event. YTD trajectory continues to support the durable EBITDA margin story.</li>
+          <li>IP Gross Revenue of $8.51M ran $232K below the $8.75M budget — the gross-to-net story is the entire favorable variance. Topline gross is slightly soft; net is strong.</li>
+          <li><span class="flag">Watch</span>Bed-base context: Highland is staffing 114 of its 138 licensed beds. Measured on the 114 staffed-bed denominator, March occupancy is approximately 79.5% — a useful operational view that the licensed-bed metric understates.</li>
+        </ul>
+      </div>
+      <div class="narrative-card warn">
+        <h3>Denials</h3>
+        <ul>
+          <li>Continue UR PI meetings and discipline-level retraining sessions — these are working. Documentation quality is the leading indicator of future denial volume.</li>
+          <li>ABH meetings should continue with focus on mutually beneficial contract refinement and clearer authorization pathways.</li>
+          <li><span class="flag">Action</span>Pull March denial dollar variance, total denied days, and recovery dollars from the Mid Month tab and update this commentary before submission.</li>
+          <li>YoY trend: validate whether denial rate is improving as a percentage of gross revenue — that's the right comparison, not absolute dollars.</li>
+        </ul>
+      </div>
+      <div class="narrative-card neutral">
+        <h3>Charity</h3>
+        <ul>
+          <li>With 74% Managed Medicaid concentration, charity should remain structurally low. Flag any month where this line exceeds budget by &gt;15% as it likely indicates a payer source classification issue rather than a true charity event.</li>
+          <li>Watch for patterns: extended-stay charity cases (more than 5 days) usually indicate eligibility process gaps that could be remediated upstream.</li>
+        </ul>
+      </div>
+      <div class="narrative-card neutral">
+        <h3>Admin Adjustments</h3>
+        <ul>
+          <li>No material admin adjustments in the period.</li>
+          <li>Standing reminder: any admin write-off greater than $5K should require dual approval and a written rationale entered in the AR system.</li>
+        </ul>
+      </div>
+      <div class="narrative-card warn">
+        <h3>Bad Debt</h3>
+        <ul>
+          <li>Total Bad Debt of $214K — IP at $186K, Physician at $5K. Validate against the budget once posted; the IP/Physician decomposition matters more than the headline.</li>
+          <li><span class="flag">Action</span>If Physician Bad Debt is materially unfavorable to budget, run an IP/Physician classification review before the variance compounds — this has been a recurring categorization issue.</li>
+          <li>AR aging context: the 90+ day bucket reflects WV Managed Medicaid adjudication timelines, not collection risk. Cash collections continuing to outpace monthly goal would confirm the underlying payer base is performing structurally.</li>
+          <li>YTD shortfall (if any) is most likely a timing issue tied to DPP payment cadence — separate timing from true collection risk in any escalation to Corporate.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 
   <div class="section-head">
     <h2>Strategic Insights</h2>
@@ -886,6 +1021,73 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="callout-container"></div>
+
+  <div class="section-head">
+    <h2>Expense Commentary</h2>
+    <span class="desc">Operating expense variance narrative · March 2026</span>
+  </div>
+  <div class="section-divider"></div>
+  <div class="narrative-block">
+    <div class="narrative-grid">
+      <div class="narrative-card good">
+        <h3>Salaries, Wages, and Benefits</h3>
+        <ul>
+          <li>Labor performed essentially at budget — Salaries <strong>$16K favorable</strong>, Benefits ($1K) unfavorable. Net result: management effectively flexed staffing for the census shortfall.</li>
+          <li><strong>Zero contract labor</strong> remains a meaningful operational achievement. This line drives material cost at many comparable facilities and continues to run clean here.</li>
+          <li><span class="flag bad">Coding Issue</span>General Salary line shows $286K unfavorable against the $297K budget while the parent category nets favorable. This indicates GL coding hygiene issue — staff hours flowing to "General" instead of properly sub-classified buckets. Recommend chart-of-accounts review before Q2 close.</li>
+          <li>Vacation/PTO of $49K ran $40K above the $9K budget — legitimate Q1 timing pattern as accruals hit the books. Not a watch item.</li>
+          <li>Worker Comp Claims Paid of $25K against zero budget — review for accrual or true-up adjustment treatment.</li>
+          <li><span class="flag">Watch</span>1:1 observation hours — track monthly trend. Supplemental staffing represents real labor cost outside standard FTE reporting (~$20-22/hour basis).</li>
+        </ul>
+      </div>
+      <div class="narrative-card good">
+        <h3>Purchased Services</h3>
+        <ul>
+          <li>Purchased Services <strong>$24K favorable</strong> at $145K vs $169K budget — IT systems, consulting, and contract timing well-managed.</li>
+          <li>Category is largely discretionary in timing, providing modest budget flex into Q2 if census ramp requires additional support spend.</li>
+          <li><span class="flag bad">Action</span>P/S Consulting at $25K ran $19K above the $6K budget (+293%). Validate scope, ensure approved engagement, and confirm deliverables are documented before next invoice cycle.</li>
+          <li><span class="flag bad">Action</span>P/S Laboratory at $39K ran $17K above the $22K budget (+79%). Investigate test volume drivers and validate against payer reimbursement — confirm send-out tests are clinically necessary versus convenience-driven.</li>
+          <li>P/S Housekeeping at $14K and Pharmacy at $3K running near budget — operational lines are stable.</li>
+        </ul>
+      </div>
+      <div class="narrative-card bad">
+        <h3>Pro Fees</h3>
+        <ul>
+          <li>Pro Fees <strong>($35K) unfavorable</strong> to budget. Root cause: $106K Dr Stipends recorded against a $0 budget for that line.</li>
+          <li>This is a cost-center mapping inconsistency, not true overspend. Stipend costs are coded to "Dr Stipends" in actuals while budget loaded them under "Other Professional Fees" — the dollars net out at the category level if categorized correctly.</li>
+          <li><span class="flag bad">Action</span>Correct GL code mapping before Q2 close to stop distorting variance optics every month.</li>
+          <li><span class="flag bad">Compliance</span>Confirm all physician compensation arrangements are documented under formal PSA/MSA agreements with FMV opinions on file. Informal stipend structures in a Medicaid/Medicare facility carry Anti-Kickback Statute exposure.</li>
+        </ul>
+      </div>
+      <div class="narrative-card good">
+        <h3>Supplies</h3>
+        <ul>
+          <li>Supplies <strong>$32K favorable</strong> at $74K vs $106K budget. Variable supply expense is flexing appropriately with the lower census — variable cost discipline is real.</li>
+          <li>Supplies PPD of <strong>$26.27 vs $37.06 budget</strong> — there is further favorable leverage available as census grows. Don't let this line creep when admissions ramp.</li>
+          <li>Food Supplies the largest single line at $43K — monitor as census recovers; this is the most volume-sensitive supply category.</li>
+          <li>Pharmacy Supplies at $7K running clean — confirm 340B program eligibility and capture is current if applicable.</li>
+        </ul>
+      </div>
+      <div class="narrative-card warn">
+        <h3>Other Expense</h3>
+        <ul>
+          <li>Repairs &amp; Maintenance <strong>$14K favorable</strong>. <span class="flag">Watch</span>In a 4th-floor expansion environment, R&amp;M underspend may be deferred work rather than true savings. Validate that planned facility readiness work is on schedule.</li>
+          <li><span class="flag bad">Timing Trap</span>Taxes line shows <strong>$407K "favorable"</strong> — primary driver is the WV provider tax accrual that did not post in March. This is timing, not a win. Escalate to Corporate Tax for Q2 catch-up confirmation and confirm whether DPP offset treatment applies.</li>
+          <li>Utilities essentially at budget overall — Natural Gas at $12K ran $7K above the $5K budget; review winter heating utilization patterns and validate against weather data.</li>
+          <li>Patient Transportation at $15K ran $10K above the $5K budget — likely volume-driven; validate trip utilization patterns and confirm no contract rate changes.</li>
+          <li>Travel and Entertainment running materially favorable — confirm this is sustainable rather than deferred Q1 activity that will catch up in Q2/Q3.</li>
+          <li>Insurance running modestly unfavorable on Worker Comp claims — track quarterly to confirm not the start of a trend.</li>
+        </ul>
+      </div>
+      <div class="narrative-card neutral">
+        <h3>Corporate Allocation</h3>
+        <ul>
+          <li>Corporate Allocation of $99K running approximately at budget — no commentary required unless allocation methodology changes.</li>
+          <li>Standing reminder: any restated allocation that materially changes prior-period EBITDA should be flagged in the Forecast section, not absorbed silently.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
 
   <div class="section-head">
     <h2>Trended Performance</h2>
@@ -1673,3 +1875,4 @@ render();
 </script>
 </body>
 </html>
+
