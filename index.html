@@ -638,26 +638,27 @@ table.detail tr:last-child td { border-bottom: none; }
 
 /* PER-ITEM NOTE BUTTONS */
 .note-btn {
-  background: none;
+  background: #f7f9fb;
   border: 1px solid var(--border);
   border-radius: 4px;
-  padding: 1px 7px;
+  padding: 3px 10px;
   font-size: 11px;
-  color: var(--muted);
+  font-weight: 600;
+  color: var(--teal-dark);
   cursor: pointer;
-  opacity: 0.45;
-  transition: opacity 0.15s, border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
   vertical-align: middle;
   white-space: nowrap;
   line-height: 1.4;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
-.note-btn:hover { opacity: 1; border-color: var(--teal); color: var(--teal); }
+.note-btn:hover { background: #eef2f5; border-color: var(--teal); color: var(--teal); }
 .note-btn.has-note {
-  opacity: 1;
   background: var(--warn-bg);
   border-color: var(--warn);
   color: #b07a1f;
-  font-weight: 600;
 }
 .note-btn .note-ico { font-size: 11px; }
 .narrative-card h3 .note-btn { float: right; margin-top: -1px; }
@@ -667,6 +668,47 @@ table.detail tr:last-child td { border-bottom: none; }
 .cat-name .note-btn { margin-left: auto; }
 table.detail td .note-btn { float: right; margin-left: 6px; }
 .callout-table td .note-btn { float: right; margin-left: 6px; }
+
+/* NOTE CALLOUT — inline display of note text */
+.note-callout {
+  background: var(--warn-bg);
+  border: 1px solid #e8d5a0;
+  border-left: 3px solid var(--warn);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+.note-callout .note-callout-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #b07a1f;
+  margin-bottom: 3px;
+}
+.note-callout-row {
+  background: var(--warn-bg);
+  border-left: 3px solid var(--warn);
+  padding: 6px 14px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  white-space: pre-wrap;
+}
+.note-callout-row td { background: var(--warn-bg) !important; padding: 6px 14px !important; }
+.note-callout-row .note-callout-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #b07a1f;
+  margin-bottom: 2px;
+}
 
 /* NOTE MODAL */
 .note-overlay {
@@ -1190,8 +1232,24 @@ function noteBtn(key, label) {
   const safeLabel = label.replace(/'/g, "\\'").replace(/"/g, '&quot;');
   return '<button class="note-btn' + has + '" data-note-key="' + key +
     '" onclick="event.stopPropagation();openNoteModal(\'' + key + '\',\'' + safeLabel + '\')">' +
-    '<span class="note-ico">' + (has ? '📝' : '📝') + '</span>' +
-    (has ? ' Note' : '') + '</button>';
+    '<span class="note-ico">📝</span>' +
+    (has ? 'Edit Note' : 'Add Note') + '</button>';
+}
+
+function noteCallout(key) {
+  const text = getNotes()[key];
+  if (!text) return '';
+  const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<div class="note-callout" data-note-callout="' + key + '">' +
+    '<div class="note-callout-label">Note</div>' + escaped + '</div>';
+}
+
+function noteCalloutRow(key, colspan) {
+  const text = getNotes()[key];
+  if (!text) return '';
+  const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return '<tr class="note-callout-row" data-note-callout="' + key + '"><td colspan="' + colspan + '">' +
+    '<div class="note-callout-label">Note</div>' + escaped + '</td></tr>';
 }
 
 function openNoteModal(key, label) {
@@ -1212,15 +1270,32 @@ function closeNoteModal() {
 
 function saveNoteFromModal() {
   const text = document.getElementById('note-modal-textarea').value;
-  saveNote(_noteCurrentKey, text);
+  const key = _noteCurrentKey;
+  saveNote(key, text);
   // Update all matching buttons on the page
-  document.querySelectorAll('.note-btn[data-note-key="' + _noteCurrentKey + '"]').forEach(btn => {
+  document.querySelectorAll('.note-btn[data-note-key="' + key + '"]').forEach(btn => {
     if (text && text.trim()) {
       btn.classList.add('has-note');
-      btn.innerHTML = '<span class="note-ico">📝</span> Note';
+      btn.innerHTML = '<span class="note-ico">📝</span>Edit Note';
     } else {
       btn.classList.remove('has-note');
-      btn.innerHTML = '<span class="note-ico">📝</span>';
+      btn.innerHTML = '<span class="note-ico">📝</span>Add Note';
+    }
+  });
+  // Update all matching callouts on the page
+  document.querySelectorAll('[data-note-callout="' + key + '"]').forEach(el => {
+    if (text && text.trim()) {
+      const escaped = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      // Check if it's a table row or div callout
+      if (el.tagName === 'TR') {
+        el.querySelector('td').innerHTML = '<div class="note-callout-label">Note</div>' + escaped;
+        el.style.display = '';
+      } else {
+        el.innerHTML = '<div class="note-callout-label">Note</div>' + escaped;
+        el.style.display = '';
+      }
+    } else {
+      el.style.display = 'none';
     }
   });
   closeNoteModal();
@@ -1822,7 +1897,7 @@ function renderCallouts() {
         '<td><span class="cl-var">▲ ' + fmt$(f.overspend) + '</span></td>' +
         '<td><span class="cl-pct">' + pctLabel + '</span></td>' +
         '<td>' + fmt$(f.ytd_act) + '</td>' +
-      '</tr>';
+      '</tr>' + noteCalloutRow('callout:' + f.gl, 7);
     }).join('') + '</tbody></table>';
 }
 
@@ -1952,6 +2027,7 @@ function renderOpps() {
       <div class="opp-cat">${c.name} ${noteBtn('opp:' + c.name, c.name)}</div>
       <div class="opp-amt">${fmt$(Math.abs(c.mar_var))}</div>
       <div class="opp-line">${lbl} · ${fmt$(c.mar_act)} actual</div>
+      ${noteCallout('opp:' + c.name)}
     </div>`;
   }).join('');
 }
@@ -2049,7 +2125,7 @@ function renderInsights() {
     <div class="insight ${i.type}">
       ${noteBtn(i.noteKey, i.noteKey.replace('insight:',''))}
       <div class="ico">${i.ico}</div>
-      <div class="body">${i.body}</div>
+      <div class="body">${i.body}${noteCallout(i.noteKey)}</div>
     </div>
   `).join('');
 }
@@ -2082,8 +2158,9 @@ function renderRevenue() {
 
 function narrativeCard(cls, title, bullets, noteKey) {
   const nb = noteKey ? ' ' + noteBtn(noteKey, title) : '';
+  const nc = noteKey ? noteCallout(noteKey) : '';
   return '<div class="narrative-card ' + cls + '"><h3>' + title + nb + '</h3><ul>' +
-    bullets.map(b => '<li>' + b + '</li>').join('') + '</ul></div>';
+    bullets.map(b => '<li>' + b + '</li>').join('') + '</ul>' + nc + '</div>';
 }
 function flag(cls, label) { return '<span class="flag ' + cls + '">' + label + '</span>'; }
 
@@ -2337,6 +2414,7 @@ function renderCategories() {
       <td>${sparkline(c.monthly_act, c.monthly_bud, color)}</td>
       <td><span class="status-pill ${statusCls}">${status}</span></td>
     </tr>`;
+    html += noteCalloutRow('cat:' + c.name, 9);
 
     html += `<tr class="detail-row" id="det-${idx}"><td colspan="9"><div class="detail-wrap">
       <h4>${c.name} — GL Account Detail <span>${c.details.length} active line items</span></h4>
@@ -2373,7 +2451,7 @@ function renderCategories() {
             <td>${fmtD(dYA)}</td>
             <td>${fmtD(dYB)}</td>
             <td>${yVarHtml}</td>
-          </tr>`;
+          </tr>` + noteCalloutRow('gl:' + d.gl, 8);
         }).join('')}
         </tbody>
       </table>
