@@ -850,6 +850,9 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         </div>
       </div>
       <div class="upload-actions">
+        <label style="font-size:0.82rem;color:var(--muted);margin-right:8px;">Staffed Beds
+          <input id="staffed-beds-input" type="number" min="1" max="999" style="width:60px;margin-left:4px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.85rem;" onchange="setStaffedBeds(this.value)">
+        </label>
         <button class="btn-clear" onclick="clearStored()">Clear Data</button>
       </div>
     </div>
@@ -1134,6 +1137,39 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 <script>
 let DATA = {};
 let view = 'dollars';
+const BEDS_KEY = 'highland_mor_beds';
+
+function getDaysInMonth() {
+  // Derive from patient days and ADC if deck data available
+  if (DATA.deck) {
+    const ipDays = DATA.deck.volume.find(v => v.label === 'Inpatient Days');
+    const adc = DATA.deck.volume.find(v => v.label === 'ADC');
+    if (ipDays && adc && adc.act > 0) return Math.round(ipDays.act / adc.act);
+  }
+  // Fallback: derive from monthly_act array position
+  if (DATA.patient_days && DATA.patient_days.monthly_act) {
+    const idx = getCurrentMonthIdx();
+    const acts = DATA.patient_days.monthly_act;
+    // Use common month lengths
+    const mdays = [31,28,31,30,31,30,31,31,30,31,30,31];
+    return mdays[idx] || 31;
+  }
+  return 31;
+}
+
+function getStaffedBeds() {
+  try {
+    const stored = localStorage.getItem(BEDS_KEY);
+    if (stored) return Number(stored);
+  } catch(e) {}
+  return 114; // default staffed beds
+}
+
+function setStaffedBeds(n) {
+  const val = parseInt(n, 10);
+  if (isNaN(val) || val <= 0) return;
+  localStorage.setItem(BEDS_KEY, val);
+}
 
 // =========================================================================
 // FILE UPLOAD + PERSISTENCE
@@ -1157,6 +1193,20 @@ function setStatus(msg, cls) {
   el.innerHTML = cls ? '<span class="' + cls + '">' + msg + '</span>' : msg;
 }
 
+function recalcOccupancy() {
+  if (!DATA.deck) return;
+  const staffedBeds = getStaffedBeds();
+  if (staffedBeds <= 0) return;
+  const occ = DATA.deck.volume.find(v => v.label === 'Occupancy');
+  const adc = DATA.deck.volume.find(v => v.label === 'ADC');
+  if (occ && adc) {
+    occ.act = adc.act / staffedBeds;
+    occ.bud = adc.bud / staffedBeds;
+    occ.var = occ.act - occ.bud;
+    if (adc.py > 0) occ.py = adc.py / staffedBeds;
+  }
+}
+
 function loadStored() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -1164,6 +1214,7 @@ function loadStored() {
     if (raw) {
       const stored = JSON.parse(raw);
       DATA = stored;
+      recalcOccupancy();
       if (meta) {
         const m = JSON.parse(meta);
         if (m.analytic) {
@@ -1412,6 +1463,23 @@ function parseDeck(wb) {
       grab(30,'PHP w/ Boarding'), grab(31,'IOP w/ Boarding'),
     ].filter(s => s.act !== 0 || s.bud !== 0 || s.py !== 0),
   };
+
+  // Recalculate occupancy from ADC / staffed beds — source formula is unreliable
+  const staffedBeds = getStaffedBeds();
+  if (staffedBeds > 0) {
+    const occ = deck.volume.find(v => v.label === 'Occupancy');
+    const adc = deck.volume.find(v => v.label === 'ADC');
+    if (occ && adc) {
+      occ.act = adc.act / staffedBeds;
+      occ.bud = adc.bud / staffedBeds;
+      occ.var = occ.act - occ.bud;
+      if (occ.py && occ.py > 1) occ.py = occ.py / staffedBeds; // fix PY if also raw
+      // Recalc PY from PY ADC if available
+      const pyAdc = adc.py;
+      if (pyAdc > 0) occ.py = pyAdc / staffedBeds;
+    }
+  }
+
   return { deck };
 }
 
@@ -1484,12 +1552,17 @@ function renderVolumeTables() {
     const isPct = v.label === 'Occupancy';
     const isDec = ['LOS','ADC','Equivalent ADC'].indexOf(v.label) >= 0;
     const f = (n) => isPct ? (n*100).toFixed(1)+'%' : isDec ? n.toFixed(1) : Math.round(n).toLocaleString();
-    const varCls = v.var > 0 ? 'var-down' : (v.var < 0 ? 'var-up' : 'var-flat');
+    // For LOS: lower is better (positive var = unfavorable = red var-up)
+    // For all others: higher is better (positive var = favorable = green var-down)
+    const isLOS = v.label === 'LOS';
+    const favorable = isLOS ? (v.var < 0) : (v.var > 0);
+    const varCls = v.var === 0 ? 'var-flat' : (favorable ? 'var-down' : 'var-up');
     const varAbs = isPct ? Math.abs(v.var*100).toFixed(1)+' pts' : isDec ? Math.abs(v.var).toFixed(1) : Math.abs(Math.round(v.var)).toLocaleString();
     return '<tr><td>' + v.label + '</td><td>' + f(v.act) + '</td><td>' + f(v.bud) + '</td><td><span class="' + varCls + '">' + varAbs + '</span></td><td>' + f(v.py) + '</td></tr>';
   }).join('');
   const a = d.admissions;
-  const aVarCls = a.var > 0 ? 'var-down' : 'var-up';
+  // Admissions: higher is better — positive var = favorable
+  const aVarCls = a.var > 0 ? 'var-down' : (a.var < 0 ? 'var-up' : 'var-flat');
   document.getElementById('vol-tbl').innerHTML =
     '<thead><tr><th>Metric</th><th>Actual</th><th>Budget</th><th>Var</th><th>PY</th></tr></thead>' +
     '<tbody>' +
@@ -1501,9 +1574,9 @@ function renderVolumeTables() {
     const budPct = (p.bud*100).toFixed(1);
     const diff = p.act - p.bud;
     const varPts = Math.abs(diff*100).toFixed(1);
-    const varCls = diff > 0 ? 'var-down' : (diff < 0 ? 'var-up' : 'var-flat');
+    const sign = diff > 0 ? '+' : (diff < 0 ? '−' : '');
     const barW = Math.max(2, p.act*100*1.2);
-    return '<tr><td><span class="mix-bar" style="width:' + barW + 'px"></span>' + p.label + '</td><td>' + pct + '%</td><td>' + budPct + '%</td><td><span class="' + varCls + '">' + varPts + ' pts</span></td></tr>';
+    return '<tr><td><span class="mix-bar" style="width:' + barW + 'px"></span>' + p.label + '</td><td>' + pct + '%</td><td>' + budPct + '%</td><td>' + sign + varPts + ' pts</td></tr>';
   }).join('');
   document.getElementById('payor-tbl').innerHTML =
     '<thead><tr><th>Payor</th><th>Actual</th><th>Budget</th><th>Var</th></tr></thead>' +
@@ -1514,9 +1587,9 @@ function renderVolumeTables() {
     const budPct = (s.bud*100).toFixed(1);
     const diff = s.act - s.bud;
     const varPts = Math.abs(diff*100).toFixed(1);
-    const varCls = diff > 0 ? 'var-down' : (diff < 0 ? 'var-up' : 'var-flat');
+    const sign = diff > 0 ? '+' : (diff < 0 ? '−' : '');
     const barW = Math.max(2, s.act*100*1.2);
-    return '<tr><td><span class="mix-bar" style="width:' + barW + 'px;background:#7d5fa3"></span>' + s.label + '</td><td>' + pct + '%</td><td>' + budPct + '%</td><td><span class="' + varCls + '">' + varPts + ' pts</span></td></tr>';
+    return '<tr><td><span class="mix-bar" style="width:' + barW + 'px;background:#7d5fa3"></span>' + s.label + '</td><td>' + pct + '%</td><td>' + budPct + '%</td><td>' + sign + varPts + ' pts</td></tr>';
   }).join('');
   document.getElementById('svc-tbl').innerHTML =
     '<thead><tr><th>Service</th><th>Actual</th><th>Budget</th><th>Var</th></tr></thead>' +
@@ -1729,8 +1802,9 @@ function renderKPIs() {
   const pd = DATA.patient_days;
   const ebMargin = (eb.mar_act / nr.mar_act * 100);
   const ebMarginBud = (eb.mar_bud / nr.mar_bud * 100);
-  const adc = (pd.mar_act / 31);
-  const adcBud = (pd.mar_bud / 31);
+  const daysInMonth = getDaysInMonth();
+  const adc = (pd.mar_act / daysInMonth);
+  const adcBud = (pd.mar_bud / daysInMonth);
 
   const kpis = [
     { c:'c1', label:'Net Revenue',
@@ -1945,6 +2019,7 @@ function toggleDetail(idx) {
   catRow.classList.toggle('expanded');
 }
 
+document.getElementById('staffed-beds-input').value = getStaffedBeds();
 loadStored();
 render();
 </script>
