@@ -798,6 +798,141 @@ table.detail td .note-btn { float: right; margin-left: 6px; }
 }
 .note-btn-delete:hover { text-decoration: underline; }
 
+/* THRESHOLDS MODAL */
+.thresh-panel {
+  background: #ffffff;
+  border-radius: 8px;
+  width: 960px;
+  max-width: 96vw;
+  max-height: 92vh;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.thresh-head {
+  padding: 18px 22px 8px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.thresh-head h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.thresh-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 22px 0;
+  border-bottom: 1px solid var(--border);
+  background: #f7f9fb;
+}
+.thresh-tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: -1px;
+}
+.thresh-tab:hover { color: var(--teal-dark); }
+.thresh-tab.active {
+  color: var(--teal-dark);
+  border-bottom-color: var(--teal);
+  background: #ffffff;
+}
+.thresh-body {
+  padding: 16px 22px;
+  overflow: auto;
+  flex: 1;
+}
+.thresh-tab-pane { display: none; }
+.thresh-tab-pane.active { display: block; }
+.thresh-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.thresh-table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  background: #f7f9fb;
+  position: sticky;
+  top: 0;
+}
+.thresh-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--ink);
+  vertical-align: middle;
+}
+.thresh-table td.label-cell {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.thresh-table td .hint {
+  color: var(--muted-2);
+  font-size: 10px;
+  margin-left: 6px;
+}
+.thresh-table input[type="number"] {
+  width: 90px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  text-align: right;
+}
+.thresh-table input[type="number"]:focus {
+  outline: none;
+  border-color: var(--teal);
+}
+.thresh-table input[type="number"]::placeholder {
+  color: var(--muted-2);
+  font-style: italic;
+}
+.thresh-search {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  margin-bottom: 10px;
+}
+.thresh-search:focus { outline: none; border-color: var(--teal); }
+.thresh-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.thresh-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 22px;
+  border-top: 1px solid var(--border-soft);
+  background: #f7f9fb;
+}
+.thresh-actions .right { display: flex; gap: 8px; }
+.thresh-pane-intro {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
 /* UNFAVORABLE LINE ITEM CALLOUTS */
 .callout-table {
   width: 100%; border-collapse: collapse; margin-bottom: 32px;
@@ -1218,6 +1353,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <div class="header-right">
       <div class="section-pill">MOR DEEP DIVE</div>
       <div class="date-stamp" id="date-stamp"></div>
+      <button class="print-btn" onclick="openThresholdsModal()"><span class="print-icon">⚙</span> Thresholds</button>
       <button class="print-btn" onclick="printReport()"><span class="print-icon">⎙</span> Print</button>
     </div>
   </div>
@@ -1371,7 +1507,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   <div class="section-head">
     <h2>Line-Item Variance Alerts</h2>
-    <span class="desc">Unfavorable variances exceeding $2,000 AND 10% of budget · Material spend anomalies</span>
+    <span class="desc" id="callout-desc">Unfavorable variances exceeding global thresholds · Material spend anomalies · Edit in ⚙ Thresholds</span>
   </div>
   <div class="section-divider"></div>
   <div id="callout-container"></div>
@@ -1413,10 +1549,40 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
 </div>
 
+<!-- Thresholds Modal -->
+<div class="note-overlay hidden" id="thresh-modal" onclick="if(event.target===this)closeThresholdsModal()">
+  <div class="thresh-panel">
+    <div class="thresh-head">
+      <h4>Thresholds</h4>
+      <div class="note-sub">Configure materiality thresholds for callouts, status pills, and commentary. Blank fields inherit from the next level up.</div>
+    </div>
+    <div class="thresh-tabs">
+      <button class="thresh-tab active" data-tab="global" onclick="switchThreshTab('global')">Global defaults</button>
+      <button class="thresh-tab" data-tab="category" onclick="switchThreshTab('category')">Per-category</button>
+      <button class="thresh-tab" data-tab="gl" onclick="switchThreshTab('gl')">Per-GL account</button>
+    </div>
+    <div class="thresh-body">
+      <div class="thresh-tab-pane active" id="thresh-pane-global"></div>
+      <div class="thresh-tab-pane" id="thresh-pane-category"></div>
+      <div class="thresh-tab-pane" id="thresh-pane-gl">
+        <input type="text" id="thresh-gl-search" placeholder="Search GL or description..." class="thresh-search" oninput="filterThresholdGL()">
+        <div id="thresh-gl-table-wrap"></div>
+      </div>
+    </div>
+    <div class="thresh-actions">
+      <button class="note-btn-delete" onclick="resetThresholdsToDefaults()">Reset to defaults</button>
+      <div class="right">
+        <button class="note-btn-cancel" onclick="closeThresholdsModal()">Cancel</button>
+        <button class="note-btn-save" onclick="saveThresholdsFromModal()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 let DATA = {};
 let view = 'dollars';
-const BEDS_KEY = 'highland_mor_beds';
+const BEDS_KEY = 'mor_beds';
 
 function printReport() {
   // Expand all collapsed GL detail rows so they appear in print
@@ -1451,9 +1617,12 @@ function getDaysInMonth() {
 function getStaffedBeds() {
   try {
     const stored = localStorage.getItem(BEDS_KEY);
-    if (stored) return Number(stored);
+    if (stored) {
+      const n = Number(stored);
+      if (!isNaN(n) && n > 0) return n;
+    }
   } catch(e) {}
-  return 114; // default staffed beds
+  return null; // no default — caller must guard
 }
 
 function setStaffedBeds(n) {
@@ -1465,9 +1634,266 @@ function setStaffedBeds(n) {
 // =========================================================================
 // FILE UPLOAD + PERSISTENCE
 // =========================================================================
-const STORAGE_KEY = 'highland_mor_data_v2';
-const STORAGE_META_KEY = 'highland_mor_meta_v2';
-const NOTES_KEY = 'highland_mor_notes';
+const STORAGE_KEY = 'mor_data_v2';
+const STORAGE_META_KEY = 'mor_meta_v2';
+const NOTES_KEY = 'mor_notes';
+const THRESHOLDS_KEY = 'mor_thresholds';
+
+// =========================================================================
+// USER-EDITABLE THRESHOLDS — global + per-category + per-GL overrides
+// =========================================================================
+const THRESHOLD_DEFAULTS = {
+  callout_min_dollars: 2000,
+  callout_min_pct:     0.10,
+  status_action_pct:   15,
+  status_watch_pct:    5,
+  detail_unfav_min:    2000,
+  detail_fav_min:      10000,
+};
+
+// Which threshold keys apply at which scope
+const THRESHOLD_KEYS_ALL = ['callout_min_dollars','callout_min_pct','detail_unfav_min','detail_fav_min','status_action_pct','status_watch_pct'];
+const THRESHOLD_KEYS_GL  = ['callout_min_dollars','callout_min_pct','detail_unfav_min','detail_fav_min']; // status pills are category-only
+
+const THRESHOLD_META = {
+  callout_min_dollars: { label: 'Callout min $',       kind: 'dollars' },
+  callout_min_pct:     { label: 'Callout min %',       kind: 'percent' },
+  status_action_pct:   { label: 'Status Action %',     kind: 'percent_whole' },
+  status_watch_pct:    { label: 'Status Watch %',      kind: 'percent_whole' },
+  detail_unfav_min:    { label: 'Detail unfav min $',  kind: 'dollars' },
+  detail_fav_min:      { label: 'Detail fav min $',    kind: 'dollars' },
+};
+
+function loadThresholds() {
+  try {
+    const raw = localStorage.getItem(THRESHOLDS_KEY);
+    if (!raw) return { global: {}, categoryOverrides: {}, glOverrides: {} };
+    const parsed = JSON.parse(raw);
+    return {
+      global:            parsed.global            || {},
+      categoryOverrides: parsed.categoryOverrides || {},
+      glOverrides:       parsed.glOverrides       || {},
+    };
+  } catch (e) {
+    return { global: {}, categoryOverrides: {}, glOverrides: {} };
+  }
+}
+
+function saveThresholds(cfg) {
+  localStorage.setItem(THRESHOLDS_KEY, JSON.stringify(cfg));
+}
+
+function getThreshold(type, category, gl) {
+  const t = loadThresholds();
+  if (category && gl) {
+    const key = category + '::' + gl;
+    const ov = t.glOverrides[key];
+    if (ov && ov[type] != null) return ov[type];
+  }
+  if (category) {
+    const ov = t.categoryOverrides[category];
+    if (ov && ov[type] != null) return ov[type];
+  }
+  if (t.global && t.global[type] != null) return t.global[type];
+  return THRESHOLD_DEFAULTS[type];
+}
+
+// Draft buffer used while the modal is open; committed to localStorage on Save
+let _threshDraft = null;
+
+function formatThresholdValue(type, v) {
+  const kind = THRESHOLD_META[type].kind;
+  if (v == null || v === '') return '';
+  if (kind === 'percent') return (v * 100).toFixed(1) + '%';
+  if (kind === 'percent_whole') return v + '%';
+  return '$' + Number(v).toLocaleString();
+}
+
+function parseThresholdInput(type, rawVal) {
+  if (rawVal === '' || rawVal == null) return null;
+  const n = Number(rawVal);
+  if (isNaN(n)) return null;
+  if (THRESHOLD_META[type].kind === 'percent') return n / 100; // user enters 10 → stored 0.10
+  return n;
+}
+
+function thresholdInputDisplay(type, v) {
+  if (v == null) return '';
+  if (THRESHOLD_META[type].kind === 'percent') return (v * 100).toString();
+  return String(v);
+}
+
+function openThresholdsModal() {
+  _threshDraft = JSON.parse(JSON.stringify(loadThresholds()));
+  renderThreshGlobalPane();
+  renderThreshCategoryPane();
+  renderThreshGLPane();
+  switchThreshTab('global');
+  document.getElementById('thresh-modal').classList.remove('hidden');
+}
+
+function closeThresholdsModal() {
+  _threshDraft = null;
+  document.getElementById('thresh-modal').classList.add('hidden');
+}
+
+function switchThreshTab(name) {
+  document.querySelectorAll('.thresh-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.tab === name);
+  });
+  document.querySelectorAll('.thresh-tab-pane').forEach(p => {
+    p.classList.toggle('active', p.id === 'thresh-pane-' + name);
+  });
+}
+
+function renderThreshGlobalPane() {
+  const pane = document.getElementById('thresh-pane-global');
+  const g = _threshDraft.global || {};
+  const rows = THRESHOLD_KEYS_ALL.map(k => {
+    const meta = THRESHOLD_META[k];
+    const def  = THRESHOLD_DEFAULTS[k];
+    const cur  = g[k];
+    const display = thresholdInputDisplay(k, cur);
+    const defDisplay = thresholdInputDisplay(k, def);
+    const unit = meta.kind === 'percent' || meta.kind === 'percent_whole' ? '%' : '$';
+    return '<tr>' +
+      '<td class="label-cell">' + meta.label + '<span class="hint">default ' + formatThresholdValue(k, def) + '</span></td>' +
+      '<td><input type="number" step="any" data-key="' + k + '" value="' + display + '" placeholder="' + defDisplay + '"> <span class="hint">' + unit + '</span></td>' +
+      '</tr>';
+  }).join('');
+  pane.innerHTML =
+    '<div class="thresh-pane-intro">These apply when no category or GL override is set. Leave blank to use the shipped default.</div>' +
+    '<table class="thresh-table"><thead><tr><th>Threshold</th><th>Value</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  pane.querySelectorAll('input[data-key]').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const key = e.target.dataset.key;
+      const val = parseThresholdInput(key, e.target.value);
+      if (val == null) delete _threshDraft.global[key];
+      else _threshDraft.global[key] = val;
+    });
+  });
+}
+
+function renderThreshCategoryPane() {
+  const pane = document.getElementById('thresh-pane-category');
+  const cats = (DATA.categories || []).map(c => c.name);
+  if (cats.length === 0) {
+    pane.innerHTML = '<div class="thresh-empty">Upload financial data to configure per-category thresholds.</div>';
+    return;
+  }
+  const headCells = THRESHOLD_KEYS_ALL.map(k =>
+    '<th>' + THRESHOLD_META[k].label + '</th>'
+  ).join('');
+  const rows = cats.map(name => {
+    const ov = (_threshDraft.categoryOverrides[name] = _threshDraft.categoryOverrides[name] || {});
+    const cells = THRESHOLD_KEYS_ALL.map(k => {
+      const inherited = getThreshold(k, null, null); // global or default (pre-draft)
+      // Show the draft's global value as the effective inherited for placeholder
+      const draftGlobal = (_threshDraft.global && _threshDraft.global[k] != null) ? _threshDraft.global[k] : THRESHOLD_DEFAULTS[k];
+      const display = thresholdInputDisplay(k, ov[k]);
+      const placeholder = thresholdInputDisplay(k, draftGlobal);
+      return '<td><input type="number" step="any" data-cat="' + name.replace(/"/g, '&quot;') + '" data-key="' + k + '" value="' + display + '" placeholder="' + placeholder + '"></td>';
+    }).join('');
+    return '<tr><td class="label-cell">' + name + '</td>' + cells + '</tr>';
+  }).join('');
+  pane.innerHTML =
+    '<div class="thresh-pane-intro">Blank cells inherit from Global. Values you set here apply to every GL in that category unless overridden on the GL tab.</div>' +
+    '<table class="thresh-table"><thead><tr><th>Category</th>' + headCells + '</tr></thead><tbody>' + rows + '</tbody></table>';
+  pane.querySelectorAll('input[data-cat]').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const cat = e.target.dataset.cat;
+      const key = e.target.dataset.key;
+      const val = parseThresholdInput(key, e.target.value);
+      const ov = _threshDraft.categoryOverrides[cat] = _threshDraft.categoryOverrides[cat] || {};
+      if (val == null) delete ov[key];
+      else ov[key] = val;
+    });
+  });
+}
+
+function renderThreshGLPane() {
+  const wrap = document.getElementById('thresh-gl-table-wrap');
+  const cats = DATA.categories || [];
+  const flat = [];
+  for (const cat of cats) {
+    for (const d of cat.details) {
+      flat.push({ category: cat.name, gl: d.gl || '', desc: d.desc || '' });
+    }
+  }
+  if (flat.length === 0) {
+    wrap.innerHTML = '<div class="thresh-empty">Upload financial data to configure per-GL thresholds.</div>';
+    return;
+  }
+  const headCells = THRESHOLD_KEYS_GL.map(k =>
+    '<th>' + THRESHOLD_META[k].label + '</th>'
+  ).join('');
+  const rowsHtml = flat.map(r => {
+    const key = r.category + '::' + r.gl;
+    const ov = (_threshDraft.glOverrides[key] = _threshDraft.glOverrides[key] || {});
+    const cells = THRESHOLD_KEYS_GL.map(k => {
+      // Placeholder shows what this GL would inherit (category override or global)
+      const catOv = (_threshDraft.categoryOverrides[r.category] || {})[k];
+      const gOv   = _threshDraft.global[k];
+      const inheritVal = catOv != null ? catOv : (gOv != null ? gOv : THRESHOLD_DEFAULTS[k]);
+      const display = thresholdInputDisplay(k, ov[k]);
+      const placeholder = thresholdInputDisplay(k, inheritVal);
+      return '<td><input type="number" step="any" data-gl-key="' + key.replace(/"/g, '&quot;') + '" data-key="' + k + '" value="' + display + '" placeholder="' + placeholder + '"></td>';
+    }).join('');
+    const safeDesc = (r.desc || '').toString().replace(/</g, '&lt;');
+    return '<tr data-row-text="' + (r.gl + ' ' + r.desc + ' ' + r.category).toLowerCase().replace(/"/g, '&quot;') + '">' +
+      '<td class="label-cell">' + r.category + '</td>' +
+      '<td>' + (r.gl || '—') + '</td>' +
+      '<td>' + safeDesc + '</td>' +
+      cells +
+      '</tr>';
+  }).join('');
+  wrap.innerHTML =
+    '<div class="thresh-pane-intro">Blank cells inherit from Category, then Global. Status-pill thresholds are not available at the GL level (they apply to whole categories).</div>' +
+    '<table class="thresh-table"><thead><tr><th>Category</th><th>GL</th><th>Description</th>' + headCells + '</tr></thead><tbody>' + rowsHtml + '</tbody></table>';
+  wrap.querySelectorAll('input[data-gl-key]').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const k = e.target.dataset.key;
+      const rowKey = e.target.dataset.glKey;
+      const val = parseThresholdInput(k, e.target.value);
+      const ov = _threshDraft.glOverrides[rowKey] = _threshDraft.glOverrides[rowKey] || {};
+      if (val == null) delete ov[k];
+      else ov[k] = val;
+    });
+  });
+}
+
+function filterThresholdGL() {
+  const q = document.getElementById('thresh-gl-search').value.toLowerCase().trim();
+  document.querySelectorAll('#thresh-gl-table-wrap tbody tr').forEach(tr => {
+    const text = tr.getAttribute('data-row-text') || '';
+    tr.style.display = !q || text.includes(q) ? '' : 'none';
+  });
+}
+
+function saveThresholdsFromModal() {
+  // Prune empty override objects
+  Object.keys(_threshDraft.categoryOverrides).forEach(k => {
+    if (Object.keys(_threshDraft.categoryOverrides[k]).length === 0) {
+      delete _threshDraft.categoryOverrides[k];
+    }
+  });
+  Object.keys(_threshDraft.glOverrides).forEach(k => {
+    if (Object.keys(_threshDraft.glOverrides[k]).length === 0) {
+      delete _threshDraft.glOverrides[k];
+    }
+  });
+  saveThresholds(_threshDraft);
+  closeThresholdsModal();
+  if (typeof render === 'function') render();
+}
+
+function resetThresholdsToDefaults() {
+  if (!confirm('Clear all threshold overrides and revert to shipped defaults?')) return;
+  _threshDraft = { global: {}, categoryOverrides: {}, glOverrides: {} };
+  renderThreshGlobalPane();
+  renderThreshCategoryPane();
+  renderThreshGLPane();
+}
 
 // =========================================================================
 // PER-ITEM NOTES — modal-based notes on individual commentary items
@@ -1591,7 +2017,7 @@ function setStatus(msg, cls) {
 function recalcOccupancy() {
   if (!DATA.deck) return;
   const staffedBeds = getStaffedBeds();
-  if (staffedBeds <= 0) return;
+  if (!staffedBeds || staffedBeds <= 0) return;
   const occ = DATA.deck.volume.find(v => v.label === 'Occupancy');
   const adc = DATA.deck.volume.find(v => v.label === 'ADC');
   if (occ && adc) {
@@ -1752,6 +2178,23 @@ function parseAnalytic(wb) {
   const total_opex = grab(65);
   const ebitda = grab(66);
 
+  // Template validation — catch mismatched workbook layouts early
+  const expectLabel = (obj, words, rowHint, friendly) => {
+    const got = (obj.desc || '').toString().toLowerCase();
+    if (!got || !words.every(w => got.includes(w))) {
+      throw new Error(
+        'Template mismatch at row ' + rowHint + ': expected "' + friendly +
+        '" (label containing ' + JSON.stringify(words) + ') but got "' +
+        (obj.desc == null ? '' : obj.desc) + '". The Month End Analytic template may have changed layout.'
+      );
+    }
+  };
+  expectLabel(ip_gross,       ['gross'],            10, 'IP Gross Revenue');
+  expectLabel(ip_contractual, ['contractual'],      11, 'IP Contractuals');
+  expectLabel(net_revenue,    ['net','revenue'],    46, 'Net Revenue');
+  expectLabel(total_opex,     ['total'],            65, 'Total Operating Expenses');
+  expectLabel(ebitda,         ['ebitda'],           66, 'EBITDA');
+
   for (const obj of [net_revenue, total_opex, ebitda]) {
     obj.ppd_mar = pd_mar ? obj.mar_act / pd_mar : 0;
     obj.ppd_bud = pd_bud ? obj.mar_bud / pd_bud : 0;
@@ -1781,6 +2224,15 @@ function parseAnalytic(wb) {
   const categories = [];
   for (const [name, cfg] of Object.entries(DETAILS)) {
     const parent = grab(cfg.parent);
+    // Validate the parent row label contains at least the first significant word of the category name
+    const parentDesc = (parent.desc || '').toString().toLowerCase();
+    const firstWord = name.split(/[\s&\/]+/).filter(Boolean)[0].toLowerCase();
+    if (!parentDesc.includes(firstWord)) {
+      throw new Error(
+        'Template mismatch at row ' + cfg.parent + ': expected category "' + name +
+        '" but got "' + (parent.desc == null ? '' : parent.desc) + '". The Month End Analytic template may have changed layout.'
+      );
+    }
     const ppdLookup = {};
     if (cfg.ppd) {
       for (const pr of cfg.ppd) {
@@ -1841,6 +2293,25 @@ function parseDeck(wb) {
     py: num(cellVal(r, 11)),
     py_var: num(cellVal(r, 12)),
   });
+
+  // Template validation — the grab() function uses hard-coded labels but the
+  // expected label text should also appear in column A of the sheet
+  const expectDeckLabel = (row, words, friendly) => {
+    const raw = cellVal(row, 1);
+    const got = (raw == null ? '' : raw.toString()).toLowerCase();
+    if (!got || !words.every(w => got.includes(w))) {
+      throw new Error(
+        'Template mismatch at row ' + row + ' of MOR_MTD: expected "' + friendly +
+        '" (label containing ' + JSON.stringify(words) + ') but got "' + (raw || '') +
+        '". The MOR Standard Deck template may have changed layout.'
+      );
+    }
+  };
+  expectDeckLabel(5,  ['admission'],     'Admissions');
+  expectDeckLabel(14, ['inpatient','day'], 'Inpatient Days');
+  expectDeckLabel(15, ['los'],           'LOS');
+  expectDeckLabel(16, ['adc'],           'ADC');
+  expectDeckLabel(17, ['occupancy'],     'Occupancy');
 
   const deck = {
     admissions: grab(5, 'Admissions'),
@@ -2106,20 +2577,20 @@ function renderTrends() {
 }
 
 function renderCallouts() {
-  const THRESHOLD_DOLLARS = 2000;
-  const THRESHOLD_PCT = 0.10;
   const flagged = [];
 
   for (const cat of DATA.categories) {
     for (const d of cat.details) {
       // d.mar_var = mar_bud - mar_act; unfavorable when negative (act > bud)
       const overspend = -d.mar_var; // positive number = how much over budget
-      if (overspend < THRESHOLD_DOLLARS) continue;
+      const minDollars = getThreshold('callout_min_dollars', cat.name, d.gl);
+      const minPct     = getThreshold('callout_min_pct',     cat.name, d.gl);
+      if (overspend < minDollars) continue;
       // Pct test: handle zero/negative budget case
       let pctOver;
       if (d.mar_bud > 0) {
         pctOver = overspend / d.mar_bud;
-        if (pctOver < THRESHOLD_PCT) continue;
+        if (pctOver < minPct) continue;
       } else {
         // No budget at all — flag if overspend material
         pctOver = null;
@@ -2308,7 +2779,12 @@ function renderInsights() {
     const pdVar = pd.mar_act - pd.mar_bud;
     let context = '';
     if (ebFav && pdVar < 0) {
-      context = ' despite a ' + Math.abs(Math.round(pdVar)) + '-day census shortfall — rate/mix execution offset volume headwinds.';
+      const ppdFavCtx = nr.ppd_mar > nr.ppd_bud;
+      if (ppdFavCtx) {
+        context = ' despite a ' + Math.abs(Math.round(pdVar)) + '-day census shortfall — rate/mix execution offset volume headwinds.';
+      } else {
+        context = ' despite a ' + Math.abs(Math.round(pdVar)) + '-day census shortfall — driver should be confirmed.';
+      }
     } else if (ebFav) {
       context = ' — strong operational execution.';
     } else {
@@ -2327,7 +2803,7 @@ function renderInsights() {
     if (DATA.deck) {
       const medicaid = DATA.deck.payor_mix.find(p => p.label === 'Medicaid');
       if (medicaid && medicaid.act >= 0.50) {
-        payorNote = ' Medicaid concentration at ' + (medicaid.act * 100).toFixed(0) + '% of admissions is the structural driver.';
+        payorNote = ' Medicaid accounts for ' + (medicaid.act * 100).toFixed(0) + '% of admissions.';
       }
     }
     insights.push({ type: ppdFav ? 'good' : 'warn', ico: '💎', noteKey: 'insight:PPD',
@@ -2366,14 +2842,13 @@ function renderInsights() {
       }
     }
 
-    // Contract labor zero check
-    if (cat.name === 'Contract Labor' && cat.mar_act === 0 && cat.mar_bud >= 0) {
+    // Contract labor zero check — only an achievement if budget was > 0
+    if (cat.name === 'Contract Labor' && cat.mar_act === 0 && cat.mar_bud > 0) {
       body += ' Zero contract labor is a meaningful operational achievement.';
     }
 
     let type;
-    if (fav && varAbs > 20000) type = 'good';
-    else if (fav) type = 'good';
+    if (fav) type = 'good';
     else if (Math.abs(varPct) > 15) type = 'bad';
     else type = 'warn';
 
@@ -2514,11 +2989,14 @@ function renderVolumeCommentary() {
   if (medicare) payorBullets.push('Medicare FFS at ' + (medicare.act*100).toFixed(1) + '% of admissions.');
   if (commercial) payorBullets.push('Commercial mix at ' + (commercial.act*100).toFixed(1) + '%.');
 
-  // Occupancy line
-  const occBullets = [
-    'Occupancy of <strong>' + (occ.act*100).toFixed(1) + '% vs ' + (occ.bud*100).toFixed(1) + '% budget</strong> on ' + staffed + ' staffed beds.'
-  ];
-  if (occ.py > 0) {
+  // Occupancy line — only shown if staffed beds is configured
+  const occBullets = [];
+  if (staffed && staffed > 0) {
+    occBullets.push('Occupancy of <strong>' + (occ.act*100).toFixed(1) + '% vs ' + (occ.bud*100).toFixed(1) + '% budget</strong> on ' + staffed + ' staffed beds.');
+  } else {
+    occBullets.push(flag('warn','Setup') + 'Enter staffed beds in the upload panel to compute occupancy.');
+  }
+  if ((staffed && staffed > 0) && occ.py > 0) {
     occBullets.push('Prior year occupancy was ' + (occ.py*100).toFixed(1) + '%.');
   }
 
@@ -2551,11 +3029,17 @@ function renderRevenueCommentary() {
     'IP Gross Revenue of ' + fmt$(ipg.mar_act) + ' vs ' + fmt$(ipg.mar_bud) + ' budget — ' + fmt$(Math.abs(ipg.mar_act - ipg.mar_bud)) + ' ' + (ipg.mar_act >= ipg.mar_bud ? 'favorable' : 'unfavorable') + '.',
   ];
   if (Math.abs(pdVar) > 0) {
-    nrBullets.push('Census of ' + fmtNum(pd.mar_act) + ' patient days vs ' + fmtNum(pd.mar_bud) + ' budget (' + (pdVar >= 0 ? '+' : '') + Math.round(pdVar) + ' days). ' + (nrFav && pdVar < 0 ? 'Rate/mix execution offset the census shortfall.' : ''));
+    const ppdFavCtx = nr.ppd_mar > nr.ppd_bud;
+    const offsetNote = (nrFav && pdVar < 0)
+      ? (ppdFavCtx ? 'Rate/mix execution offset the census shortfall.' : 'Driver of favorable revenue despite census shortfall should be confirmed.')
+      : '';
+    nrBullets.push('Census of ' + fmtNum(pd.mar_act) + ' patient days vs ' + fmtNum(pd.mar_bud) + ' budget (' + (pdVar >= 0 ? '+' : '') + Math.round(pdVar) + ' days). ' + offsetNote);
   }
-  const adcAct = pd.mar_act / getDaysInMonth();
-  const occPct = (adcAct / staffed * 100).toFixed(1);
-  nrBullets.push(flag('','Watch') + 'Occupancy of ' + occPct + '% on ' + staffed + ' staffed beds.');
+  if (staffed && staffed > 0) {
+    const adcAct = pd.mar_act / getDaysInMonth();
+    const occPct = (adcAct / staffed * 100).toFixed(1);
+    nrBullets.push(flag('','Watch') + 'Occupancy of ' + occPct + '% on ' + staffed + ' staffed beds.');
+  }
 
   // YTD card
   const ytdVar = nr.ytd_act - nr.ytd_bud;
@@ -2598,22 +3082,26 @@ function renderExpenseCommentary() {
     const ytdFav = cat.ytd_var > 0;
     bullets.push('YTD: ' + fmt$(cat.ytd_act) + ' actual vs ' + fmt$(cat.ytd_bud) + ' budget — ' + fmt$(Math.abs(cat.ytd_var)) + ' ' + (ytdFav ? 'favorable' : 'unfavorable') + '.');
 
-    // Flag material detail-level variances (top 3 unfavorable)
-    const unfavDetails = cat.details.filter(d => d.mar_var < -2000).slice(0, 3);
+    // Flag material detail-level variances (top 3 unfavorable) — threshold per-GL
+    const unfavDetails = cat.details
+      .filter(d => d.mar_var < -getThreshold('detail_unfav_min', cat.name, d.gl))
+      .slice(0, 3);
     for (const d of unfavDetails) {
       const dPct = d.mar_bud > 0 ? ((-d.mar_var) / d.mar_bud * 100).toFixed(0) : null;
       const pctStr = dPct ? ' (+' + dPct + '%)' : ' (Unbudgeted)';
       bullets.push(flag('bad','Action') + d.desc + ': ' + fmt$(d.mar_act) + ' actual vs ' + fmt$(d.mar_bud) + ' budget — ' + fmt$(Math.abs(d.mar_var)) + ' unfavorable' + pctStr + '.');
     }
 
-    // Flag material favorable detail-level variances (top 2)
-    const favDetails = cat.details.filter(d => d.mar_var > 10000).slice(0, 2);
+    // Flag material favorable detail-level variances (top 2) — threshold per-GL
+    const favDetails = cat.details
+      .filter(d => d.mar_var > getThreshold('detail_fav_min', cat.name, d.gl))
+      .slice(0, 2);
     for (const d of favDetails) {
       bullets.push(flag('good','Favorable') + d.desc + ': ' + fmt$(d.mar_act) + ' actual vs ' + fmt$(d.mar_bud) + ' budget — ' + fmt$(d.mar_var) + ' favorable.');
     }
 
-    // Zero contract labor check
-    if (cat.name === 'Contract Labor' && cat.mar_act === 0) {
+    // Zero contract labor check — only an achievement if budget was > 0
+    if (cat.name === 'Contract Labor' && cat.mar_act === 0 && cat.mar_bud > 0) {
       bullets.push(flag('good','Win') + 'Zero contract labor — a meaningful operational achievement.');
     }
 
@@ -2656,8 +3144,10 @@ function renderCategories() {
     // Status logic
     let status, statusCls;
     const absPct = Math.abs(varPct);
-    if (c.mar_var < 0 && absPct > 15) { status = 'Action Needed'; statusCls = 'action'; }
-    else if (c.mar_var < 0 && absPct > 5) { status = 'Watch'; statusCls = 'watch'; }
+    const actionPct = getThreshold('status_action_pct', c.name);
+    const watchPct  = getThreshold('status_watch_pct',  c.name);
+    if (c.mar_var < 0 && absPct > actionPct) { status = 'Action Needed'; statusCls = 'action'; }
+    else if (c.mar_var < 0 && absPct > watchPct) { status = 'Watch'; statusCls = 'watch'; }
     else { status = 'On Track'; statusCls = 'ontrack'; }
 
     // Variance display
@@ -2736,7 +3226,7 @@ function toggleDetail(idx) {
   catRow.classList.toggle('expanded');
 }
 
-document.getElementById('staffed-beds-input').value = getStaffedBeds();
+document.getElementById('staffed-beds-input').value = getStaffedBeds() || '';
 loadStored();
 render();
 </script>
