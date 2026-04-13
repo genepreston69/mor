@@ -1912,6 +1912,9 @@ function saveNote(key, text) {
   localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
 }
 
+// Hide note buttons on trivial items (|variance| < this threshold)
+const NOTE_MIN_VARIANCE = 3000;
+
 function noteBtn(key, label) {
   const has = getNotes()[key] ? ' has-note' : '';
   const safeLabel = label.replace(/'/g, "\\'").replace(/"/g, '&quot;');
@@ -1919,6 +1922,13 @@ function noteBtn(key, label) {
     '" onclick="event.stopPropagation();openNoteModal(\'' + key + '\',\'' + safeLabel + '\')">' +
     '<span class="note-ico">📝</span>' +
     (has ? 'Edit Note' : 'Add Note') + '</button>';
+}
+
+// Variance-gated variant: returns empty string if |variance| is below the threshold.
+// Pass variance = null (or omit) to always show the button.
+function noteBtnVar(key, label, variance) {
+  if (variance != null && Math.abs(variance) < NOTE_MIN_VARIANCE) return '';
+  return noteBtn(key, label);
 }
 
 function noteCallout(key) {
@@ -2623,7 +2633,7 @@ function renderCallouts() {
     '<tbody>' + flagged.map(f => {
       const pctLabel = f.pctOver === null ? 'Unbudgeted' : '+' + (f.pctOver*100).toFixed(0) + '%';
       return '<tr>' +
-        '<td><span class="cl-gl">' + f.gl + '</span><span class="cl-name">' + f.desc + '</span> ' + noteBtn('callout:' + f.gl, f.desc) + '</td>' +
+        '<td><span class="cl-gl">' + f.gl + '</span><span class="cl-name">' + f.desc + '</span> ' + noteBtnVar('callout:' + f.gl, f.desc, f.overspend) + '</td>' +
         '<td><span class="cl-cat">' + f.category + '</span></td>' +
         '<td>' + fmt$(f.act) + '</td>' +
         '<td>' + fmt$(f.bud) + '</td>' +
@@ -2757,7 +2767,7 @@ function renderOpps() {
     const cls = fav ? 'fav' : 'unfav';
     const lbl = fav ? 'Favorable to budget' : 'Unfavorable to budget';
     return `<div class="opp-card ${cls}">
-      <div class="opp-cat">${c.name} ${noteBtn('opp:' + c.name, c.name)}</div>
+      <div class="opp-cat">${c.name} ${noteBtnVar('opp:' + c.name, c.name, c.mar_var)}</div>
       <div class="opp-amt">${fmt$(Math.abs(c.mar_var))}</div>
       <div class="opp-line">${lbl} · ${fmt$(c.mar_act)} actual</div>
       ${noteCallout('opp:' + c.name)}
@@ -2902,8 +2912,9 @@ function renderRevenue() {
 
 // ---- Dynamic Commentary Renderers ----
 
-function narrativeCard(cls, title, bullets, noteKey) {
-  const nb = noteKey ? ' ' + noteBtn(noteKey, title) : '';
+function narrativeCard(cls, title, bullets, noteKey, variance) {
+  const btnHtml = noteKey ? noteBtnVar(noteKey, title, variance) : '';
+  const nb = btnHtml ? ' ' + btnHtml : '';
   const nc = noteKey ? noteCallout(noteKey) : '';
   return '<div class="narrative-card ' + cls + '"><h3>' + title + nb + '</h3><ul>' +
     bullets.map(b => '<li>' + b + '</li>').join('') + '</ul>' + nc + '</div>';
@@ -3052,8 +3063,8 @@ function renderRevenueCommentary() {
   ];
 
   el.innerHTML = '<div class="narrative-block"><div class="narrative-grid">' +
-    narrativeCard(nrFav ? 'good' : 'bad', 'Net Revenue', nrBullets, 'rev:Net Revenue') +
-    narrativeCard(ytdVar >= 0 ? 'good' : 'warn', 'YTD Performance', ytdBullets, 'rev:YTD Performance') +
+    narrativeCard(nrFav ? 'good' : 'bad', 'Net Revenue', nrBullets, 'rev:Net Revenue', nrVar) +
+    narrativeCard(ytdVar >= 0 ? 'good' : 'warn', 'YTD Performance', ytdBullets, 'rev:YTD Performance', ytdVar) +
   '</div></div>';
 }
 
@@ -3108,7 +3119,7 @@ function renderExpenseCommentary() {
       bullets.push(flag('good','Win') + 'Zero contract labor — a meaningful operational achievement.');
     }
 
-    cards.push(narrativeCard(cls, cat.name, bullets, 'exp:' + cat.name));
+    cards.push(narrativeCard(cls, cat.name, bullets, 'exp:' + cat.name, cat.mar_var));
   }
 
   el.innerHTML = '<div class="narrative-block"><div class="narrative-grid">' + cards.join('') + '</div></div>';
@@ -3165,7 +3176,7 @@ function renderCategories() {
                                    : `<span class="var-up">${fmtPct(varPct)}</span>`);
 
     html += `<tr class="cat-row" onclick="toggleDetail(${idx})">
-      <td><div class="cat-name"><span class="arrow">▶</span>${c.name} ${noteBtn('cat:' + c.name, c.name)}</div></td>
+      <td><div class="cat-name"><span class="arrow">▶</span>${c.name} ${noteBtnVar('cat:' + c.name, c.name, c.mar_var)}</div></td>
       <td>${fmt(marAct)}</td>
       <td>${fmt(marBud)}</td>
       <td>${varDisplay}</td>
@@ -3204,7 +3215,7 @@ function renderCategories() {
           const yVarHtml = Math.abs(d.ytd_var) < 100 ? `<span class="var-flat">${fmtD(Math.abs(yVar))}</span>` :
                            (d.ytd_var > 0 ? `<span class="var-down">${fmtD(Math.abs(yVar))}</span>` : `<span class="var-up">${fmtD(Math.abs(yVar))}</span>`);
           return `<tr>
-            <td><span class="gl-tag">${d.gl}</span>${d.desc} ${noteBtn('gl:' + d.gl, d.desc)}</td>
+            <td><span class="gl-tag">${d.gl}</span>${d.desc} ${noteBtnVar('gl:' + d.gl, d.desc, d.mar_var)}</td>
             <td>${fmtD(dMarA)}</td>
             <td>${fmtD(dMarB)}</td>
             <td>${dVarHtml}</td>
