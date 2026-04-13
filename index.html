@@ -2253,7 +2253,7 @@ function renderKPIs() {
     { c:'c4', label:'EBITDA Margin',
       val: ebMargin.toFixed(1) + '%',
       delta: 'Budget ' + ebMarginBud.toFixed(1) + '%',
-      pill: '+' + (ebMargin - ebMarginBud).toFixed(1) + ' pts',
+      pill: (ebMargin - ebMarginBud >= 0 ? '+' : '') + (ebMargin - ebMarginBud).toFixed(1) + ' pts',
       pillGood: ebMargin > ebMarginBud },
     { c:'c5', label:'Patient Days',
       val: fmtNum(pd.mar_act),
@@ -2397,11 +2397,21 @@ function renderRevenue() {
   const pd = DATA.patient_days.mar_act;
   const f = (n) => isP ? fmtPPD(n/pd) : fmt$(n);
 
+  // IP Gross Revenue: higher actual than budget = favorable
+  const ipgVar = ipg.mar_act - ipg.mar_bud;
+  const ipgFav = ipgVar >= 0;
+  // IP Contractuals: lower actual than budget = less deduction = favorable
+  const ipcVar = ipc.mar_bud - ipc.mar_act;
+  const ipcFav = ipcVar >= 0;
+  // Net Revenue: higher actual than budget = favorable
+  const nrVar = nr.mar_act - nr.mar_bud;
+  const nrFav = nrVar >= 0;
+
   const cards = [
-    { l:'IP Gross Revenue', v: f(ipg.mar_act), s:`Bud ${f(ipg.mar_bud)}` },
-    { l:'IP Contractuals', v: f(ipc.mar_act), s:`${fmt$(ipc.mar_bud-ipc.mar_act)} favorable` },
+    { l:'IP Gross Revenue', v: f(ipg.mar_act), s:`Bud ${f(ipg.mar_bud)} · ${fmt$(Math.abs(ipgVar))} ${ipgFav ? 'favorable' : 'unfavorable'}` },
+    { l:'IP Contractuals', v: f(ipc.mar_act), s:`${fmt$(Math.abs(ipcVar))} ${ipcFav ? 'favorable' : 'unfavorable'}` },
     { l:'Supplemental (DSH/HDAA)', v: f(Math.abs(sup.mar_act)), s: sup.desc || 'Directed Payment / Supplemental Revenue' },
-    { l:'Net Revenue', v: f(nr.mar_act), s:`${fmt$(nr.mar_act-nr.mar_bud)} favorable to budget` },
+    { l:'Net Revenue', v: f(nr.mar_act), s:`${fmt$(Math.abs(nrVar))} ${nrFav ? 'favorable' : 'unfavorable'} to budget` },
   ];
   document.getElementById('rev-grid').innerHTML = cards.map(c => `
     <div class="rev-card">
