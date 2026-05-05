@@ -259,6 +259,154 @@ body {
 }
 .kpi .delta-pill.bad { background: var(--bad-bg); color: var(--bad); }
 
+/* LABOR MANAGEMENT */
+.labor-wrap {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.labor-panel {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px 18px 16px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+}
+.labor-panel h3 {
+  font-family: Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 12px;
+  letter-spacing: -0.2px;
+}
+.labor-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.labor-metric {
+  border: 1px solid var(--border-soft);
+  border-radius: 5px;
+  padding: 12px 14px;
+  background: #fafbfc;
+  position: relative;
+}
+.labor-metric .label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.labor-metric .value {
+  font-family: Georgia, serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1;
+  letter-spacing: -0.4px;
+}
+.labor-metric .delta {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.labor-metric .pill {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--good-bg);
+  color: var(--good);
+}
+.labor-metric .pill.bad { background: var(--bad-bg); color: var(--bad); }
+.labor-metric .pill.warn { background: var(--warn-bg); color: #b07a1f; }
+.labor-inputs {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 8px 10px;
+  align-items: center;
+  font-size: 12px;
+}
+.labor-inputs .hd {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.labor-inputs label {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.labor-inputs input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+  background: #ffffff;
+}
+.labor-inputs input:focus {
+  outline: none;
+  border-color: var(--teal);
+}
+.labor-inputs .help {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.labor-discussion {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--teal);
+  border-radius: 6px;
+  padding: 16px 18px;
+  margin-bottom: 24px;
+}
+.labor-discussion h3 {
+  font-family: Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.labor-discussion ul { list-style: none; padding: 0; margin: 0; }
+.labor-discussion li {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.6;
+  padding-left: 18px;
+  position: relative;
+  margin-bottom: 8px;
+}
+.labor-discussion li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--teal);
+  font-weight: 700;
+}
+.labor-discussion li:last-child { margin-bottom: 0; }
+.labor-discussion .empty {
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+}
+@media (max-width: 900px) {
+  .labor-wrap { grid-template-columns: 1fr; }
+  .labor-metric-grid { grid-template-columns: 1fr; }
+  .labor-inputs { grid-template-columns: 1fr 1fr 1fr; }
+}
+
 /* SECTION HEAD */
 .section-head {
   display: flex;
@@ -1520,6 +1668,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   <div id="expense-commentary"></div>
 
   <div class="section-head">
+    <h2>Labor Management</h2>
+    <span class="desc">EPOB &amp; Direct Care EPOB · Productivity vs budget · Edit FTEs in the inputs below</span>
+  </div>
+  <div class="section-divider"></div>
+  <div id="labor-section"></div>
+
+  <div class="section-head">
     <h2>Trended Performance</h2>
     <span class="desc">Year-to-date monthly trend · Actual vs Budget · Source: Month End Analytic</span>
   </div>
@@ -1629,6 +1784,32 @@ function setStaffedBeds(n) {
   const val = parseInt(n, 10);
   if (isNaN(val) || val <= 0) return;
   localStorage.setItem(BEDS_KEY, val);
+}
+
+// =========================================================================
+// LABOR / FTE INPUTS — EPOB and Direct Care EPOB
+// =========================================================================
+const LABOR_KEY = 'mor_labor_v1';
+
+function getLaborInputs() {
+  try {
+    const raw = localStorage.getItem(LABOR_KEY);
+    if (raw) {
+      const obj = JSON.parse(raw);
+      if (obj && typeof obj === 'object') return obj;
+    }
+  } catch(e) {}
+  return { dc_act: null, dc_bud: null, tot_act: null, tot_bud: null };
+}
+
+function setLaborInput(field, value) {
+  const allowed = ['dc_act','dc_bud','tot_act','tot_bud'];
+  if (!allowed.includes(field)) return;
+  const cur = getLaborInputs();
+  const n = parseFloat(value);
+  cur[field] = (isNaN(n) || n < 0) ? null : n;
+  localStorage.setItem(LABOR_KEY, JSON.stringify(cur));
+  if (typeof renderLabor === 'function') renderLabor();
 }
 
 // =========================================================================
@@ -2704,6 +2885,7 @@ function render() {
   renderInsights();
   renderExpenseCommentary();
   renderCategories();
+  renderLabor();
 }
 
 function renderKPIs() {
@@ -3123,6 +3305,204 @@ function renderExpenseCommentary() {
   }
 
   el.innerHTML = '<div class="narrative-block"><div class="narrative-grid">' + cards.join('') + '</div></div>';
+}
+
+function renderLabor() {
+  const el = document.getElementById('labor-section');
+  if (!el) return;
+  if (!DATA || !DATA.patient_days) { el.innerHTML = ''; return; }
+
+  const inputs = getLaborInputs();
+  const dim = getDaysInMonth();
+  const adcAct = DATA.patient_days.mar_act / dim;
+  const adcBud = DATA.patient_days.mar_bud / dim;
+
+  const sw = (DATA.categories || []).find(c => c.name === 'Salaries & Wages');
+  const benefits = (DATA.categories || []).find(c => c.name === 'Benefits');
+  const contract = (DATA.categories || []).find(c => c.name === 'Contract Labor');
+  const totalLaborAct = (sw ? sw.mar_act : 0) + (benefits ? benefits.mar_act : 0) + (contract ? contract.mar_act : 0);
+  const totalLaborBud = (sw ? sw.mar_bud : 0) + (benefits ? benefits.mar_bud : 0) + (contract ? contract.mar_bud : 0);
+  const laborVar = totalLaborBud - totalLaborAct;
+
+  // EPOB = FTEs / ADC. Lower is better (fewer staff per occupied bed = leaner).
+  const epob = (fte, adc) => (fte > 0 && adc > 0) ? (fte / adc) : null;
+  const dcEpobAct = epob(inputs.dc_act, adcAct);
+  const dcEpobBud = epob(inputs.dc_bud, adcBud);
+  const totEpobAct = epob(inputs.tot_act, adcAct);
+  const totEpobBud = epob(inputs.tot_bud, adcBud);
+
+  const indirectAct = (inputs.tot_act != null && inputs.dc_act != null) ? (inputs.tot_act - inputs.dc_act) : null;
+  const indirectBud = (inputs.tot_bud != null && inputs.dc_bud != null) ? (inputs.tot_bud - inputs.dc_bud) : null;
+
+  const hasAnyInput = inputs.dc_act != null || inputs.dc_bud != null || inputs.tot_act != null || inputs.tot_bud != null;
+
+  // Helper: build a metric tile. For EPOB lower-is-better.
+  const fmtFte = v => v == null ? '—' : v.toFixed(1);
+  const fmtEpob = v => v == null ? '—' : v.toFixed(2);
+  const epobPill = (act, bud) => {
+    if (act == null || bud == null) return '<span class="pill warn">Enter FTEs &amp; budget</span>';
+    const diff = act - bud;
+    const pct = bud !== 0 ? (diff / bud * 100) : 0;
+    const fav = diff <= 0; // lower EPOB is better
+    const arrow = diff <= 0 ? '▼ ' : '▲ ';
+    const sign = diff >= 0 ? '+' : '';
+    return '<span class="pill ' + (fav ? '' : 'bad') + '">' + arrow + Math.abs(diff).toFixed(2) + ' (' + sign + pct.toFixed(1) + '%)</span>';
+  };
+
+  const totalTile = `
+    <div class="labor-metric">
+      <div class="label">Total EPOB</div>
+      <div class="value">${fmtEpob(totEpobAct)}</div>
+      <div class="delta">Budget ${fmtEpob(totEpobBud)} · ${inputs.tot_act != null ? fmtFte(inputs.tot_act) + ' FTEs' : 'FTEs not entered'}</div>
+      ${epobPill(totEpobAct, totEpobBud)}
+    </div>`;
+  const directTile = `
+    <div class="labor-metric">
+      <div class="label">Direct Care EPOB</div>
+      <div class="value">${fmtEpob(dcEpobAct)}</div>
+      <div class="delta">Budget ${fmtEpob(dcEpobBud)} · ${inputs.dc_act != null ? fmtFte(inputs.dc_act) + ' FTEs' : 'FTEs not entered'}</div>
+      ${epobPill(dcEpobAct, dcEpobBud)}
+    </div>`;
+  const adcTile = `
+    <div class="labor-metric">
+      <div class="label">ADC (denominator)</div>
+      <div class="value">${adcAct.toFixed(1)}</div>
+      <div class="delta">Budget ${adcBud.toFixed(1)} · ${fmtNum(DATA.patient_days.mar_act)} patient days</div>
+      <span class="pill ${adcAct >= adcBud ? '' : 'warn'}">${adcAct >= adcBud ? '+' : ''}${(adcAct - adcBud).toFixed(1)} vs bud</span>
+    </div>`;
+  const indirectTile = `
+    <div class="labor-metric">
+      <div class="label">Indirect EPOB</div>
+      <div class="value">${fmtEpob(epob(indirectAct, adcAct))}</div>
+      <div class="delta">Budget ${fmtEpob(epob(indirectBud, adcBud))} · ${indirectAct != null ? fmtFte(indirectAct) + ' FTEs' : '—'}</div>
+      ${epobPill(epob(indirectAct, adcAct), epob(indirectBud, adcBud))}
+    </div>`;
+
+  const inputVal = v => v == null ? '' : v;
+  const inputsHtml = `
+    <div class="labor-inputs">
+      <div class="hd">FTE Category</div>
+      <div class="hd">Actual</div>
+      <div class="hd">Budget</div>
+      <label>Direct Care FTEs</label>
+      <input type="number" min="0" step="0.1" value="${inputVal(inputs.dc_act)}" placeholder="0.0" onchange="setLaborInput('dc_act', this.value)">
+      <input type="number" min="0" step="0.1" value="${inputVal(inputs.dc_bud)}" placeholder="0.0" onchange="setLaborInput('dc_bud', this.value)">
+      <label>Total FTEs</label>
+      <input type="number" min="0" step="0.1" value="${inputVal(inputs.tot_act)}" placeholder="0.0" onchange="setLaborInput('tot_act', this.value)">
+      <input type="number" min="0" step="0.1" value="${inputVal(inputs.tot_bud)}" placeholder="0.0" onchange="setLaborInput('tot_bud', this.value)">
+      <div class="help">Direct Care = bedside staff (RN, LPN, CNA, therapy techs). Total = all paid FTEs including indirect &amp; admin. EPOB = FTEs ÷ ADC; lower is leaner. Stored locally in your browser.</div>
+    </div>`;
+
+  // Discussion / commentary
+  const bullets = [];
+  if (!hasAnyInput) {
+    bullets.push('<span class="empty">Enter Direct Care and Total FTEs (Actual &amp; Budget) above to generate productivity commentary. EPOB is calculated as FTEs ÷ ADC; lower values indicate leaner staffing relative to census.</span>');
+  } else {
+    // ADC context
+    const adcDiff = adcAct - adcBud;
+    if (Math.abs(adcDiff) >= 1) {
+      bullets.push('<strong>Census context:</strong> ADC of ' + adcAct.toFixed(1) + ' vs ' + adcBud.toFixed(1) + ' budget (' + (adcDiff >= 0 ? '+' : '') + adcDiff.toFixed(1) + '). EPOB targets assume budgeted census; flex staffing should track actual ADC.');
+    } else {
+      bullets.push('<strong>Census context:</strong> ADC of ' + adcAct.toFixed(1) + ' is in line with the ' + adcBud.toFixed(1) + ' budget — EPOB is a clean apples-to-apples comparison this period.');
+    }
+
+    // Direct Care EPOB commentary
+    if (dcEpobAct != null && dcEpobBud != null) {
+      const diff = dcEpobAct - dcEpobBud;
+      const pct = dcEpobBud !== 0 ? (diff / dcEpobBud * 100) : 0;
+      const fav = diff <= 0;
+      let line = '<strong>Direct Care EPOB ' + dcEpobAct.toFixed(2) + ' vs ' + dcEpobBud.toFixed(2) + ' budget</strong> (' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + ', ' + (diff >= 0 ? '+' : '') + pct.toFixed(1) + '%). ';
+      if (fav && Math.abs(pct) >= 3) {
+        line += 'Direct care productivity is favorable — bedside staffing is leaner than plan. Confirm acuity, mandatory ratios, and quality indicators (falls, pressure injuries, call-light response) are holding before celebrating.';
+      } else if (!fav && Math.abs(pct) >= 5) {
+        line += 'Direct care staffing is heavier than plan. Drill into shift-by-shift schedules, sitter usage, overtime, and orientation hours; validate whether higher acuity or census mix justifies the variance.';
+      } else {
+        line += 'Direct care is essentially on plan — continue monitoring weekly.';
+      }
+      bullets.push(line);
+    } else if (inputs.dc_act != null || inputs.dc_bud != null) {
+      bullets.push('<strong>Direct Care:</strong> Enter both Actual and Budget FTEs to calculate variance.');
+    }
+
+    // Total EPOB commentary
+    if (totEpobAct != null && totEpobBud != null) {
+      const diff = totEpobAct - totEpobBud;
+      const pct = totEpobBud !== 0 ? (diff / totEpobBud * 100) : 0;
+      const fav = diff <= 0;
+      let line = '<strong>Total EPOB ' + totEpobAct.toFixed(2) + ' vs ' + totEpobBud.toFixed(2) + ' budget</strong> (' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + ', ' + (diff >= 0 ? '+' : '') + pct.toFixed(1) + '%). ';
+      if (fav && Math.abs(pct) >= 3) {
+        line += 'Total productivity is favorable — overall headcount is right-sized to census.';
+      } else if (!fav && Math.abs(pct) >= 5) {
+        line += 'Total EPOB is unfavorable. If Direct Care EPOB is on plan, investigate indirect roles (admin, dietary, EVS, scheduling, leadership) for staffing creep or open positions filled in error.';
+      } else {
+        line += 'Total staffing is essentially on plan.';
+      }
+      bullets.push(line);
+    } else if (inputs.tot_act != null || inputs.tot_bud != null) {
+      bullets.push('<strong>Total FTEs:</strong> Enter both Actual and Budget FTEs to calculate variance.');
+    }
+
+    // Direct vs Indirect mix
+    if (dcEpobAct != null && totEpobAct != null && totEpobAct > 0) {
+      const dcShareAct = (inputs.dc_act / inputs.tot_act) * 100;
+      let mixLine = '<strong>Direct/Indirect mix:</strong> ' + dcShareAct.toFixed(0) + '% of total FTEs are direct care';
+      if (inputs.dc_bud != null && inputs.tot_bud != null && inputs.tot_bud > 0) {
+        const dcShareBud = (inputs.dc_bud / inputs.tot_bud) * 100;
+        const mixDiff = dcShareAct - dcShareBud;
+        mixLine += ' vs ' + dcShareBud.toFixed(0) + '% budget (' + (mixDiff >= 0 ? '+' : '') + mixDiff.toFixed(1) + ' pts).';
+        if (mixDiff < -2) {
+          mixLine += ' A lower direct-care share signals indirect creep — review non-clinical headcount.';
+        } else if (mixDiff > 2) {
+          mixLine += ' A higher direct-care share suggests indirect support has been streamlined.';
+        }
+      } else {
+        mixLine += '.';
+      }
+      bullets.push(mixLine);
+    }
+
+    // Labor dollar context — tie EPOB to financial impact
+    if (sw || benefits || contract) {
+      const laborPct = totalLaborBud > 0 ? (laborVar / totalLaborBud * 100) : 0;
+      const sign = laborVar >= 0 ? 'favorable' : 'unfavorable';
+      let dollarLine = '<strong>Labor $:</strong> Salaries, Benefits &amp; Contract Labor totaled ' + fmt$(totalLaborAct) + ' vs ' + fmt$(totalLaborBud) + ' budget — ' + fmt$(Math.abs(laborVar)) + ' ' + sign + ' (' + (laborVar >= 0 ? '+' : '') + laborPct.toFixed(1) + '%).';
+      if (contract && contract.mar_act > 0) {
+        dollarLine += ' Contract labor of ' + fmt$(contract.mar_act) + ' is inflating effective EPOB cost — convert to permanent roles where possible.';
+      }
+      bullets.push(dollarLine);
+    }
+
+    // Action prompt
+    if ((dcEpobAct != null && dcEpobBud != null && dcEpobAct > dcEpobBud * 1.05) ||
+        (totEpobAct != null && totEpobBud != null && totEpobAct > totEpobBud * 1.05)) {
+      bullets.push('<strong>Recommended actions:</strong> Run a position-control audit, review open requisitions, validate PTO/orientation hours are coded out of productive time, and align worked hours per patient day (HPPD) to acuity-based targets.');
+    }
+  }
+
+  const discussionHtml = `
+    <div class="labor-discussion">
+      <h3>Productivity Discussion</h3>
+      <ul>${bullets.map(b => '<li>' + b + '</li>').join('')}</ul>
+    </div>`;
+
+  el.innerHTML = `
+    <div class="labor-wrap">
+      <div class="labor-panel">
+        <h3>Productivity Metrics</h3>
+        <div class="labor-metric-grid">
+          ${directTile}
+          ${totalTile}
+          ${indirectTile}
+          ${adcTile}
+        </div>
+      </div>
+      <div class="labor-panel">
+        <h3>FTE Inputs (MTD)</h3>
+        ${inputsHtml}
+      </div>
+    </div>
+    ${discussionHtml}
+  `;
 }
 
 function renderCategories() {
