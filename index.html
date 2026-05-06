@@ -784,6 +784,40 @@ table.detail tr:last-child td { border-bottom: none; }
 .narrative-card .flag.bad { background: var(--bad-bg); color: var(--bad); }
 .narrative-card .flag.good { background: var(--good-bg); color: var(--good); }
 
+/* MANAGEMENT COMMENTARY TEXT BOX */
+.mgmt-commentary {
+  width: 100%;
+  margin: 14px 0 28px;
+}
+.mgmt-commentary-label {
+  font-family: Georgia, serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+  display: block;
+}
+.mgmt-commentary textarea {
+  width: 100%;
+  min-height: 120px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--teal);
+  border-radius: 6px;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  resize: vertical;
+}
+.mgmt-commentary textarea:focus {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 2px rgba(43, 122, 138, 0.15);
+}
+
 /* PER-ITEM NOTE BUTTONS */
 .note-btn {
   background: #f7f9fb;
@@ -1399,6 +1433,17 @@ footer {
     margin-bottom: 10px !important;
   }
 
+  /* Management commentary textareas */
+  .mgmt-commentary { break-inside: avoid !important; margin: 8px 0 14px !important; }
+  .mgmt-commentary textarea {
+    min-height: 80px !important;
+    font-size: 10px !important;
+    padding: 8px !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    border-left: 3px solid #2b7a8a !important;
+  }
+
   /* Trend grids — use full landscape width */
   .trend-grid-lg {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -1600,6 +1645,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="volume-commentary"></div>
+  <div class="mgmt-commentary">
+    <label class="mgmt-commentary-label" for="volume-mgmt-commentary">Management Commentary</label>
+    <textarea id="volume-mgmt-commentary" data-mgmt-key="volume" placeholder="Add management commentary on volume performance..."></textarea>
+  </div>
 
   <div class="section-head">
     <h2>Top Opportunities</h2>
@@ -1621,6 +1670,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="revenue-commentary"></div>
+  <div class="mgmt-commentary">
+    <label class="mgmt-commentary-label" for="revenue-mgmt-commentary">Management Commentary</label>
+    <textarea id="revenue-mgmt-commentary" data-mgmt-key="revenue" placeholder="Add management commentary on revenue performance..."></textarea>
+  </div>
 
   <div class="section-head">
     <h2>Strategic Insights</h2>
@@ -1666,6 +1719,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="expense-commentary"></div>
+  <div class="mgmt-commentary">
+    <label class="mgmt-commentary-label" for="expense-mgmt-commentary">Management Commentary</label>
+    <textarea id="expense-mgmt-commentary" data-mgmt-key="expense" placeholder="Add management commentary on operating expense variances..."></textarea>
+  </div>
 
   <div class="section-head">
     <h2>Labor Management</h2>
@@ -1818,6 +1875,28 @@ function setLaborInput(field, value) {
 const STORAGE_KEY = 'mor_data_v2';
 const STORAGE_META_KEY = 'mor_meta_v2';
 const NOTES_KEY = 'mor_notes';
+const MGMT_COMMENTARY_KEY = 'mor_mgmt_commentary';
+
+function getMgmtCommentary() {
+  try { return JSON.parse(localStorage.getItem(MGMT_COMMENTARY_KEY)) || {}; }
+  catch (e) { return {}; }
+}
+
+function initMgmtCommentary() {
+  const stored = getMgmtCommentary();
+  document.querySelectorAll('textarea[data-mgmt-key]').forEach(ta => {
+    const key = ta.getAttribute('data-mgmt-key');
+    if (stored[key]) ta.value = stored[key];
+    ta.addEventListener('input', () => {
+      const cur = getMgmtCommentary();
+      if (ta.value.trim()) cur[key] = ta.value;
+      else delete cur[key];
+      localStorage.setItem(MGMT_COMMENTARY_KEY, JSON.stringify(cur));
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initMgmtCommentary);
 const THRESHOLDS_KEY = 'mor_thresholds';
 
 // =========================================================================
