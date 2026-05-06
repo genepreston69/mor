@@ -2897,8 +2897,15 @@ function renderKPIs() {
   const ebMargin = (eb.mar_act / nr.mar_act * 100);
   const ebMarginBud = (eb.mar_bud / nr.mar_bud * 100);
   const daysInMonth = getDaysInMonth();
-  const adc = (pd.mar_act / daysInMonth);
-  const adcBud = (pd.mar_bud / daysInMonth);
+  // Prefer deck (MOR Standard Deck) values for Patient Days and ADC so the
+  // KPI cards match the Volume table. Fall back to analytic-derived values
+  // when the deck is not loaded.
+  const deckIPD = DATA.deck && DATA.deck.volume && DATA.deck.volume.find(v => v.label === 'Inpatient Days');
+  const deckADC = DATA.deck && DATA.deck.volume && DATA.deck.volume.find(v => v.label === 'ADC');
+  const pdAct = deckIPD ? deckIPD.act : pd.mar_act;
+  const pdBud = deckIPD ? deckIPD.bud : pd.mar_bud;
+  const adc = deckADC ? deckADC.act : (pd.mar_act / daysInMonth);
+  const adcBud = deckADC ? deckADC.bud : (pd.mar_bud / daysInMonth);
 
   const kpis = [
     { c:'c1', label:'Net Revenue',
@@ -2922,10 +2929,10 @@ function renderKPIs() {
       pill: (ebMargin - ebMarginBud >= 0 ? '+' : '') + (ebMargin - ebMarginBud).toFixed(1) + ' pts',
       pillGood: ebMargin > ebMarginBud },
     { c:'c5', label:'Patient Days',
-      val: fmtNum(pd.mar_act),
-      delta: 'Budget ' + fmtNum(pd.mar_bud),
-      pill: (pd.mar_act - pd.mar_bud >= 0 ? '+' : '') + fmtNum(pd.mar_act - pd.mar_bud),
-      pillGood: pd.mar_act >= pd.mar_bud },
+      val: fmtNum(pdAct),
+      delta: 'Budget ' + fmtNum(pdBud),
+      pill: (pdAct - pdBud >= 0 ? '+' : '') + fmtNum(pdAct - pdBud),
+      pillGood: pdAct >= pdBud },
     { c:'c6', label:'ADC',
       val: adc.toFixed(1),
       delta: 'Budget ' + adcBud.toFixed(1),
