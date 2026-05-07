@@ -2306,6 +2306,7 @@ function loadStored() {
       const stored = JSON.parse(raw);
       DATA = stored;
       recalcOccupancy();
+      recomputePPD();
       if (meta) {
         const m = JSON.parse(meta);
         if (m.analytic) {
@@ -2379,6 +2380,7 @@ function handleFile(event, kind) {
         updates = parseDeck(wb);
       }
       Object.assign(DATA, updates);
+      recomputePPD();
       saveStored(updates, kind, file.name);
       // Update UI
       const drop = document.getElementById('drop-' + kind);
@@ -2749,6 +2751,63 @@ function getCurrentMonthIdx() {
   for (let i = 0; i < acts.length; i++) { if (acts[i] > 0) last = i; }
   return last;
 }
+
+// Patient days source-of-truth: prefer the MOR Standard Deck (Inpatient Days)
+// over the Month End Analytic. The analytic file provides the 12-month history
+// and YTD totals; the deck provides the authoritative current-period census.
+// We overlay the deck value onto the current month and adjust YTD accordingly.
+function getEffectivePatientDays() {
+  if (!DATA.patient_days) return null;
+  const pd = DATA.patient_days;
+  const result = {
+    mar_act: pd.mar_act || 0,
+    mar_bud: pd.mar_bud || 0,
+    ytd_act: pd.ytd_act || 0,
+    ytd_bud: pd.ytd_bud || 0,
+    monthly_act: (pd.monthly_act || []).slice(),
+    monthly_bud: (pd.monthly_bud || []).slice(),
+  };
+  if (DATA.deck && DATA.deck.volume) {
+    const ipd = DATA.deck.volume.find(v => v.label === 'Inpatient Days');
+    if (ipd) {
+      result.ytd_act = result.ytd_act + (ipd.act - result.mar_act);
+      result.ytd_bud = result.ytd_bud + (ipd.bud - result.mar_bud);
+      const acts = result.monthly_act;
+      let idx = -1;
+      for (let i = 0; i < acts.length; i++) if (acts[i] > 0) idx = i;
+      if (idx >= 0) {
+        result.monthly_act[idx] = ipd.act;
+        result.monthly_bud[idx] = ipd.bud;
+      }
+      result.mar_act = ipd.act;
+      result.mar_bud = ipd.bud;
+    }
+  }
+  return result;
+}
+
+// Recompute every stored ppd_* value on DATA using deck-sourced patient days.
+// Call after each file load (analytic or deck) and after restoring from storage.
+function recomputePPD() {
+  if (!DATA.patient_days) return;
+  const pd = getEffectivePatientDays();
+  const summaries = [DATA.net_revenue, DATA.total_opex, DATA.ebitda].filter(Boolean);
+  for (const obj of summaries) {
+    obj.ppd_mar = pd.mar_act ? obj.mar_act / pd.mar_act : 0;
+    obj.ppd_bud = pd.mar_bud ? obj.mar_bud / pd.mar_bud : 0;
+  }
+  if (DATA.categories) {
+    for (const cat of DATA.categories) {
+      cat.ppd_mar = pd.mar_act ? cat.mar_act / pd.mar_act : 0;
+      cat.ppd_bud = pd.mar_bud ? cat.mar_bud / pd.mar_bud : 0;
+      if (cat.details) {
+        for (const d of cat.details) {
+          d.ppd_mar = pd.mar_act ? d.mar_act / pd.mar_act : null;
+        }
+      }
+    }
+  }
+}
 function lineChart(actVals, budVals, w, h, color) {
   // Rolling 12-month window: always render all 12 months on the X-axis.
   // Actuals are plotted only through the last month with data; budget runs the full 12.
@@ -2796,15 +2855,16 @@ function lineChart(actVals, budVals, w, h, color) {
 
 function renderTrends() {
   const isP = view === 'ppd';
-  const pdAct = DATA.patient_days.monthly_act;
-  const pdBud = DATA.patient_days.monthly_bud || [];
+  const epd = getEffectivePatientDays();
+  const pdAct = epd.monthly_act;
+  const pdBud = epd.monthly_bud;
   const ppdize = (arr, divisor) => arr.map((v,i) => (divisor[i] && divisor[i] !== 0) ? v/divisor[i] : 0);
 
   const lgItems = [
     { title:'Net Revenue', src: DATA.net_revenue, color:'#2b7a8a', isPD: false },
     { title:'Total OpEx', src: DATA.total_opex, color:'#e08552', isPD: false },
     { title:'EBITDA', src: DATA.ebitda, color:'#5a9b6e', isPD: false },
-    { title:'Patient Days', src: DATA.patient_days, color:'#7d5fa3', isPD: true },
+    { title:'Patient Days', src: epd, color:'#7d5fa3', isPD: true },
   ];
   document.getElementById('trend-lg').innerHTML = lgItems.map(it => {
     let actArr, budArr, currentVal, currentLabel;
@@ -2937,7 +2997,8 @@ function updateHeader() {
   }
   const facility = DATA.facility || 'Hospital';
   const period = DATA.period || '';
-  const days = DATA.patient_days ? Math.round(DATA.patient_days.mar_act) : 0;
+  const epd = getEffectivePatientDays();
+  const days = epd ? Math.round(epd.mar_act) : 0;
   const monthName = getMonthName();
 
   el.innerHTML = '<span class="dot"></span> ' + period + ' · ' + facility + ' · ' + days.toLocaleString() + ' IP days';
@@ -2983,17 +3044,13 @@ function renderKPIs() {
   const nr = DATA.net_revenue;
   const eb = DATA.ebitda;
   const op = DATA.total_opex;
-  const pd = DATA.patient_days;
+  const pd = getEffectivePatientDays();
   const ebMargin = (eb.mar_act / nr.mar_act * 100);
   const ebMarginBud = (eb.mar_bud / nr.mar_bud * 100);
   const daysInMonth = getDaysInMonth();
-  // Prefer deck (MOR Standard Deck) values for Patient Days and ADC so the
-  // KPI cards match the Volume table. Fall back to analytic-derived values
-  // when the deck is not loaded.
-  const deckIPD = DATA.deck && DATA.deck.volume && DATA.deck.volume.find(v => v.label === 'Inpatient Days');
   const deckADC = DATA.deck && DATA.deck.volume && DATA.deck.volume.find(v => v.label === 'ADC');
-  const pdAct = deckIPD ? deckIPD.act : pd.mar_act;
-  const pdBud = deckIPD ? deckIPD.bud : pd.mar_bud;
+  const pdAct = pd.mar_act;
+  const pdBud = pd.mar_bud;
   const adc = deckADC ? deckADC.act : (pd.mar_act / daysInMonth);
   const adcBud = deckADC ? deckADC.bud : (pd.mar_bud / daysInMonth);
 
@@ -3058,7 +3115,7 @@ function renderInsights() {
   const cats = DATA.categories;
   const nr = DATA.net_revenue;
   const eb = DATA.ebitda;
-  const pd = DATA.patient_days;
+  const pd = getEffectivePatientDays();
   const monthName = getMonthName();
   const insights = [];
 
@@ -3161,7 +3218,7 @@ function renderRevenue() {
   const ipc = DATA.ip_contractual;
   const sup = DATA.supplemental;
   const isP = view === 'ppd';
-  const pd = DATA.patient_days.mar_act;
+  const pd = getEffectivePatientDays().mar_act;
   const f = (n) => isP ? fmtPPD(n/pd) : fmt$(n);
 
   // IP Gross Revenue: higher actual than budget = favorable
@@ -3306,7 +3363,7 @@ function renderRevenueCommentary() {
   const nr = DATA.net_revenue;
   const ipg = DATA.ip_gross;
   const ipc = DATA.ip_contractual;
-  const pd = DATA.patient_days;
+  const pd = getEffectivePatientDays();
   const staffed = getStaffedBeds();
 
   if (!nr || !ipg) { el.innerHTML = ''; return; }
@@ -3351,7 +3408,7 @@ function renderExpenseCommentary() {
   const el = document.getElementById('expense-commentary');
   if (!DATA.categories || DATA.categories.length === 0) { el.innerHTML = ''; return; }
   const cats = DATA.categories;
-  const pd = DATA.patient_days.mar_act;
+  const pd = getEffectivePatientDays().mar_act;
   const cards = [];
 
   // Build a card for each major expense category
@@ -3411,8 +3468,10 @@ function renderLabor() {
 
   const inputs = getLaborInputs();
   const dim = getDaysInMonth();
-  const adcAct = DATA.patient_days.mar_act / dim;
-  const adcBud = DATA.patient_days.mar_bud / dim;
+  const epd = getEffectivePatientDays();
+  const deckADC = DATA.deck && DATA.deck.volume && DATA.deck.volume.find(v => v.label === 'ADC');
+  const adcAct = deckADC ? deckADC.act : (epd.mar_act / dim);
+  const adcBud = deckADC ? deckADC.bud : (epd.mar_bud / dim);
 
   const sw = (DATA.categories || []).find(c => c.name === 'Salaries & Wages');
   const benefits = (DATA.categories || []).find(c => c.name === 'Benefits');
@@ -3464,7 +3523,7 @@ function renderLabor() {
     <div class="labor-metric">
       <div class="label">ADC (denominator)</div>
       <div class="value">${adcAct.toFixed(1)}</div>
-      <div class="delta">Budget ${adcBud.toFixed(1)} · ${fmtNum(DATA.patient_days.mar_act)} patient days</div>
+      <div class="delta">Budget ${adcBud.toFixed(1)} · ${fmtNum(epd.mar_act)} patient days</div>
       <span class="pill ${adcAct >= adcBud ? '' : 'warn'}">${adcAct >= adcBud ? '+' : ''}${(adcAct - adcBud).toFixed(1)} vs bud</span>
     </div>`;
   const indirectTile = `
@@ -3604,10 +3663,11 @@ function renderLabor() {
 
 function renderCategories() {
   const isP = view === 'ppd';
-  const pd = DATA.patient_days.mar_act;
-  const pdBudV = DATA.patient_days.mar_bud;
-  const pdY = DATA.patient_days.ytd_act;
-  const pdYBud = DATA.patient_days.ytd_bud;
+  const epd = getEffectivePatientDays();
+  const pd = epd.mar_act;
+  const pdBudV = epd.mar_bud;
+  const pdY = epd.ytd_act;
+  const pdYBud = epd.ytd_bud;
   const tbody = document.getElementById('cat-tbody');
   const ms = getMonthShort();
 
