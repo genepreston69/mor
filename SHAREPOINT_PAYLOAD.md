@@ -50,10 +50,19 @@ console.log(JSON.stringify(payload, null, 2));
   "note_threshold_dollars": 3000,                 // applies to summary/categories
 
   "labor": {
-    "direct_care_fte_actual": 42.5,
-    "direct_care_fte_budget": 40.0,
-    "total_fte_actual":       110.0,
-    "total_fte_budget":       105.0
+    // Sourced from MOR_MTD rows 74-83 of the MOR Standard Deck. Each entry has
+    // shape { label, act, bud, var, var_pct, pm, pm_var, py, py_var }. Impact
+    // rows (epob_fte_impact, rate_per_fte_impact, total_impact) populate only
+    // var / pm_var / py_var; the act/bud/pm/py fields will be 0. May be null
+    // entirely if the deck has not been uploaded.
+    "epob_paid":           { "label": "EPOB Paid", "act": 2.24, "bud": 2.26, "var": 0.02, "var_pct": 0.01, "pm": 2.12, "pm_var": -0.12, "py": 2.02, "py_var": -0.22 },
+    "equivalent_epob":     { "label": "Equivalent EPOB Paid", "act": 2.27, "bud": 2.21, "var": -0.05, "var_pct": -0.02, "pm": 2.05, "pm_var": -0.21, "py": 1.95, "py_var": -0.32 },
+    "paid_ftes":           { "label": "Paid FTEs", "act": 190.6, "bud": 215.0, "var": 24.4, "var_pct": 0.11, "pm": 192, "pm_var": 1, "py": 230, "py_var": 39 },
+    "labor_cost":          { "label": "Labor Cost", "act": 1389168, "bud": 1516900, "var": 127733, "var_pct": 0.08, "pm": 1420772, "pm_var": 31604, "py": 1583719, "py_var": 194551 },
+    "labor_cost_ahr":      { "label": "Labor Cost AHR", "act": 42.63, "bud": 41.28, "var": -1.36, "var_pct": -0.03, "pm": 42, "pm_var": -0.74, "py": 39, "py_var": -4 },
+    "epob_fte_impact":     { "label": "EPOB FTE Impact", "var": -30194, "pm_var": -132283, "py_var": -185516 },
+    "rate_per_fte_impact": { "label": "Rate per FTE Impact", "var": -44251, "pm_var": 21526, "py_var": -74311 },
+    "total_impact":        { "label": "Total", "var": -74445, "pm_var": -110757, "py_var": -259826 }
   },
 
   "summary": {
