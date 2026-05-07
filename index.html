@@ -2809,10 +2809,13 @@ function recomputePPD() {
   }
 }
 function lineChart(actVals, budVals, w, h, color) {
-  // Rolling 12-month window: always render all 12 months on the X-axis.
-  // Actuals are plotted only through the last month with data; budget runs the full 12.
-  const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
-  const N = 12;
+  // Dynamic window: render only months through the last month with confirmed
+  // actual data (per getCurrentMonthIdx), excluding the in-progress current
+  // calendar month and any future months with no data.
+  const monthsAll = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+  const lastDataIdx = getCurrentMonthIdx();
+  const N = Math.max(1, lastDataIdx + 1);
+  const months = monthsAll.slice(0, N);
   const actFull = (actVals || []).slice(0, N);
   const budFull = (budVals || []).slice(0, N);
   while (actFull.length < N) actFull.push(0);
@@ -2831,7 +2834,7 @@ function lineChart(actVals, budVals, w, h, color) {
   const padL = 8, padR = 8, padT = 8, padB = 16;
   const innerW = w - padL - padR;
   const innerH = h - padT - padB;
-  const step = innerW / (N - 1);
+  const step = N > 1 ? innerW / (N - 1) : 0;
 
   const yPos = (v) => padT + innerH - ((v - min) / range) * innerH;
   const xPos = (i) => padL + i * step;
