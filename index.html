@@ -1789,7 +1789,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   <div class="section-head">
     <h2>Trended Performance</h2>
-    <span class="desc">Rolling 12-month trend · Closed months only (current period in card headline) · Source: Month End Analytic</span>
+    <span class="desc">Trailing actuals · Closed months only · Source: MOR Standard Deck (Trended P&amp;L)</span>
   </div>
   <div class="section-divider"></div>
   <div class="trend-grid-lg" id="trend-lg"></div>
@@ -2691,6 +2691,91 @@ function parseDeck(wb) {
     }
   }
 
+  // ----- Trended P&L: trailing actuals keyed by period code -----------------
+  // Sheet layout: row 2 = Scenario (Actual / Budget_Final), row 3 = period code
+  // (e.g., '2025M6'), row 7 = column header. Cols E onwards. We capture every
+  // column where Scenario === 'Actual' until the first Budget_Final column.
+  const tWs = wb.Sheets['Trended P&L'];
+  if (!tWs) throw new Error("'Trended P&L' sheet not found in workbook");
+  const tCell = (r, c) => {
+    const cell = tWs[XLSX.utils.encode_cell({r: r-1, c: c-1})];
+    return cell ? cell.v : null;
+  };
+  const tLabel = (r) => {
+    const v = tCell(r, 4);
+    return v == null ? '' : String(v).trim();
+  };
+  const expectTrendedLabel = (row, expected) => {
+    const got = tLabel(row);
+    if (got.toLowerCase() !== expected.toLowerCase()) {
+      throw new Error('Trended P&L row ' + row + ': expected "' + expected +
+        '" but got "' + got + '". The Trended P&L sheet layout may have changed.');
+    }
+  };
+
+  const periods = [];
+  const actCols = [];
+  for (let c = 5; c <= 30; c++) {
+    const scen = tCell(2, c);
+    if (scen == null || String(scen).trim() === '') continue;
+    if (!/actual/i.test(String(scen))) break;
+    const time = tCell(3, c);
+    if (!time) continue;
+    periods.push(String(time).trim());
+    actCols.push(c);
+  }
+  if (periods.length === 0) throw new Error('Trended P&L: no Actual columns found in row 2');
+
+  expectTrendedLabel(17,  'IP Days');
+  expectTrendedLabel(55,  'Total Net Revenue');
+  expectTrendedLabel(97,  'Labor Costs');
+  expectTrendedLabel(102, 'Total Salary Expense');
+  expectTrendedLabel(116, 'Employee Benefits');
+  expectTrendedLabel(120, 'Contract Labor');
+  expectTrendedLabel(125, 'Supplies');
+  expectTrendedLabel(139, 'Purchased Services');
+  expectTrendedLabel(148, 'Professional Fees');
+  expectTrendedLabel(160, 'Utilities');
+  expectTrendedLabel(161, 'Repairs & Maintenance');
+  expectTrendedLabel(162, 'Rent');
+  expectTrendedLabel(163, 'Insurance');
+  expectTrendedLabel(168, 'Marketing & Advertising');
+  expectTrendedLabel(169, 'Operating Taxes');
+  expectTrendedLabel(174, 'EBITDA');
+
+  const seriesFor = (row) => actCols.map(c => num(tCell(row, c)));
+  // 'Other Operating' rolls up Travel, Employee Related, Patient Transportation
+  // and Other Operating Expenses Forecast (rows 164-167).
+  const otherOpSeries = actCols.map((c) =>
+    [164, 165, 166, 167].reduce((sum, r) => sum + num(tCell(r, c)), 0));
+
+  const nrSeries     = seriesFor(55);
+  const ebitdaSeries = seriesFor(174);
+
+  deck.trended = {
+    periods,
+    series: {
+      net_revenue:         nrSeries,
+      total_opex:          nrSeries.map((nr, i) => nr - ebitdaSeries[i]),
+      ebitda:              ebitdaSeries,
+      ip_days:             seriesFor(17),
+      rent:                seriesFor(162),
+      salaries_wages:      seriesFor(102),
+      insurance:           seriesFor(163),
+      professional_fees:   seriesFor(148),
+      taxes:               seriesFor(169),
+      supplies:            seriesFor(125),
+      utilities:           seriesFor(160),
+      repairs_maintenance: seriesFor(161),
+      benefits:            seriesFor(116),
+      purchased_services:  seriesFor(139),
+      marketing:           seriesFor(168),
+      contract_labor:      seriesFor(120),
+      other_operating:     otherOpSeries,
+      labor_costs:         seriesFor(97),
+    },
+  };
+
   return { deck };
 }
 
@@ -2877,26 +2962,31 @@ function recomputePPD() {
     }
   }
 }
-function lineChart(actVals, budVals, w, h, color) {
-  // Rolling 12-month window: always render all 12 months on the X-axis.
-  // Actuals run through the last *closed* month (the period before the
-  // current reporting month); budget runs the full 12.
-  const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
-  const N = 12;
-  const actFull = (actVals || []).slice(0, N);
-  const budFull = (budVals || []).slice(0, N);
-  while (actFull.length < N) actFull.push(0);
-  while (budFull.length < N) budFull.push(0);
+// Period code 'YYYYMm' -> { year, month, label, short }
+function parsePeriod(code) {
+  const m = /^(\d{4})M(\d{1,2})$/.exec(String(code || '').trim());
+  if (!m) return null;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const yr = parseInt(m[1], 10);
+  const mo = parseInt(m[2], 10);
+  return {
+    year: yr, month: mo,
+    label: months[mo-1] + " '" + String(yr).slice(2),  // e.g., "Jun '25"
+    short: months[mo-1].charAt(0),
+  };
+}
 
-  // Last index with actual data (non-zero). -1 if none. The current period's
-  // value is preliminary (and may be partial), so the trend line stops one
-  // month short of it — the current month is reported in the card headline,
-  // not in the trend.
-  let lastAct = -1;
-  for (let i = 0; i < N; i++) if (actFull[i] !== 0) lastAct = i;
-  const trendLast = lastAct - 1;
+// Rolling-actuals chart. Drops the most-recent (current) period, which is
+// preliminary, and renders only an Actual line with no budget overlay.
+function lineChartTrailing(values, periods, w, h, color, opts) {
+  opts = opts || {};
+  const N = Math.min(values.length, periods.length);
+  if (N < 2) return '';
+  const trendLast = N - 2;       // index of last *closed* period
+  if (trendLast < 0) return '';
 
-  const all = actFull.concat(budFull).filter(v => v !== 0);
+  const closedVals = values.slice(0, trendLast + 1);
+  const all = closedVals.filter(v => v !== 0);
   if (all.length === 0) return '';
   const min = Math.min(...all) * 0.92;
   const max = Math.max(...all) * 1.08;
@@ -2905,91 +2995,108 @@ function lineChart(actVals, budVals, w, h, color) {
   const padL = 8, padR = 8, padT = 8, padB = 16;
   const innerW = w - padL - padR;
   const innerH = h - padT - padB;
-  const step = innerW / (N - 1);
+  const step = N > 1 ? innerW / (N - 1) : 0;
 
   const yPos = (v) => padT + innerH - ((v - min) / range) * innerH;
   const xPos = (i) => padL + i * step;
 
-  const actPts = trendLast >= 0
-    ? actFull.slice(0, trendLast + 1).map((v,i) => xPos(i) + ',' + yPos(v)).join(' ')
-    : '';
-  const budPts = budFull.map((v,i) => xPos(i) + ',' + yPos(v)).join(' ');
+  const actPts = closedVals.map((v,i) => xPos(i) + ',' + yPos(v)).join(' ');
   const areaPath = trendLast >= 1
     ? xPos(0) + ',' + (padT+innerH) + ' ' + actPts + ' ' + xPos(trendLast) + ',' + (padT+innerH)
     : '';
 
+  // X-axis labels: full "Mon 'yy" on large charts, single-letter on small.
+  const labelMode = opts.labelMode === 'short' ? 'short' : 'long';
+  const ticks = periods.map((p, i) => {
+    const pp = parsePeriod(p);
+    const txt = pp ? (labelMode === 'short' ? pp.short : pp.label) : String(p);
+    return '<text x="' + xPos(i) + '" y="' + (h-3) + '" text-anchor="middle" font-size="' +
+      (labelMode === 'short' ? 9 : 9.5) + '" fill="#8a97a6" font-family="-apple-system,sans-serif">' +
+      txt + '</text>';
+  }).join('');
+
   return '<svg width="' + w + '" height="' + h + '" style="display:block;width:100%;height:auto" viewBox="0 0 ' + w + ' ' + h + '">' +
     (areaPath ? '<polygon points="' + areaPath + '" fill="' + color + '" fill-opacity="0.08"/>' : '') +
-    '<polyline points="' + budPts + '" fill="none" stroke="#b0bcc9" stroke-width="1.5" stroke-dasharray="3,3"/>' +
-    (actPts ? '<polyline points="' + actPts + '" fill="none" stroke="' + color + '" stroke-width="2.2"/>' : '') +
-    actFull.slice(0, trendLast + 1).map((v,i) => '<circle cx="' + xPos(i) + '" cy="' + yPos(v) + '" r="3" fill="#fff" stroke="' + color + '" stroke-width="2"/>').join('') +
-    months.map((m,i) => '<text x="' + xPos(i) + '" y="' + (h-3) + '" text-anchor="middle" font-size="9" fill="#8a97a6" font-family="-apple-system,sans-serif">' + m + '</text>').join('') +
+    '<polyline points="' + actPts + '" fill="none" stroke="' + color + '" stroke-width="2.2"/>' +
+    closedVals.map((v,i) => '<circle cx="' + xPos(i) + '" cy="' + yPos(v) + '" r="3" fill="#fff" stroke="' + color + '" stroke-width="2"/>').join('') +
+    ticks +
     '</svg>';
 }
 
 function renderTrends() {
+  const trended = DATA.deck && DATA.deck.trended;
+  if (!trended) {
+    document.getElementById('trend-lg').innerHTML = '';
+    document.getElementById('trend-sm').innerHTML = '';
+    return;
+  }
   const isP = view === 'ppd';
-  const epd = getEffectivePatientDays();
-  const pdAct = epd.monthly_act;
-  const pdBud = epd.monthly_bud;
-  const ppdize = (arr, divisor) => arr.map((v,i) => (divisor[i] && divisor[i] !== 0) ? v/divisor[i] : 0);
+  const periods = trended.periods;
+  const ipDays = trended.series.ip_days;
+
+  // PPD = $ series ÷ IP Days series, period-by-period.
+  const ppdize = (arr) => arr.map((v,i) => (ipDays[i] && ipDays[i] !== 0) ? v/ipDays[i] : 0);
+
+  // Last closed period drives the headline value (current period is partial).
+  const lastClosedIdx = Math.max(0, periods.length - 2);
+  const closedPeriod  = parsePeriod(periods[lastClosedIdx]);
+  const closedLabel   = closedPeriod ? closedPeriod.label : periods[lastClosedIdx];
 
   const lgItems = [
-    { title:'Net Revenue', src: DATA.net_revenue, color:'#2b7a8a', isPD: false },
-    { title:'Total OpEx', src: DATA.total_opex, color:'#e08552', isPD: false },
-    { title:'EBITDA', src: DATA.ebitda, color:'#5a9b6e', isPD: false },
-    { title:'Patient Days', src: epd, color:'#7d5fa3', isPD: true },
+    { title:'Net Revenue', key:'net_revenue', color:'#2b7a8a', kind:'money' },
+    { title:'Total OpEx',  key:'total_opex',  color:'#e08552', kind:'money' },
+    { title:'EBITDA',      key:'ebitda',      color:'#5a9b6e', kind:'money' },
+    { title:'Patient Days',key:'ip_days',     color:'#7d5fa3', kind:'count' },
   ];
   document.getElementById('trend-lg').innerHTML = lgItems.map(it => {
-    let actArr, budArr, currentVal, currentLabel;
-    if (it.isPD) {
-      actArr = it.src.monthly_act;
-      budArr = it.src.monthly_bud;
-      currentVal = fmtNum(it.src.mar_act);
-      currentLabel = getMonthName() + ' · ' + fmtNum(it.src.mar_act) + ' actual vs ' + fmtNum(it.src.mar_bud) + ' bud';
-    } else if (isP) {
-      actArr = ppdize(it.src.monthly_act, pdAct);
-      budArr = ppdize(it.src.monthly_bud, pdBud);
-      currentVal = fmtPPD(it.src.ppd_mar);
-      currentLabel = getMonthName() + ' · ' + fmtPPD(it.src.ppd_mar) + ' / patient day';
-    } else {
-      actArr = it.src.monthly_act;
-      budArr = it.src.monthly_bud;
-      currentVal = fmt$(it.src.mar_act);
-      currentLabel = getMonthName() + ' · ' + fmt$(it.src.mar_act) + ' actual vs ' + fmt$(it.src.mar_bud) + ' budget';
-    }
+    const raw = trended.series[it.key] || [];
+    const inPpd = isP && it.kind === 'money';
+    const arr = inPpd ? ppdize(raw) : raw;
+    const closedVal = arr[lastClosedIdx] || 0;
+    const fmtVal = inPpd ? fmtPPD : (it.kind === 'money' ? fmt$ : fmtNum);
+    const sub = inPpd
+      ? closedLabel + ' · ' + fmtPPD(closedVal) + ' / patient day'
+      : closedLabel + ' · ' + fmtVal(closedVal) + ' actual';
     return '<div class="trend-card">' +
-      '<div class="tc-head"><div class="tc-title">' + it.title + '</div><div class="tc-val">' + currentVal + '</div></div>' +
-      '<div class="tc-sub">' + currentLabel + '</div>' +
-      lineChart(actArr, budArr, 580, 140, it.color) +
-      '<div class="trend-legend">' +
-        '<div class="lg-item"><div class="lg-swatch" style="background:' + it.color + '"></div>Actual</div>' +
-        '<div class="lg-item"><div class="lg-swatch" style="background:#b0bcc9"></div>Budget</div>' +
-      '</div>' +
+      '<div class="tc-head"><div class="tc-title">' + it.title + '</div><div class="tc-val">' + fmtVal(closedVal) + '</div></div>' +
+      '<div class="tc-sub">' + sub + '</div>' +
+      lineChartTrailing(arr, periods, 580, 140, it.color, { labelMode: 'long' }) +
     '</div>';
   }).join('');
 
+  // Expense category cards. Order by absolute size of the most-recent closed
+  // month, descending — biggest spend lines first.
   const colors = ['#2b7a8a','#e08552','#7d5fa3','#d4a04a','#c44536','#5a9b6e','#1e4a5f','#8a97a6'];
-  const sortedCats = DATA.categories.slice()
-    .filter(c => c.mar_act !== 0 || c.mar_bud !== 0)
-    .sort((a,b) => Math.abs(b.mar_var) - Math.abs(a.mar_var));
-  document.getElementById('trend-sm').innerHTML = sortedCats.map((c,i) => {
-    let actArr, budArr, currentVal;
-    if (isP) {
-      actArr = ppdize(c.monthly_act, pdAct);
-      budArr = ppdize(c.monthly_bud, pdBud);
-      currentVal = fmtPPD(c.ppd_mar);
-    } else {
-      actArr = c.monthly_act;
-      budArr = c.monthly_bud;
-      currentVal = fmt$(c.mar_act);
-    }
+  const smItems = [
+    { name:'Salaries & Wages',     key:'salaries_wages' },
+    { name:'Benefits',             key:'benefits' },
+    { name:'Contract Labor',       key:'contract_labor' },
+    { name:'Supplies',             key:'supplies' },
+    { name:'Purchased Services',   key:'purchased_services' },
+    { name:'Professional Fees',    key:'professional_fees' },
+    { name:'Rent / Lease',         key:'rent' },
+    { name:'Insurance',            key:'insurance' },
+    { name:'Utilities',            key:'utilities' },
+    { name:'Repairs & Maintenance',key:'repairs_maintenance' },
+    { name:'Operating Taxes',      key:'taxes' },
+    { name:'Marketing',            key:'marketing' },
+    { name:'Other Operating',      key:'other_operating' },
+  ].map(it => {
+    const raw = trended.series[it.key] || [];
+    return Object.assign({}, it, { raw, closed: raw[lastClosedIdx] || 0 });
+  })
+   .filter(it => it.raw.some(v => v !== 0))
+   .sort((a,b) => Math.abs(b.closed) - Math.abs(a.closed));
+
+  document.getElementById('trend-sm').innerHTML = smItems.map((it, i) => {
+    const arr = isP ? ppdize(it.raw) : it.raw;
+    const val = arr[lastClosedIdx] || 0;
     const color = colors[i % colors.length];
-    const arrow = c.mar_var > 0 ? '▼ ' : '▲ ';
+    const fmtVal = isP ? fmtPPD : fmt$;
     return '<div class="trend-card sm">' +
-      '<div class="tc-head"><div class="tc-title">' + c.name + '</div><div class="tc-val">' + currentVal + '</div></div>' +
-      '<div class="tc-sub">' + getMonthShort() + ' · ' + arrow + fmt$(Math.abs(c.mar_var)) + ' vs bud</div>' +
-      lineChart(actArr, budArr, 260, 100, color) +
+      '<div class="tc-head"><div class="tc-title">' + it.name + '</div><div class="tc-val">' + fmtVal(val) + '</div></div>' +
+      '<div class="tc-sub">' + closedLabel + (isP ? ' · per patient day' : ' actual') + '</div>' +
+      lineChartTrailing(arr, periods, 260, 100, color, { labelMode: 'short' }) +
     '</div>';
   }).join('');
 }
