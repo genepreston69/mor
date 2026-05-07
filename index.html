@@ -1733,7 +1733,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   <div class="section-head">
     <h2>Trended Performance</h2>
-    <span class="desc">Year-to-date monthly trend · Actual vs Budget · Source: Month End Analytic</span>
+    <span class="desc">Rolling 12-month trend · Actual vs Budget · Source: Month End Analytic</span>
   </div>
   <div class="section-divider"></div>
   <div class="trend-grid-lg" id="trend-lg"></div>
@@ -2750,13 +2750,20 @@ function getCurrentMonthIdx() {
   return last;
 }
 function lineChart(actVals, budVals, w, h, color) {
+  // Rolling 12-month window: always render all 12 months on the X-axis.
+  // Actuals are plotted only through the last month with data; budget runs the full 12.
   const months = ['J','F','M','A','M','J','J','A','S','O','N','D'];
-  const showThru = getCurrentMonthIdx();
-  const actSlice = actVals.slice(0, showThru+1);
-  const budSlice = budVals.slice(0, showThru+1);
-  const monthSlice = months.slice(0, showThru+1);
+  const N = 12;
+  const actFull = (actVals || []).slice(0, N);
+  const budFull = (budVals || []).slice(0, N);
+  while (actFull.length < N) actFull.push(0);
+  while (budFull.length < N) budFull.push(0);
 
-  const all = actSlice.concat(budSlice).filter(v => v !== 0);
+  // Last index with actual data (non-zero). -1 if none.
+  let lastAct = -1;
+  for (let i = 0; i < N; i++) if (actFull[i] !== 0) lastAct = i;
+
+  const all = actFull.concat(budFull).filter(v => v !== 0);
   if (all.length === 0) return '';
   const min = Math.min(...all) * 0.92;
   const max = Math.max(...all) * 1.08;
@@ -2765,21 +2772,25 @@ function lineChart(actVals, budVals, w, h, color) {
   const padL = 8, padR = 8, padT = 8, padB = 16;
   const innerW = w - padL - padR;
   const innerH = h - padT - padB;
-  const step = actSlice.length > 1 ? innerW / (actSlice.length - 1) : 0;
+  const step = innerW / (N - 1);
 
   const yPos = (v) => padT + innerH - ((v - min) / range) * innerH;
   const xPos = (i) => padL + i * step;
 
-  const actPts = actSlice.map((v,i) => xPos(i) + ',' + yPos(v)).join(' ');
-  const budPts = budSlice.map((v,i) => xPos(i) + ',' + yPos(v)).join(' ');
-  const areaPath = xPos(0) + ',' + (padT+innerH) + ' ' + actPts + ' ' + xPos(actSlice.length-1) + ',' + (padT+innerH);
+  const actPts = lastAct >= 0
+    ? actFull.slice(0, lastAct + 1).map((v,i) => xPos(i) + ',' + yPos(v)).join(' ')
+    : '';
+  const budPts = budFull.map((v,i) => xPos(i) + ',' + yPos(v)).join(' ');
+  const areaPath = lastAct >= 1
+    ? xPos(0) + ',' + (padT+innerH) + ' ' + actPts + ' ' + xPos(lastAct) + ',' + (padT+innerH)
+    : '';
 
   return '<svg width="' + w + '" height="' + h + '" style="display:block;width:100%;height:auto" viewBox="0 0 ' + w + ' ' + h + '">' +
-    '<polygon points="' + areaPath + '" fill="' + color + '" fill-opacity="0.08"/>' +
+    (areaPath ? '<polygon points="' + areaPath + '" fill="' + color + '" fill-opacity="0.08"/>' : '') +
     '<polyline points="' + budPts + '" fill="none" stroke="#b0bcc9" stroke-width="1.5" stroke-dasharray="3,3"/>' +
-    '<polyline points="' + actPts + '" fill="none" stroke="' + color + '" stroke-width="2.2"/>' +
-    actSlice.map((v,i) => '<circle cx="' + xPos(i) + '" cy="' + yPos(v) + '" r="3" fill="#fff" stroke="' + color + '" stroke-width="2"/>').join('') +
-    monthSlice.map((m,i) => '<text x="' + xPos(i) + '" y="' + (h-3) + '" text-anchor="middle" font-size="9" fill="#8a97a6" font-family="-apple-system,sans-serif">' + m + '</text>').join('') +
+    (actPts ? '<polyline points="' + actPts + '" fill="none" stroke="' + color + '" stroke-width="2.2"/>' : '') +
+    actFull.slice(0, lastAct + 1).map((v,i) => '<circle cx="' + xPos(i) + '" cy="' + yPos(v) + '" r="3" fill="#fff" stroke="' + color + '" stroke-width="2"/>').join('') +
+    months.map((m,i) => '<text x="' + xPos(i) + '" y="' + (h-3) + '" text-anchor="middle" font-size="9" fill="#8a97a6" font-family="-apple-system,sans-serif">' + m + '</text>').join('') +
     '</svg>';
 }
 
