@@ -1547,6 +1547,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <div class="section-pill">MOR DEEP DIVE</div>
       <div class="date-stamp" id="date-stamp"></div>
       <button class="print-btn" onclick="openThresholdsModal()"><span class="print-icon">⚙</span> Thresholds</button>
+      <button class="print-btn" id="sp-submit-btn" onclick="submitToSharePoint()"><span class="print-icon">⇪</span> Submit to SharePoint</button>
       <button class="print-btn" onclick="printReport()"><span class="print-icon">⎙</span> Print</button>
     </div>
   </div>
@@ -3775,6 +3776,144 @@ function toggleDetail(idx) {
   const catRow = row.previousElementSibling;
   row.classList.toggle('open');
   catRow.classList.toggle('expanded');
+}
+
+// =========================================================================
+// SHAREPOINT PAYLOAD — high-level summary + every line item meeting the
+// note threshold (variance >= NOTE_MIN_VARIANCE), with note text attached.
+// =========================================================================
+const SHAREPOINT_URL_KEY = 'mor_sharepoint_url';
+
+function buildSharePointPayload() {
+  const notes = getNotes();
+  const mgmt  = getMgmtCommentary();
+  const labor = getLaborInputs();
+  const meetsNoteThreshold = v => v != null && Math.abs(v) >= NOTE_MIN_VARIANCE;
+
+  const summarize = key => {
+    const s = DATA[key];
+    if (!s) return null;
+    return {
+      mar_act: s.mar_act ?? null, mar_bud: s.mar_bud ?? null, mar_var: s.mar_var ?? null,
+      ytd_act: s.ytd_act ?? null, ytd_bud: s.ytd_bud ?? null, ytd_var: s.ytd_var ?? null,
+      ppd_mar: s.ppd_mar ?? null, ppd_bud: s.ppd_bud ?? null,
+    };
+  };
+
+  const volumeMetric = label => {
+    if (!DATA.deck || !DATA.deck.volume) return null;
+    const v = DATA.deck.volume.find(x => x.label === label);
+    if (!v) return null;
+    const noteKey = 'vol:' + label;
+    return {
+      label, act: v.act ?? null, bud: v.bud ?? null,
+      var: v.var ?? null, var_pct: v.var_pct ?? null, py: v.py ?? null,
+      note_key: noteKey,
+      note: notes[noteKey] || '',
+      requires_note: meetsNoteThreshold(v.var),
+    };
+  };
+
+  const categories = (DATA.categories || []).map(cat => {
+    const catNoteKey = 'cat:' + cat.name;
+    const expNoteKey = 'exp:' + cat.name;
+    const details = (cat.details || [])
+      .filter(d => meetsNoteThreshold(d.mar_var))
+      .map(d => {
+        const glKey = 'gl:' + d.gl;
+        const calloutKey = 'callout:' + d.gl;
+        const note = notes[glKey] || notes[calloutKey] || '';
+        return {
+          gl: d.gl, desc: d.desc,
+          mar_act: d.mar_act ?? null, mar_bud: d.mar_bud ?? null, mar_var: d.mar_var ?? null,
+          ytd_act: d.ytd_act ?? null, ytd_bud: d.ytd_bud ?? null, ytd_var: d.ytd_var ?? null,
+          ppd_mar: d.ppd_mar ?? null,
+          note,
+          note_source: notes[glKey] ? 'gl' : (notes[calloutKey] ? 'callout' : null),
+          has_note: !!note,
+          requires_note: true,
+        };
+      });
+    return {
+      name: cat.name,
+      mar_act: cat.mar_act ?? null, mar_bud: cat.mar_bud ?? null, mar_var: cat.mar_var ?? null,
+      ytd_act: cat.ytd_act ?? null, ytd_bud: cat.ytd_bud ?? null, ytd_var: cat.ytd_var ?? null,
+      ppd_mar: cat.ppd_mar ?? null, ppd_bud: cat.ppd_bud ?? null,
+      category_note: notes[catNoteKey] || '',
+      commentary_note: notes[expNoteKey] || '',
+      requires_note: meetsNoteThreshold(cat.mar_var),
+      details,
+    };
+  }).filter(c => c.details.length > 0 || c.requires_note || c.category_note || c.commentary_note);
+
+  return {
+    schema_version: 1,
+    generated_at: new Date().toISOString(),
+    facility: DATA.facility || null,
+    period: DATA.period || null,
+    days_in_month: getDaysInMonth(),
+    staffed_beds: getStaffedBeds(),
+    note_threshold_dollars: NOTE_MIN_VARIANCE,
+    labor: {
+      direct_care_fte_actual: labor.dc_act,
+      direct_care_fte_budget: labor.dc_bud,
+      total_fte_actual:       labor.tot_act,
+      total_fte_budget:       labor.tot_bud,
+    },
+    summary: {
+      net_revenue:    summarize('net_revenue'),
+      total_opex:     summarize('total_opex'),
+      ebitda:         summarize('ebitda'),
+      ip_gross:       summarize('ip_gross'),
+      ip_contractual: summarize('ip_contractual'),
+      supplemental:   summarize('supplemental'),
+      patient_days:   summarize('patient_days'),
+    },
+    volume: ['Admissions','Inpatient Days','LOS','ADC','Equivalent ADC','Occupancy']
+      .map(volumeMetric).filter(Boolean),
+    revenue_narrative_notes: {
+      net_revenue:     notes['rev:Net Revenue'] || '',
+      ytd_performance: notes['rev:YTD Performance'] || '',
+    },
+    management_commentary: {
+      volume:  mgmt.volume  || '',
+      revenue: mgmt.revenue || '',
+      expense: mgmt.expense || '',
+    },
+    categories,
+  };
+}
+window.buildSharePointPayload = buildSharePointPayload;
+
+async function submitToSharePoint() {
+  const stored = localStorage.getItem(SHAREPOINT_URL_KEY) || '';
+  const url = (window.prompt('SharePoint / Power Automate endpoint URL:', stored) || '').trim();
+  if (!url) return;
+  if (!/^https?:\/\//i.test(url)) { alert('URL must start with http(s)://'); return; }
+  localStorage.setItem(SHAREPOINT_URL_KEY, url);
+
+  const payload = buildSharePointPayload();
+  const btn = document.getElementById('sp-submit-btn');
+  const orig = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = 'Submitting…'; }
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(() => '');
+      throw new Error('HTTP ' + res.status + (t ? ' — ' + t.slice(0, 200) : ''));
+    }
+    alert('Submitted to SharePoint successfully.');
+  } catch (e) {
+    console.error('SharePoint submit failed', e);
+    console.log('Payload:', payload);
+    alert('Submit failed: ' + e.message + '\nPayload logged to console.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+  }
 }
 
 document.getElementById('staffed-beds-input').value = getStaffedBeds() || '';
