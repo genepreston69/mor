@@ -1503,6 +1503,65 @@ footer {
   /* Footer */
   footer { margin-top: 8px !important; padding-top: 6px !important; font-size: 9px !important; }
 }
+
+/* SharePoint submission controls */
+.sp-cycle-select {
+  padding: 6px 8px;
+  border: 1px solid #d0d4dc;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  color: #1f2937;
+  margin: 0 4px;
+}
+.sp-workbook-label { cursor: pointer; }
+.sp-workbook-status {
+  font-size: 12px;
+  color: #555;
+  margin: 0 6px 0 2px;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+  vertical-align: middle;
+}
+.sp-workbook-status .sp-workbook-name { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.sp-workbook-status.stale .sp-workbook-name { color: #a36c00; }
+.sp-workbook-status a { color: #666; margin-left: 6px; }
+.sp-footer {
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+  padding: 18px 0 28px;
+  border-top: 1px solid #eef0f3;
+  margin-top: 24px;
+}
+.sp-footer a {
+  color: #5b6472;
+  text-decoration: none;
+  margin: 0 6px;
+  cursor: pointer;
+}
+.sp-footer a:hover { text-decoration: underline; }
+.sp-footer .sep { margin: 0 2px; color: #c5cad2; }
+.sp-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2a2f3a;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+  z-index: 10000;
+  font-size: 13px;
+  max-width: 80vw;
+  transition: opacity .6s ease;
+}
+.sp-toast.warn { background: #a36c00; }
+.sp-toast.fade { opacity: 0; }
 </style>
 <script>/* SheetJS xlsx 0.18.5 — inlined for offline use, no external CDN dependency */
 /*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
@@ -1547,6 +1606,15 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <div class="section-pill">MOR DEEP DIVE</div>
       <div class="date-stamp" id="date-stamp"></div>
       <button class="print-btn" onclick="openThresholdsModal()"><span class="print-icon">⚙</span> Thresholds</button>
+      <select id="sp-cycle" class="sp-cycle-select" title="Submission cycle" onchange="onCycleChanged(this.value)">
+        <option value="FCST01">FCST01</option>
+        <option value="FCST02">FCST02</option>
+        <option value="MOR_PRELIM">MOR Preliminary</option>
+        <option value="MOR_FINAL">MOR Final</option>
+      </select>
+      <label class="print-btn sp-workbook-label" for="sp-workbook-input" title="Attach the source workbook used for this submission"><span class="print-icon">📎</span> Workbook</label>
+      <input type="file" id="sp-workbook-input" accept=".xlsx,.xlsm,.xlsb,.xls,.csv" style="display:none" onchange="onSourceWorkbookSelected(this.files && this.files[0])">
+      <span class="sp-workbook-status" id="sp-workbook-status"></span>
       <button class="print-btn" id="sp-submit-btn" onclick="submitToSharePoint()"><span class="print-icon">⇪</span> Submit to SharePoint</button>
       <button class="print-btn" onclick="printReport()"><span class="print-icon">⎙</span> Print</button>
     </div>
@@ -1789,6 +1857,12 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <button class="note-btn-save" onclick="saveThresholdsFromModal()">Save</button>
       </div>
     </div>
+  </div>
+
+  <div class="sp-footer">
+    <a onclick="resetSpEndpoint()">Reset endpoint</a><span class="sep">·</span>
+    <a onclick="resetSpSecret()">Reset secret</a><span class="sep">·</span>
+    <a onclick="resetSpSubmitter()">Reset submitter info</a>
   </div>
 </div>
 
@@ -3779,16 +3853,130 @@ function toggleDetail(idx) {
 }
 
 // =========================================================================
-// SHAREPOINT PAYLOAD — high-level summary + every line item meeting the
-// note threshold (variance >= NOTE_MIN_VARIANCE), with note text attached.
+// SHAREPOINT PAYLOAD v2 — high-level summary + every line item meeting the
+// note threshold, plus cycle/sequence/audit metadata for SharePoint upserts.
 // =========================================================================
-const SHAREPOINT_URL_KEY = 'mor_sharepoint_url';
+const SCHEMA_VERSION       = 2;
+const DASHBOARD_VERSION    = 'v2.0.0';
+const SHAREPOINT_URL_KEY   = 'mor_sharepoint_url';
+const SHAREPOINT_SECRET_KEY = 'mor_sharepoint_secret';
+const SUBMITTER_NAME_KEY   = 'mor_submitted_by';
+const SUBMITTER_ROLE_KEY   = 'mor_submitted_role';
+const CYCLE_KEY            = 'mor_cycle';
+const LAST_FILE_KEY        = 'mor_last_source_file';
+const CYCLES = ['FCST01', 'FCST02', 'MOR_PRELIM', 'MOR_FINAL'];
+const DEFAULT_CYCLE = 'FCST02';
 
-function buildSharePointPayload() {
+// Per-metric thresholds for volume notes. `field` chooses which numeric on
+// the volume row drives the requires_note flag.
+const VOLUME_THRESHOLDS = {
+  'ADC':            { value: 2,    unit: 'count', field: 'var' },
+  'Inpatient Days': { value: 60,   unit: 'count', field: 'var' },
+  'LOS':            { value: 0.05, unit: 'pct',   field: 'var_pct' },
+  'Occupancy':      { value: 0.03, unit: 'pct',   field: 'var_pct' },
+  'Admissions':     { value: 10,   unit: 'count', field: 'var' },
+  'Equivalent ADC': { value: 2,    unit: 'count', field: 'var' },
+};
+
+// Source workbook attachment — populated only when the user picks a file
+// in the current session. Hash is never persisted.
+let _sourceWorkbook = { name: null, sha256: null };
+
+async function sha256Hex(str) {
+  const data = new TextEncoder().encode(str);
+  const buf  = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function sha256HexBytes(arrayBuffer) {
+  const buf = await crypto.subtle.digest('SHA-256', arrayBuffer);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function getCycle() {
+  const sel = (typeof document !== 'undefined') && document.getElementById('sp-cycle');
+  if (sel && sel.value && CYCLES.includes(sel.value)) return sel.value;
+  const stored = localStorage.getItem(CYCLE_KEY);
+  return CYCLES.includes(stored) ? stored : DEFAULT_CYCLE;
+}
+
+function onCycleChanged(val) {
+  if (CYCLES.includes(val)) localStorage.setItem(CYCLE_KEY, val);
+}
+
+function seqKey(facility, period, cycle) {
+  return 'mor_seq:' + (facility || '_') + ':' + (period || '_') + ':' + cycle;
+}
+
+function getCurrentSeq(facility, period, cycle) {
+  const v = parseInt(localStorage.getItem(seqKey(facility, period, cycle)) || '0', 10);
+  return isNaN(v) ? 0 : v;
+}
+
+function bumpSeq(facility, period, cycle, newVal) {
+  localStorage.setItem(seqKey(facility, period, cycle), String(newVal));
+}
+
+async function onSourceWorkbookSelected(file) {
+  if (!file) return;
+  try {
+    const buf = await file.arrayBuffer();
+    const hex = await sha256HexBytes(buf);
+    _sourceWorkbook = { name: file.name, sha256: hex };
+    localStorage.setItem(LAST_FILE_KEY, file.name);
+    renderSourceWorkbookStatus(_sourceWorkbook, false);
+  } catch (e) {
+    console.error('Failed to hash workbook:', e);
+    showSubmitToast('Could not read workbook: ' + e.message, 'warn');
+  }
+}
+
+function clearSourceWorkbook() {
+  _sourceWorkbook = { name: null, sha256: null };
+  localStorage.removeItem(LAST_FILE_KEY);
+  const inp = document.getElementById('sp-workbook-input');
+  if (inp) inp.value = '';
+  renderSourceWorkbookStatus(null, false);
+}
+
+function renderSourceWorkbookStatus(state, stale) {
+  const el = document.getElementById('sp-workbook-status');
+  if (!el) return;
+  if (!state || !state.name) {
+    el.classList.remove('stale');
+    el.innerHTML = '';
+    return;
+  }
+  const safeName = String(state.name).replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));
+  const shortHash = state.sha256 ? state.sha256.slice(0, 8) + '…' : '(re-select to hash)';
+  el.classList.toggle('stale', !!stale);
+  el.innerHTML =
+    '<span class="sp-workbook-name">' + safeName + ' (' + shortHash + ')</span>' +
+    '<a href="#" onclick="event.preventDefault();clearSourceWorkbook();return false;">Clear</a>';
+}
+
+function showSubmitToast(msg, type) {
+  if (typeof document === 'undefined' || !document.body) return;
+  const el = document.createElement('div');
+  el.className = 'sp-toast' + (type ? ' ' + type : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.classList.add('fade'); }, 2800);
+  setTimeout(() => { el.remove(); }, 3600);
+}
+
+async function buildSharePointPayload() {
   const notes = getNotes();
   const mgmt  = getMgmtCommentary();
   const labor = getLaborInputs();
-  const meetsNoteThreshold = v => v != null && Math.abs(v) >= NOTE_MIN_VARIANCE;
+
+  const facility = DATA.facility || null;
+  const period   = DATA.period   || null;
+  const cycle    = getCycle();
+  const submission_id       = await sha256Hex((facility || '') + '|' + (period || '') + '|' + cycle);
+  const submission_sequence = getCurrentSeq(facility, period, cycle) + 1;
+
+  const meetsDollarThreshold = v => v != null && Math.abs(v) >= NOTE_MIN_VARIANCE;
 
   const summarize = key => {
     const s = DATA[key];
@@ -3805,12 +3993,18 @@ function buildSharePointPayload() {
     const v = DATA.deck.volume.find(x => x.label === label);
     if (!v) return null;
     const noteKey = 'vol:' + label;
+    const t = VOLUME_THRESHOLDS[label] || { value: NOTE_MIN_VARIANCE, unit: 'count', field: 'var' };
+    const fieldVal = v[t.field];
+    const requires = fieldVal != null && Math.abs(fieldVal) >= t.value;
     return {
-      label, act: v.act ?? null, bud: v.bud ?? null,
+      label,
+      act: v.act ?? null, bud: v.bud ?? null,
       var: v.var ?? null, var_pct: v.var_pct ?? null, py: v.py ?? null,
       note_key: noteKey,
       note: notes[noteKey] || '',
-      requires_note: meetsNoteThreshold(v.var),
+      threshold: t.value,
+      threshold_unit: t.unit,
+      requires_note: requires,
     };
   };
 
@@ -3818,7 +4012,7 @@ function buildSharePointPayload() {
     const catNoteKey = 'cat:' + cat.name;
     const expNoteKey = 'exp:' + cat.name;
     const details = (cat.details || [])
-      .filter(d => meetsNoteThreshold(d.mar_var))
+      .filter(d => meetsDollarThreshold(d.mar_var))
       .map(d => {
         const glKey = 'gl:' + d.gl;
         const calloutKey = 'callout:' + d.gl;
@@ -3841,16 +4035,19 @@ function buildSharePointPayload() {
       ppd_mar: cat.ppd_mar ?? null, ppd_bud: cat.ppd_bud ?? null,
       category_note: notes[catNoteKey] || '',
       commentary_note: notes[expNoteKey] || '',
-      requires_note: meetsNoteThreshold(cat.mar_var),
+      requires_note: meetsDollarThreshold(cat.mar_var),
       details,
     };
   }).filter(c => c.details.length > 0 || c.requires_note || c.category_note || c.commentary_note);
 
   return {
-    schema_version: 1,
+    schema_version: SCHEMA_VERSION,
+    submission_id,
+    submission_sequence,
+    cycle,
     generated_at: new Date().toISOString(),
-    facility: DATA.facility || null,
-    period: DATA.period || null,
+    facility,
+    period,
     days_in_month: getDaysInMonth(),
     staffed_beds: getStaffedBeds(),
     note_threshold_dollars: NOTE_MIN_VARIANCE,
@@ -3869,10 +4066,10 @@ function buildSharePointPayload() {
       supplemental:   summarize('supplemental'),
       patient_days:   summarize('patient_days'),
     },
-    volume: ['Admissions','Inpatient Days','LOS','ADC','Equivalent ADC','Occupancy']
+    volume: ['Admissions', 'Inpatient Days', 'LOS', 'ADC', 'Equivalent ADC', 'Occupancy']
       .map(volumeMetric).filter(Boolean),
     revenue_narrative_notes: {
-      net_revenue:     notes['rev:Net Revenue'] || '',
+      net_revenue:     notes['rev:Net Revenue']     || '',
       ytd_performance: notes['rev:YTD Performance'] || '',
     },
     management_commentary: {
@@ -3881,32 +4078,72 @@ function buildSharePointPayload() {
       expense: mgmt.expense || '',
     },
     categories,
+    audit: {
+      submitted_by:       localStorage.getItem(SUBMITTER_NAME_KEY) || null,
+      submitted_role:     localStorage.getItem(SUBMITTER_ROLE_KEY) || null,
+      source_file:        _sourceWorkbook.name   || null,
+      source_file_sha256: _sourceWorkbook.sha256 || null,
+      user_agent:         (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : null,
+      dashboard_version:  DASHBOARD_VERSION,
+    },
   };
 }
 window.buildSharePointPayload = buildSharePointPayload;
 
 async function submitToSharePoint() {
-  const stored = localStorage.getItem(SHAREPOINT_URL_KEY) || '';
-  const url = (window.prompt('SharePoint / Power Automate endpoint URL:', stored) || '').trim();
-  if (!url) return;
-  if (!/^https?:\/\//i.test(url)) { alert('URL must start with http(s)://'); return; }
-  localStorage.setItem(SHAREPOINT_URL_KEY, url);
+  // Endpoint URL — prompt only when missing
+  let url = localStorage.getItem(SHAREPOINT_URL_KEY) || '';
+  if (!url) {
+    url = (window.prompt('SharePoint / Power Automate endpoint URL:', '') || '').trim();
+    if (!url) return;
+    if (!/^https?:\/\//i.test(url)) { alert('URL must start with http(s)://'); return; }
+    localStorage.setItem(SHAREPOINT_URL_KEY, url);
+  }
 
-  const payload = buildSharePointPayload();
+  // Shared secret — prompt only when missing
+  let secret = localStorage.getItem(SHAREPOINT_SECRET_KEY) || '';
+  if (!secret) {
+    secret = (window.prompt('Shared secret (sent as X-MOR-Secret header):', '') || '').trim();
+    if (!secret) { alert('Submit cancelled — secret required.'); return; }
+    localStorage.setItem(SHAREPOINT_SECRET_KEY, secret);
+  }
+
+  // Submitter — prompt only when missing
+  if (!localStorage.getItem(SUBMITTER_NAME_KEY)) {
+    const name = (window.prompt('Submitter name (e.g., Gene Preston):', '') || '').trim();
+    if (!name) return;
+    localStorage.setItem(SUBMITTER_NAME_KEY, name);
+  }
+  if (!localStorage.getItem(SUBMITTER_ROLE_KEY)) {
+    const role = (window.prompt('Submitter role (e.g., Facility CFO):', '') || '').trim();
+    if (!role) return;
+    localStorage.setItem(SUBMITTER_ROLE_KEY, role);
+  }
+
+  if (!_sourceWorkbook.name) {
+    showSubmitToast('Submitting without source workbook reference.', 'warn');
+  }
+
+  const payload = await buildSharePointPayload();
   const btn = document.getElementById('sp-submit-btn');
   const orig = btn ? btn.innerHTML : '';
   if (btn) { btn.disabled = true; btn.innerHTML = 'Submitting…'; }
   try {
     const res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-MOR-Secret': secret,
+      },
       body: JSON.stringify(payload),
     });
     if (!res.ok) {
       const t = await res.text().catch(() => '');
       throw new Error('HTTP ' + res.status + (t ? ' — ' + t.slice(0, 200) : ''));
     }
-    alert('Submitted to SharePoint successfully.');
+    bumpSeq(payload.facility, payload.period, payload.cycle, payload.submission_sequence);
+    alert('Submitted to SharePoint (cycle ' + payload.cycle + ', sequence #' + payload.submission_sequence + ').');
   } catch (e) {
     console.error('SharePoint submit failed', e);
     console.log('Payload:', payload);
@@ -3915,6 +4152,30 @@ async function submitToSharePoint() {
     if (btn) { btn.disabled = false; btn.innerHTML = orig; }
   }
 }
+
+function resetSpEndpoint()  {
+  localStorage.removeItem(SHAREPOINT_URL_KEY);
+  alert('SharePoint endpoint URL cleared. You will be prompted on the next submit.');
+}
+function resetSpSecret() {
+  localStorage.removeItem(SHAREPOINT_SECRET_KEY);
+  alert('Shared secret cleared. You will be prompted on the next submit.');
+}
+function resetSpSubmitter() {
+  localStorage.removeItem(SUBMITTER_NAME_KEY);
+  localStorage.removeItem(SUBMITTER_ROLE_KEY);
+  alert('Submitter info cleared. You will be prompted on the next submit.');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sel = document.getElementById('sp-cycle');
+  if (sel) {
+    const stored = localStorage.getItem(CYCLE_KEY);
+    sel.value = CYCLES.includes(stored) ? stored : DEFAULT_CYCLE;
+  }
+  const lastFile = localStorage.getItem(LAST_FILE_KEY);
+  if (lastFile) renderSourceWorkbookStatus({ name: lastFile, sha256: null }, true);
+});
 
 document.getElementById('staffed-beds-input').value = getStaffedBeds() || '';
 loadStored();
