@@ -1789,7 +1789,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   <div class="section-head">
     <h2>Trended Performance</h2>
-    <span class="desc">Trailing actuals · Closed months only · Source: MOR Standard Deck (Trended P&amp;L)</span>
+    <span class="desc">Trailing actuals through current period · Source: MOR Standard Deck (Trended P&amp;L)</span>
   </div>
   <div class="section-divider"></div>
   <div class="trend-grid-lg" id="trend-lg"></div>
@@ -2976,14 +2976,14 @@ function parsePeriod(code) {
   };
 }
 
-// Rolling-actuals chart. Drops the most-recent (current) period, which is
-// preliminary, and renders only an Actual line with no budget overlay.
+// Rolling-actuals chart. Renders only an Actual line (no budget overlay) for
+// every period supplied — the deck's Trended P&L sheet only includes columns
+// for fully closed months, so all values are final.
 function lineChartTrailing(values, periods, w, h, color, opts) {
   opts = opts || {};
   const N = Math.min(values.length, periods.length);
   if (N < 2) return '';
-  const trendLast = N - 2;       // index of last *closed* period
-  if (trendLast < 0) return '';
+  const trendLast = N - 1;
 
   const closedVals = values.slice(0, trendLast + 1);
   const all = closedVals.filter(v => v !== 0);
@@ -3037,8 +3037,9 @@ function renderTrends() {
   // PPD = $ series ÷ IP Days series, period-by-period.
   const ppdize = (arr) => arr.map((v,i) => (ipDays[i] && ipDays[i] !== 0) ? v/ipDays[i] : 0);
 
-  // Last closed period drives the headline value (current period is partial).
-  const lastClosedIdx = Math.max(0, periods.length - 2);
+  // Headline = most recent period in the deck (the deck's column O is the
+  // finalized current reporting month).
+  const lastClosedIdx = Math.max(0, periods.length - 1);
   const closedPeriod  = parsePeriod(periods[lastClosedIdx]);
   const closedLabel   = closedPeriod ? closedPeriod.label : periods[lastClosedIdx];
 
