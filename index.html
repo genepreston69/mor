@@ -836,7 +836,6 @@ table.detail tr:last-child td { border-bottom: none; }
 .opp-card .note-btn { float: right; }
 .cat-name .note-btn { margin-left: auto; }
 table.detail td .note-btn { float: right; margin-left: 6px; }
-.callout-table td .note-btn { float: right; margin-left: 6px; }
 
 /* NOTE CALLOUT — inline display of note text */
 .note-callout {
@@ -1102,47 +1101,6 @@ table.detail td .note-btn { float: right; margin-left: 6px; }
   line-height: 1.5;
 }
 
-/* UNFAVORABLE LINE ITEM CALLOUTS */
-.callout-table {
-  width: 100%; border-collapse: collapse; margin-bottom: 32px;
-  background: #ffffff; border: 1px solid var(--border); border-radius: 8px;
-  overflow: hidden;
-}
-.callout-table th {
-  text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.6px; color: var(--muted); padding: 10px 14px;
-  background: var(--bg); border-bottom: 1px solid var(--border);
-}
-.callout-table th:not(:first-child):not(:nth-child(2)) { text-align: right; }
-.callout-table td {
-  padding: 9px 14px; font-size: 12px; color: var(--ink-2);
-  border-bottom: 1px solid var(--border-soft); font-variant-numeric: tabular-nums;
-}
-.callout-table td:not(:first-child):not(:nth-child(2)) { text-align: right; }
-.callout-table tr:last-child td { border-bottom: none; }
-.callout-table .cl-cat {
-  font-size: 9px; color: var(--muted); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.6px; display: block; margin-bottom: 1px;
-}
-.callout-table .cl-name { font-weight: 600; color: var(--ink); }
-.callout-table .cl-gl {
-  font-family: ui-monospace, monospace; font-size: 10px;
-  color: var(--muted); margin-right: 5px;
-}
-.callout-table .cl-var { font-weight: 700; color: var(--bad); }
-.callout-table .cl-pct {
-  font-size: 11px; font-weight: 600; color: var(--bad);
-  background: var(--bad-bg); padding: 2px 8px; border-radius: 999px;
-  white-space: nowrap;
-}
-.callout-empty {
-  background: #ffffff; border: 1px solid var(--border); border-radius: 6px;
-  padding: 24px; text-align: center; color: var(--muted); font-size: 13px;
-  margin-bottom: 32px;
-}
-.callout-empty::before { content: '✓ '; color: var(--good); font-weight: 700; }
-
-
 .upload-panel {
   background: #ffffff; border: 1px solid var(--border); border-radius: 8px;
   padding: 16px 20px; margin-bottom: 22px;
@@ -1403,14 +1361,6 @@ footer {
   table.detail th, table.detail td { padding: 2px 5px !important; }
   .detail-wrap { overflow: visible !important; }
 
-  /* Variance callouts */
-  .callout-wrap {
-    overflow: visible !important;
-    margin-bottom: 10px !important;
-  }
-  .callout-table { font-size: 9px !important; }
-  .callout-table th, .callout-table td { padding: 3px 6px !important; }
-
   /* Commentary blocks */
   .commentary {
     font-size: 10px !important;
@@ -1463,7 +1413,7 @@ footer {
   /* Remove all overflow:hidden that causes truncation */
   [style*="overflow"],
   .card, .mini-card, .opp-card, .rev-card, .insight-card, .trend-card,
-  .cat-wrap, .detail-wrap, .callout-wrap { overflow: visible !important; }
+  .cat-wrap, .detail-wrap { overflow: visible !important; }
 
   /* Page break logic */
   .section-head { break-after: avoid !important; }
@@ -1763,13 +1713,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
 
   <div class="section-head">
-    <h2>Line-Item Variance Alerts</h2>
-    <span class="desc" id="callout-desc">Unfavorable variances exceeding global thresholds · Material spend anomalies · Edit in ⚙ Thresholds</span>
-  </div>
-  <div class="section-divider"></div>
-  <div id="callout-container"></div>
-
-  <div class="section-head">
     <h2>Expense Commentary</h2>
     <span class="desc">Operating expense variance narrative</span>
   </div>
@@ -1822,7 +1765,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   <div class="thresh-panel">
     <div class="thresh-head">
       <h4>Thresholds</h4>
-      <div class="note-sub">Configure materiality thresholds for callouts, status pills, and commentary. Blank fields inherit from the next level up.</div>
+      <div class="note-sub">Configure materiality thresholds for status pills and commentary. Blank fields inherit from the next level up.</div>
     </div>
     <div class="thresh-tabs">
       <button class="thresh-tab active" data-tab="global" onclick="switchThreshTab('global')">Global defaults</button>
@@ -1939,8 +1882,6 @@ const THRESHOLDS_KEY = 'mor_thresholds';
 // USER-EDITABLE THRESHOLDS — global + per-category + per-GL overrides
 // =========================================================================
 const THRESHOLD_DEFAULTS = {
-  callout_min_dollars: 2000,
-  callout_min_pct:     0.10,
   status_action_pct:   15,
   status_watch_pct:    5,
   detail_unfav_min:    2000,
@@ -1948,12 +1889,10 @@ const THRESHOLD_DEFAULTS = {
 };
 
 // Which threshold keys apply at which scope
-const THRESHOLD_KEYS_ALL = ['callout_min_dollars','callout_min_pct','detail_unfav_min','detail_fav_min','status_action_pct','status_watch_pct'];
-const THRESHOLD_KEYS_GL  = ['callout_min_dollars','callout_min_pct','detail_unfav_min','detail_fav_min']; // status pills are category-only
+const THRESHOLD_KEYS_ALL = ['detail_unfav_min','detail_fav_min','status_action_pct','status_watch_pct'];
+const THRESHOLD_KEYS_GL  = ['detail_unfav_min','detail_fav_min']; // status pills are category-only
 
 const THRESHOLD_META = {
-  callout_min_dollars: { label: 'Callout min $',       kind: 'dollars' },
-  callout_min_pct:     { label: 'Callout min %',       kind: 'percent' },
   status_action_pct:   { label: 'Status Action %',     kind: 'percent_whole' },
   status_watch_pct:    { label: 'Status Watch %',      kind: 'percent_whole' },
   detail_unfav_min:    { label: 'Detail unfav min $',  kind: 'dollars' },
@@ -3102,61 +3041,6 @@ function renderTrends() {
   }).join('');
 }
 
-function renderCallouts() {
-  const flagged = [];
-
-  for (const cat of DATA.categories) {
-    for (const d of cat.details) {
-      // d.mar_var = mar_bud - mar_act; unfavorable when negative (act > bud)
-      const overspend = -d.mar_var; // positive number = how much over budget
-      const minDollars = getThreshold('callout_min_dollars', cat.name, d.gl);
-      const minPct     = getThreshold('callout_min_pct',     cat.name, d.gl);
-      if (overspend < minDollars) continue;
-      // Pct test: handle zero/negative budget case
-      let pctOver;
-      if (d.mar_bud > 0) {
-        pctOver = overspend / d.mar_bud;
-        if (pctOver < minPct) continue;
-      } else {
-        // No budget at all — flag if overspend material
-        pctOver = null;
-      }
-      flagged.push({
-        category: cat.name,
-        gl: d.gl,
-        desc: d.desc,
-        act: d.mar_act,
-        bud: d.mar_bud,
-        overspend: overspend,
-        pctOver: pctOver,
-        ytd_act: d.ytd_act,
-        ytd_bud: d.ytd_bud,
-      });
-    }
-  }
-  flagged.sort((a,b) => b.overspend - a.overspend);
-
-  const container = document.getElementById('callout-container');
-  if (flagged.length === 0) {
-    container.innerHTML = '<div class="callout-empty">No line items exceed both thresholds this month. Detail spending is in line with budget.</div>';
-    return;
-  }
-  container.innerHTML = '<table class="callout-table">' +
-    '<thead><tr><th>Line Item</th><th>Category</th><th>Actual</th><th>Budget</th><th>Variance</th><th>Var %</th><th>YTD Actual</th></tr></thead>' +
-    '<tbody>' + flagged.map(f => {
-      const pctLabel = f.pctOver === null ? 'Unbudgeted' : '+' + (f.pctOver*100).toFixed(0) + '%';
-      return '<tr>' +
-        '<td><span class="cl-gl">' + f.gl + '</span><span class="cl-name">' + f.desc + '</span> ' + noteBtnVar('callout:' + f.gl, f.desc, f.overspend) + '</td>' +
-        '<td><span class="cl-cat">' + f.category + '</span></td>' +
-        '<td>' + fmt$(f.act) + '</td>' +
-        '<td>' + fmt$(f.bud) + '</td>' +
-        '<td><span class="cl-var">▲ ' + fmt$(f.overspend) + '</span></td>' +
-        '<td><span class="cl-pct">' + pctLabel + '</span></td>' +
-        '<td>' + fmt$(f.ytd_act) + '</td>' +
-      '</tr>' + noteCalloutRow('callout:' + f.gl, 7);
-    }).join('') + '</tbody></table>';
-}
-
 function hasData() {
   return DATA && DATA.patient_days && DATA.categories && DATA.categories.length > 0;
 }
@@ -3211,7 +3095,6 @@ function render() {
   if (DATA.deck) renderVolumeTables();
   if (DATA.deck) renderVolumeCommentary();
   renderTrends();
-  renderCallouts();
   renderOpps();
   renderRevenue();
   renderRevenueCommentary();
@@ -3824,7 +3707,7 @@ function renderCategories() {
                        (varPct > 0 ? `<span class="var-down">${fmtPct(varPct)}</span>`
                                    : `<span class="var-up">${fmtPct(varPct)}</span>`);
 
-    html += `<tr class="cat-row" onclick="toggleDetail(${idx})">
+    html += `<tr class="cat-row expanded" onclick="toggleDetail(${idx})">
       <td><div class="cat-name"><span class="arrow">▶</span>${c.name} ${noteBtnVar('cat:' + c.name, c.name, c.mar_var)}</div></td>
       <td>${fmt(marAct)}</td>
       <td>${fmt(marBud)}</td>
@@ -3837,7 +3720,7 @@ function renderCategories() {
     </tr>`;
     html += noteCalloutRow('cat:' + c.name, 9);
 
-    html += `<tr class="detail-row" id="det-${idx}"><td colspan="9"><div class="detail-wrap">
+    html += `<tr class="detail-row open" id="det-${idx}"><td colspan="9"><div class="detail-wrap">
       <h4>${c.name} — GL Account Detail <span>${c.details.length} active line items</span></h4>
       <table class="detail">
         <thead><tr>
