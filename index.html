@@ -3483,13 +3483,24 @@ function renderRevenue() {
     { l: 'IP Rev Deducts &mdash; Denials',           o: den },
     { anchor: true, l: 'IP Net Revenue', o: ipnr },
   ];
-  if (nprB && nprA && nr) {
-    seq.push(bridge('OP &amp; Physician Net Revenue', ipnr, nprB));
-    seq.push({ anchor: true, l: 'Net Patient Revenue before Bad Debt', o: nprB });
-    seq.push(bridge('Bad Debt Provision', nprB, nprA));
-    seq.push({ anchor: true, l: 'Net Patient Revenue after Bad Debt', o: nprA });
-    seq.push(bridge('Other Operating Revenue', nprA, nr));
-    seq.push({ anchor: true, l: 'Net Revenue', o: nr });
+  // Step from IP Net Revenue down to the reported Net Revenue, picking up
+  // whichever P&L subtotals are present in the loaded data. When an
+  // intermediate subtotal is missing (e.g. data persisted to localStorage
+  // by an older build), the adjacent steps merge so the chain still ends
+  // exactly on Net Revenue and stays reconciled to the workbook.
+  const SEGMENTS = [
+    { anchor: nprB, anchorL: 'Net Patient Revenue before Bad Debt', stepL: 'OP &amp; Physician Net Revenue' },
+    { anchor: nprA, anchorL: 'Net Patient Revenue after Bad Debt',  stepL: 'Bad Debt Provision' },
+    { anchor: nr,   anchorL: 'Net Revenue',                          stepL: 'Other Operating Revenue' },
+  ];
+  let prevAnchor = ipnr, pendingSteps = [];
+  for (const seg of SEGMENTS) {
+    pendingSteps.push(seg.stepL);
+    if (!seg.anchor) continue;
+    seq.push(bridge(pendingSteps.join(' + '), prevAnchor, seg.anchor));
+    seq.push({ anchor: true, l: seg.anchorL, o: seg.anchor });
+    prevAnchor = seg.anchor;
+    pendingSteps = [];
   }
 
   // First pass — running totals and scale. Anchors re-seat the running
