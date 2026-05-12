@@ -511,6 +511,81 @@ body {
 }
 .rev-card .sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
 
+/* REVENUE WATERFALL */
+.waterfall {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 18px 20px;
+  margin-bottom: 32px;
+}
+.wf-row {
+  display: grid;
+  grid-template-columns: 220px 1fr 150px;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+.wf-row + .wf-row { border-top: 1px solid var(--border-soft); }
+.wf-label {
+  font-size: 12px;
+  color: var(--ink-2);
+  font-weight: 600;
+  line-height: 1.35;
+}
+.wf-track {
+  position: relative;
+  height: 20px;
+  background: var(--bg);
+  border-radius: 3px;
+}
+.wf-bar {
+  position: absolute;
+  top: 1px;
+  height: 18px;
+  border-radius: 3px;
+  min-width: 2px;
+}
+.wf-bar.start, .wf-bar.total { background: var(--accent-teal); }
+.wf-bar.decrease { background: var(--bad); }
+.wf-bar.increase { background: var(--good); }
+.wf-val {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.wf-val .v {
+  font-family: Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  letter-spacing: -0.2px;
+}
+.wf-delta { font-size: 10px; color: var(--muted); font-weight: 400; white-space: nowrap; }
+.wf-delta.fav { color: var(--good); }
+.wf-delta.unfav { color: var(--bad); }
+.wf-row.is-start .wf-label, .wf-row.is-total .wf-label { font-weight: 700; color: var(--ink); }
+.wf-row.is-start .wf-val .v, .wf-row.is-total .wf-val .v { font-size: 18px; }
+.wf-row.is-total { border-top: 2px solid var(--border); margin-top: 4px; padding-top: 12px; }
+.wf-legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.wf-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.wf-legend i { width: 11px; height: 11px; border-radius: 2px; display: inline-block; }
+.wf-legend i.start { background: var(--accent-teal); }
+.wf-legend i.decrease { background: var(--bad); }
+.wf-legend i.increase { background: var(--good); }
+
 /* CATEGORY TABLE */
 .cat-wrap {
   background: #ffffff;
@@ -1159,6 +1234,7 @@ footer {
   .kpi-grid { grid-template-columns: repeat(3, 1fr); }
   .opp-grid, .insight-grid { grid-template-columns: 1fr; }
   .rev-grid { grid-template-columns: repeat(2, 1fr); }
+  .wf-row { grid-template-columns: 130px 1fr 96px; gap: 8px; }
 }
 .empty-state {
   text-align: center;
@@ -1408,7 +1484,7 @@ footer {
   .section-divider { break-after: avoid !important; }
   .kpi-grid { break-inside: avoid !important; }
   .split-grid { break-inside: avoid !important; }
-  .mini-card, .opp-card, .rev-card, .insight-card { break-inside: avoid !important; }
+  .mini-card, .opp-card, .rev-card, .insight-card, .waterfall { break-inside: avoid !important; }
   .callout, .commentary { break-inside: avoid !important; }
   /* Allow the expense table to break across pages — it can be long */
   .cat-wrap { break-inside: auto !important; }
@@ -1651,11 +1727,11 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   <div class="opp-grid" id="opp-grid"></div>
 
   <div class="section-head">
-    <h2>Net Revenue Bridge</h2>
-    <span class="desc" id="rev-bridge-desc">Gross to net · Supplemental revenue and contractual adjustments</span>
+    <h2>Revenue Waterfall</h2>
+    <span class="desc" id="rev-bridge-desc">IP gross revenue to net · Contractual deductions, admin, charity, and denials</span>
   </div>
   <div class="section-divider"></div>
-  <div class="rev-grid" id="rev-grid"></div>
+  <div class="waterfall" id="rev-grid"></div>
 
   <div class="section-head">
     <h2>Revenue Commentary</h2>
@@ -2408,6 +2484,10 @@ function parseAnalytic(wb) {
   const ip_gross = grab(10);
   const ip_contractual = grab(11);
   const supplemental = grab(12);
+  const ip_rev_admin = grab(13);
+  const ip_rev_charity = grab(14);
+  const ip_rev_denials = grab(15);
+  const ip_net_revenue = grab(16);
   const net_revenue = grab(46);
   const total_opex = grab(65);
   const ebitda = grab(66);
@@ -2423,13 +2503,18 @@ function parseAnalytic(wb) {
       );
     }
   };
-  expectLabel(ip_gross,       ['gross'],            10, 'IP Gross Revenue');
-  expectLabel(ip_contractual, ['contractual'],      11, 'IP Contractuals');
-  expectLabel(net_revenue,    ['net','revenue'],    46, 'Net Revenue');
-  expectLabel(total_opex,     ['total'],            65, 'Total Operating Expenses');
-  expectLabel(ebitda,         ['ebitda'],           66, 'EBITDA');
+  expectLabel(ip_gross,        ['gross'],            10, 'IP Gross Revenue');
+  expectLabel(ip_contractual,  ['contractual'],      11, 'IP Contractuals');
+  expectLabel(supplemental,    ['supplemental'],     12, 'Supplemental Income (Contra-Contractual)');
+  expectLabel(ip_rev_admin,    ['admin'],            13, 'IP Rev Deducts - Admin');
+  expectLabel(ip_rev_charity,  ['charity'],          14, 'IP Rev Deducts - Charity');
+  expectLabel(ip_rev_denials,  ['denials'],          15, 'IP Rev Deducts - Denials');
+  expectLabel(ip_net_revenue,  ['net','revenue'],    16, 'IP Net Revenue');
+  expectLabel(net_revenue,     ['net','revenue'],    46, 'Net Revenue');
+  expectLabel(total_opex,      ['total'],            65, 'Total Operating Expenses');
+  expectLabel(ebitda,          ['ebitda'],           66, 'EBITDA');
 
-  for (const obj of [net_revenue, total_opex, ebitda]) {
+  for (const obj of [net_revenue, total_opex, ebitda, ip_gross, ip_contractual, supplemental, ip_rev_admin, ip_rev_charity, ip_rev_denials, ip_net_revenue]) {
     obj.ppd_mar = pd_mar ? obj.mar_act / pd_mar : 0;
     obj.ppd_bud = pd_bud ? obj.mar_bud / pd_bud : 0;
     obj.mar_var = obj.mar_act - obj.mar_bud;
@@ -2505,7 +2590,7 @@ function parseAnalytic(wb) {
   const period = typeof periodRaw === 'string' ? periodRaw : '';
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  return { facility, period, months, patient_days, ip_gross, ip_contractual, supplemental, net_revenue, total_opex, ebitda, categories };
+  return { facility, period, months, patient_days, ip_gross, ip_contractual, supplemental, ip_rev_admin, ip_rev_charity, ip_rev_denials, ip_net_revenue, net_revenue, total_opex, ebitda, categories };
 }
 
 // ---- MOR Standard Deck parser ----
@@ -3265,37 +3350,91 @@ function renderInsights() {
 }
 
 function renderRevenue() {
-  const nr = DATA.net_revenue;
+  const el = document.getElementById('rev-grid');
   const ipg = DATA.ip_gross;
   const ipc = DATA.ip_contractual;
   const sup = DATA.supplemental;
+  const adm = DATA.ip_rev_admin;
+  const chr = DATA.ip_rev_charity;
+  const den = DATA.ip_rev_denials;
+  const ipnr = DATA.ip_net_revenue;
+  if (!ipg || !ipc || !ipnr) { el.innerHTML = ''; return; }
+
   const isP = view === 'ppd';
-  const pd = getEffectivePatientDays().mar_act;
-  const f = (n) => isP ? fmtPPD(n/pd) : fmt$(n);
+  const epd = getEffectivePatientDays();
+  const pd = epd ? epd.mar_act : 0;
+  const f = (n) => (isP && pd) ? fmtPPD(n / pd) : fmt$(n);
+  const v = (o) => o ? o.mar_act : 0;
 
-  // IP Gross Revenue: higher actual than budget = favorable
-  const ipgVar = ipg.mar_act - ipg.mar_bud;
-  const ipgFav = ipgVar >= 0;
-  // IP Contractuals: lower actual than budget = less deduction = favorable
-  const ipcVar = ipc.mar_bud - ipc.mar_act;
-  const ipcFav = ipcVar >= 0;
-  // Net Revenue: higher actual than budget = favorable
-  const nrVar = nr.mar_act - nr.mar_bud;
-  const nrFav = nrVar >= 0;
-
-  const cards = [
-    { l:'IP Gross Revenue', v: f(ipg.mar_act), s:`Bud ${f(ipg.mar_bud)} · ${fmt$(Math.abs(ipgVar))} ${ipgFav ? 'favorable' : 'unfavorable'}` },
-    { l:'IP Contractuals', v: f(ipc.mar_act), s:`${fmt$(Math.abs(ipcVar))} ${ipcFav ? 'favorable' : 'unfavorable'}` },
-    { l:'Supplemental (DSH/HDAA)', v: f(Math.abs(sup.mar_act)), s: sup.desc || 'Directed Payment / Supplemental Revenue' },
-    { l:'Net Revenue', v: f(nr.mar_act), s:`${fmt$(Math.abs(nrVar))} ${nrFav ? 'favorable' : 'unfavorable'} to budget` },
+  // Each step subtracts its actual value from the running total. A positive
+  // value reduces net revenue (decrease bar); a negative value (contra
+  // account) adds back (increase bar). Bar geometry is computed on raw
+  // dollars — the ratios are unaffected by the per-patient-day toggle.
+  const steps = [
+    { l: 'IP Contractual Deductions',                 o: ipc },
+    { l: 'Supplemental Income (Contra-Contractual)',  o: sup },
+    { l: 'IP Rev Deducts &mdash; Admin',              o: adm },
+    { l: 'IP Rev Deducts &mdash; Charity',            o: chr },
+    { l: 'IP Rev Deducts &mdash; Denials',            o: den },
   ];
-  document.getElementById('rev-grid').innerHTML = cards.map(c => `
-    <div class="rev-card">
-      <div class="label">${c.l}</div>
-      <div class="val">${c.v}</div>
-      <div class="sub">${c.s}</div>
-    </div>
-  `).join('');
+
+  const gross  = v(ipg);
+  const netEnd = v(ipnr);
+  let scaleMax = Math.max(gross, netEnd, 1);
+  { let r = gross; for (const s of steps) { r -= v(s.o); scaleMax = Math.max(scaleMax, r); } }
+  const pct = (x) => Math.max(0, Math.min(100, (x / scaleMax) * 100));
+
+  const deltaHtml = (o, isDeduction) => {
+    if (!o) return '';
+    const a = o.mar_act, b = o.mar_bud;
+    if (!isFinite(a) || !isFinite(b)) return '';
+    const d = a - b;
+    if (Math.abs(d) < 1) return '<span class="wf-delta">flat to budget</span>';
+    const fav = isDeduction ? (a < b) : (a >= b);
+    return '<span class="wf-delta ' + (fav ? 'fav' : 'unfav') + '">' +
+      fmt$(Math.abs(d)) + ' ' + (fav ? 'fav' : 'unfav') + ' vs bud</span>';
+  };
+
+  const anchorRow = (cls, label, val, o) =>
+    '<div class="wf-row ' + cls + '">' +
+      '<div class="wf-label">' + label + '</div>' +
+      '<div class="wf-track"><div class="wf-bar ' + (cls === 'is-total' ? 'total' : 'start') +
+        '" style="left:0%;width:' + pct(val) + '%"></div></div>' +
+      '<div class="wf-val"><span class="v">' + f(val) + '</span>' + deltaHtml(o, false) + '</div>' +
+    '</div>';
+
+  let running = gross;
+  const rows = [ anchorRow('is-start', 'IP Gross Revenue', gross, ipg) ];
+
+  for (const s of steps) {
+    const val = v(s.o);
+    const before = running;
+    const after = before - val;
+    running = after;
+    const lo = Math.min(before, after), hi = Math.max(before, after);
+    const dec = val >= 0;
+    const disp = dec ? '(' + f(Math.abs(val)) + ')' : '+' + f(Math.abs(val));
+    rows.push(
+      '<div class="wf-row">' +
+        '<div class="wf-label">' + s.l + '</div>' +
+        '<div class="wf-track"><div class="wf-bar ' + (dec ? 'decrease' : 'increase') +
+          '" style="left:' + pct(lo) + '%;width:' + Math.max(0.5, pct(hi) - pct(lo)) + '%"></div></div>' +
+        '<div class="wf-val"><span class="v">' + disp + '</span>' + deltaHtml(s.o, true) + '</div>' +
+      '</div>'
+    );
+  }
+
+  rows.push( anchorRow('is-total', 'IP Net Revenue', netEnd, ipnr) );
+
+  rows.push(
+    '<div class="wf-legend">' +
+      '<span><i class="start"></i>Gross / Net</span>' +
+      '<span><i class="decrease"></i>Deduction</span>' +
+      '<span><i class="increase"></i>Add-back</span>' +
+    '</div>'
+  );
+
+  el.innerHTML = rows.join('');
 }
 
 // ---- Dynamic Commentary Renderers ----
