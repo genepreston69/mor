@@ -726,6 +726,20 @@ table.detail tr:last-child td { border-bottom: none; }
   font-family: ui-monospace, monospace;
   font-weight: 600;
 }
+.contra-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
 
 /* SPARKLINE */
 .spark { display: inline-block; vertical-align: middle; }
@@ -1735,6 +1749,30 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   <div class="waterfall" id="rev-grid"></div>
 
   <div class="section-head">
+    <h2>Revenue Detail Drill-Down</h2>
+    <span class="desc">Click any revenue line to expand its component detail · Source: Month End Analytic</span>
+  </div>
+  <div class="section-divider"></div>
+  <div class="cat-wrap">
+    <table class="cats">
+      <thead id="rev-cat-thead">
+        <tr>
+          <th>Revenue Line</th>
+          <th>Actual</th>
+          <th>Budget</th>
+          <th>Variance</th>
+          <th>Var %</th>
+          <th>YTD Actual</th>
+          <th>YTD Var</th>
+          <th>3-Mo Trend</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="rev-cat-tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="section-head">
     <h2>Revenue Commentary</h2>
     <span class="desc">Net revenue, deductions, and bad debt narrative</span>
   </div>
@@ -2587,13 +2625,52 @@ function parseAnalytic(wb) {
     categories.push(parent);
   }
 
+  // Revenue line-item drill-down — mirrors the P&L revenue section so each
+  // rollup (IP / OP / physician net revenue, bad debt, other revenue) can be
+  // expanded to its component lines. `contra` rows (contractual deductions,
+  // revenue deducts, supplemental contra-revenue, bad-debt provision) are
+  // favorable when actual comes in BELOW budget; everything else is favorable
+  // when actual exceeds budget. Stored variances are signed so that a
+  // positive value always means favorable.
+  const REV_GROUPS = [
+    { name: 'IP Net Patient Revenue',  parent: 16, rows: [10,11,12,13,14,15], contra: [11,12,13,14,15], pcontra: false },
+    { name: 'OP Net Patient Revenue',  parent: 23, rows: [17,18,19,20,21,22], contra: [18,19,20,21,22], pcontra: false },
+    { name: 'Physician Net Revenue',   parent: 29, rows: [24,25,26,27,28],    contra: [25,26,27,28],    pcontra: false },
+    { name: 'Bad Debt Provision',      parent: 34, rows: [31,32,33],          contra: [31,32,33],       pcontra: true  },
+    { name: 'Other Revenue',           parent: 45, rows: range(36,45),        contra: [],               pcontra: false },
+  ];
+  const isZeroRow = o => o.mar_act === 0 && o.mar_bud === 0 && o.ytd_act === 0 && o.ytd_bud === 0;
+  const revenue_detail = [];
+  for (const g of REV_GROUPS) {
+    const parent = grab(g.parent);
+    if (isZeroRow(parent)) continue;
+    const contraSet = new Set(g.contra);
+    parent.name = g.name;
+    parent.contra = !!g.pcontra;
+    parent.mar_var = g.pcontra ? (parent.mar_bud - parent.mar_act) : (parent.mar_act - parent.mar_bud);
+    parent.ytd_var = g.pcontra ? (parent.ytd_bud - parent.ytd_act) : (parent.ytd_act - parent.ytd_bud);
+    parent.ppd_mar = pd_mar ? parent.mar_act / pd_mar : null;
+    const details = [];
+    for (const r of g.rows) {
+      const d = grab(r);
+      if (!d.desc || isZeroRow(d)) continue;
+      d.contra = contraSet.has(r);
+      d.mar_var = d.contra ? (d.mar_bud - d.mar_act) : (d.mar_act - d.mar_bud);
+      d.ytd_var = d.contra ? (d.ytd_bud - d.ytd_act) : (d.ytd_act - d.ytd_bud);
+      d.ppd_mar = pd_mar ? d.mar_act / pd_mar : null;
+      details.push(d);
+    }
+    parent.details = details;
+    revenue_detail.push(parent);
+  }
+
   // Extract facility name and period from workbook metadata
   const facility = cellVal(1, 4) || cellVal(2, 4) || 'Hospital';
   const periodRaw = cellVal(2, 4) || cellVal(3, 4) || '';
   const period = typeof periodRaw === 'string' ? periodRaw : '';
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  return { facility, period, months, patient_days, ip_gross, ip_contractual, supplemental, ip_rev_admin, ip_rev_charity, ip_rev_denials, ip_net_revenue, ip_bad_debt, net_revenue, total_opex, ebitda, categories };
+  return { facility, period, months, patient_days, ip_gross, ip_contractual, supplemental, ip_rev_admin, ip_rev_charity, ip_rev_denials, ip_net_revenue, ip_bad_debt, net_revenue, total_opex, ebitda, categories, revenue_detail };
 }
 
 // ---- MOR Standard Deck parser ----
@@ -3172,6 +3249,7 @@ function render() {
   renderTrends();
   renderOpps();
   renderRevenue();
+  renderRevenueDetail();
   renderRevenueCommentary();
   renderInsights();
   renderExpenseCommentary();
@@ -3907,6 +3985,115 @@ function renderCategories() {
 
 function toggleDetail(idx) {
   const row = document.getElementById('det-' + idx);
+  const catRow = row.previousElementSibling;
+  row.classList.toggle('open');
+  catRow.classList.toggle('expanded');
+}
+
+function renderRevenueDetail() {
+  const tbody = document.getElementById('rev-cat-tbody');
+  if (!tbody) return;
+  const rows = DATA.revenue_detail || [];
+  const thead = document.getElementById('rev-cat-thead');
+  if (!rows.length) { tbody.innerHTML = ''; return; }
+
+  const isP = view === 'ppd';
+  const epd = getEffectivePatientDays();
+  const pd = epd && epd.mar_act ? epd.mar_act : 0;
+  const pdB = epd && epd.mar_bud ? epd.mar_bud : 0;
+  const pdY = epd && epd.ytd_act ? epd.ytd_act : 0;
+  const pdYB = epd && epd.ytd_bud ? epd.ytd_bud : 0;
+  const ms = getMonthShort();
+  const fmt = isP ? fmtPPD : fmt$;
+  const minVar = isP ? 1 : 100;
+
+  thead.innerHTML = '<tr><th>Revenue Line</th><th>' + ms + ' Actual</th><th>' + ms + ' Budget</th><th>Variance</th><th>Var %</th><th>YTD Actual</th><th>YTD Var</th><th>3-Mo Trend</th><th>Status</th></tr>';
+
+  // signed so positive == favorable
+  const sv = (act, bud, contra) => contra ? (bud - act) : (act - bud);
+  const varCell = (signed, threshold) => {
+    if (Math.abs(signed) < threshold) return '<span class="var-flat">' + fmt(Math.abs(signed)) + '</span>';
+    return signed > 0 ? '<span class="var-down">' + fmt(Math.abs(signed)) + '</span>'
+                      : '<span class="var-up">' + fmt(Math.abs(signed)) + '</span>';
+  };
+
+  let html = '';
+  rows.forEach((c, idx) => {
+    const aMar = isP && pd ? c.mar_act/pd : c.mar_act;
+    const bMar = isP && pdB ? c.mar_bud/pdB : c.mar_bud;
+    const aYtd = isP && pdY ? c.ytd_act/pdY : c.ytd_act;
+    const bYtd = isP && pdYB ? c.ytd_bud/pdYB : c.ytd_bud;
+    const mVarRaw = sv(c.mar_act, c.mar_bud, c.contra);
+    const mVarDisp = sv(aMar, bMar, c.contra);
+    const yVarDisp = sv(aYtd, bYtd, c.contra);
+    const varPct = c.mar_bud !== 0 ? mVarRaw / Math.abs(c.mar_bud) * 100 : 0;
+    const color = mVarRaw >= 0 ? '#5a9b6e' : '#c44536';
+    const actionPct = getThreshold('status_action_pct', c.name);
+    const watchPct  = getThreshold('status_watch_pct',  c.name);
+    let status, statusCls;
+    if (mVarRaw < 0 && Math.abs(varPct) > actionPct) { status = 'Action Needed'; statusCls = 'action'; }
+    else if (mVarRaw < 0 && Math.abs(varPct) > watchPct) { status = 'Watch'; statusCls = 'watch'; }
+    else { status = 'On Track'; statusCls = 'ontrack'; }
+    const pctDisplay = varPct === 0 ? '—' :
+      (varPct > 0 ? `<span class="var-down">${fmtPct(varPct)}</span>` : `<span class="var-up">${fmtPct(varPct)}</span>`);
+
+    html += `<tr class="cat-row expanded" onclick="toggleRevDetail(${idx})">
+      <td><div class="cat-name"><span class="arrow">▶</span>${c.name} ${noteBtnVar('revcat:' + c.name, c.name, mVarRaw)}</div></td>
+      <td>${fmt(aMar)}</td>
+      <td>${fmt(bMar)}</td>
+      <td>${varCell(mVarDisp, minVar)}</td>
+      <td>${pctDisplay}</td>
+      <td>${fmt(aYtd)}</td>
+      <td>${varCell(yVarDisp, minVar)}</td>
+      <td>${sparkline(c.monthly_act, c.monthly_bud, color)}</td>
+      <td><span class="status-pill ${statusCls}">${status}</span></td>
+    </tr>`;
+    html += noteCalloutRow('revcat:' + c.name, 9);
+
+    html += `<tr class="detail-row open" id="rev-det-${idx}"><td colspan="9"><div class="detail-wrap">
+      <h4>${c.name} — Component Detail <span>${c.details.length} active line items</span></h4>
+      <table class="detail">
+        <thead><tr>
+          <th>Line Item</th>
+          <th>${ms} Actual</th>
+          <th>${ms} Budget</th>
+          <th>Variance</th>
+          <th>$ / PPD</th>
+          <th>YTD Actual</th>
+          <th>YTD Budget</th>
+          <th>YTD Var</th>
+        </tr></thead>
+        <tbody>
+        ${c.details.map(d => {
+          const dA = isP && pd ? d.mar_act/pd : d.mar_act;
+          const dB = isP && pdB ? d.mar_bud/pdB : d.mar_bud;
+          const dYA = isP && pdY ? d.ytd_act/pdY : d.ytd_act;
+          const dYB = isP && pdYB ? d.ytd_bud/pdYB : d.ytd_bud;
+          const dmRaw = sv(d.mar_act, d.mar_bud, d.contra);
+          const dmDisp = sv(dA, dB, d.contra);
+          const dyDisp = sv(dYA, dYB, d.contra);
+          const nk = 'revgl:' + d.desc;
+          return `<tr>
+            <td><span class="gl-tag">${d.gl}</span>${d.desc}${d.contra ? ' <span class="contra-tag">contra</span>' : ''} ${noteBtnVar(nk, d.desc, dmRaw)}</td>
+            <td>${fmt(dA)}</td>
+            <td>${fmt(dB)}</td>
+            <td>${varCell(dmDisp, minVar)}</td>
+            <td>${d.ppd_mar !== null ? fmtPPD(d.ppd_mar) : '—'}</td>
+            <td>${fmt(dYA)}</td>
+            <td>${fmt(dYB)}</td>
+            <td>${varCell(dyDisp, minVar)}</td>
+          </tr>` + noteCalloutRow(nk, 8);
+        }).join('')}
+        </tbody>
+      </table>
+    </div></td></tr>`;
+  });
+
+  tbody.innerHTML = html;
+}
+
+function toggleRevDetail(idx) {
+  const row = document.getElementById('rev-det-' + idx);
   const catRow = row.previousElementSibling;
   row.classList.toggle('open');
   catRow.classList.toggle('expanded');
