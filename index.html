@@ -566,9 +566,10 @@ body {
 .wf-delta { font-size: 10px; color: var(--muted); font-weight: 400; white-space: nowrap; }
 .wf-delta.fav { color: var(--good); }
 .wf-delta.unfav { color: var(--bad); }
-.wf-row.is-start .wf-label, .wf-row.is-total .wf-label { font-weight: 700; color: var(--ink); }
-.wf-row.is-start .wf-val .v, .wf-row.is-total .wf-val .v { font-size: 18px; }
-.wf-row.is-total { border-top: 2px solid var(--border); margin-top: 4px; padding-top: 12px; }
+.wf-row.is-start .wf-label, .wf-row.is-total .wf-label, .wf-row.is-subtotal .wf-label { font-weight: 700; color: var(--ink); }
+.wf-row.is-start .wf-val .v, .wf-row.is-total .wf-val .v, .wf-row.is-subtotal .wf-val .v { font-size: 18px; }
+.wf-row.is-total, .wf-row.is-subtotal { border-top: 2px solid var(--border); margin-top: 4px; padding-top: 12px; }
+.wf-row.is-subtotal { border-top-width: 1px; margin-top: 0; }
 .wf-legend {
   display: flex;
   gap: 18px;
@@ -1728,7 +1729,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   <div class="section-head">
     <h2>Revenue Waterfall</h2>
-    <span class="desc" id="rev-bridge-desc">IP gross revenue to net · Contractual deductions, admin, charity, and denials</span>
+    <span class="desc" id="rev-bridge-desc">IP gross revenue to net · Contractual deductions, admin, charity, denials, and bad debt</span>
   </div>
   <div class="section-divider"></div>
   <div class="waterfall" id="rev-grid"></div>
@@ -2488,6 +2489,7 @@ function parseAnalytic(wb) {
   const ip_rev_charity = grab(14);
   const ip_rev_denials = grab(15);
   const ip_net_revenue = grab(16);
+  const ip_bad_debt = grab(31);
   const net_revenue = grab(46);
   const total_opex = grab(65);
   const ebitda = grab(66);
@@ -2510,11 +2512,12 @@ function parseAnalytic(wb) {
   expectLabel(ip_rev_charity,  ['charity'],          14, 'IP Rev Deducts - Charity');
   expectLabel(ip_rev_denials,  ['denials'],          15, 'IP Rev Deducts - Denials');
   expectLabel(ip_net_revenue,  ['net','revenue'],    16, 'IP Net Revenue');
+  expectLabel(ip_bad_debt,     ['bad','debt'],       31, 'IP Bad Debt');
   expectLabel(net_revenue,     ['net','revenue'],    46, 'Net Revenue');
   expectLabel(total_opex,      ['total'],            65, 'Total Operating Expenses');
   expectLabel(ebitda,          ['ebitda'],           66, 'EBITDA');
 
-  for (const obj of [net_revenue, total_opex, ebitda, ip_gross, ip_contractual, supplemental, ip_rev_admin, ip_rev_charity, ip_rev_denials, ip_net_revenue]) {
+  for (const obj of [net_revenue, total_opex, ebitda, ip_gross, ip_contractual, supplemental, ip_rev_admin, ip_rev_charity, ip_rev_denials, ip_net_revenue, ip_bad_debt]) {
     obj.ppd_mar = pd_mar ? obj.mar_act / pd_mar : 0;
     obj.ppd_bud = pd_bud ? obj.mar_bud / pd_bud : 0;
     obj.mar_var = obj.mar_act - obj.mar_bud;
@@ -2590,7 +2593,7 @@ function parseAnalytic(wb) {
   const period = typeof periodRaw === 'string' ? periodRaw : '';
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  return { facility, period, months, patient_days, ip_gross, ip_contractual, supplemental, ip_rev_admin, ip_rev_charity, ip_rev_denials, ip_net_revenue, net_revenue, total_opex, ebitda, categories };
+  return { facility, period, months, patient_days, ip_gross, ip_contractual, supplemental, ip_rev_admin, ip_rev_charity, ip_rev_denials, ip_net_revenue, ip_bad_debt, net_revenue, total_opex, ebitda, categories };
 }
 
 // ---- MOR Standard Deck parser ----
@@ -3358,6 +3361,7 @@ function renderRevenue() {
   const chr = DATA.ip_rev_charity;
   const den = DATA.ip_rev_denials;
   const ipnr = DATA.ip_net_revenue;
+  const ibd = DATA.ip_bad_debt;
   if (!ipg || !ipc || !ipnr) { el.innerHTML = ''; return; }
 
   const isP = view === 'ppd';
@@ -3366,23 +3370,41 @@ function renderRevenue() {
   const f = (n) => (isP && pd) ? fmtPPD(n / pd) : fmt$(n);
   const v = (o) => o ? o.mar_act : 0;
 
-  // Each step subtracts its actual value from the running total. A positive
-  // value reduces net revenue (decrease bar); a negative value (contra
-  // account) adds back (increase bar). Bar geometry is computed on raw
-  // dollars — the ratios are unaffected by the per-patient-day toggle.
-  const steps = [
-    { l: 'IP Contractual Deductions',                 o: ipc },
-    { l: 'Supplemental Income (Contra-Contractual)',  o: sup },
-    { l: 'IP Rev Deducts &mdash; Admin',              o: adm },
-    { l: 'IP Rev Deducts &mdash; Charity',            o: chr },
-    { l: 'IP Rev Deducts &mdash; Denials',            o: den },
+  // Build the waterfall sequence. Anchors render as solid bars from the
+  // baseline (gross, subtotals, net); steps render as floating bars that
+  // bridge the running total before/after the line. Each step subtracts
+  // its actual value from the running total — a positive value reduces
+  // revenue (decrease), a negative value (contra account or bad-debt
+  // recovery) adds back (increase). Bar geometry is computed on raw
+  // dollars; the ratios are unaffected by the per-patient-day toggle.
+  const seq = [
+    { anchor: true, l: 'IP Gross Revenue', o: ipg },
+    { l: 'IP Contractual Deductions',                o: ipc },
+    { l: 'Supplemental Income (Contra-Contractual)', o: sup },
+    { l: 'IP Rev Deducts &mdash; Admin',             o: adm },
+    { l: 'IP Rev Deducts &mdash; Charity',           o: chr },
+    { l: 'IP Rev Deducts &mdash; Denials',           o: den },
+    { anchor: true, l: 'IP Net Revenue', o: ipnr },
   ];
+  if (ibd) {
+    seq.push({ l: 'IP Bad Debt', o: ibd });
+    seq.push({ anchor: true, l: 'IP Net Revenue after Bad Debt', computed: true });
+  }
 
-  const gross  = v(ipg);
-  const netEnd = v(ipnr);
-  let scaleMax = Math.max(gross, netEnd, 1);
-  { let r = gross; for (const s of steps) { r -= v(s.o); scaleMax = Math.max(scaleMax, r); } }
-  const pct = (x) => Math.max(0, Math.min(100, (x / scaleMax) * 100));
+  // First pass — running totals and scale.
+  let running = 0, scaleMax = 1;
+  for (const it of seq) {
+    if (it.anchor) {
+      running = it.computed ? running : v(it.o);
+      it.run = running;
+    } else {
+      it.before = running;
+      running -= v(it.o);
+      it.after = running;
+    }
+    scaleMax = Math.max(scaleMax, Math.abs(running), it.before ? Math.abs(it.before) : 0);
+  }
+  const pct = (x) => Math.max(0, Math.min(100, (Math.abs(x) / scaleMax) * 100));
 
   const deltaHtml = (o, isDeduction) => {
     if (!o) return '';
@@ -3395,36 +3417,28 @@ function renderRevenue() {
       fmt$(Math.abs(d)) + ' ' + (fav ? 'fav' : 'unfav') + ' vs bud</span>';
   };
 
-  const anchorRow = (cls, label, val, o) =>
-    '<div class="wf-row ' + cls + '">' +
-      '<div class="wf-label">' + label + '</div>' +
-      '<div class="wf-track"><div class="wf-bar ' + (cls === 'is-total' ? 'total' : 'start') +
-        '" style="left:0%;width:' + pct(val) + '%"></div></div>' +
-      '<div class="wf-val"><span class="v">' + f(val) + '</span>' + deltaHtml(o, false) + '</div>' +
-    '</div>';
-
-  let running = gross;
-  const rows = [ anchorRow('is-start', 'IP Gross Revenue', gross, ipg) ];
-
-  for (const s of steps) {
-    const val = v(s.o);
-    const before = running;
-    const after = before - val;
-    running = after;
-    const lo = Math.min(before, after), hi = Math.max(before, after);
+  const rows = seq.map((it, i) => {
+    if (it.anchor) {
+      const cls = i === 0 ? 'is-start' : (i === seq.length - 1 ? 'is-total' : 'is-subtotal');
+      const barCls = i === 0 ? 'start' : 'total';
+      const val = it.computed ? it.run : v(it.o);
+      return '<div class="wf-row ' + cls + '">' +
+        '<div class="wf-label">' + it.l + '</div>' +
+        '<div class="wf-track"><div class="wf-bar ' + barCls + '" style="left:0%;width:' + pct(val) + '%"></div></div>' +
+        '<div class="wf-val"><span class="v">' + f(val) + '</span>' + (it.computed ? '' : deltaHtml(it.o, false)) + '</div>' +
+      '</div>';
+    }
+    const val = v(it.o);
+    const lo = Math.min(it.before, it.after), hi = Math.max(it.before, it.after);
     const dec = val >= 0;
     const disp = dec ? '(' + f(Math.abs(val)) + ')' : '+' + f(Math.abs(val));
-    rows.push(
-      '<div class="wf-row">' +
-        '<div class="wf-label">' + s.l + '</div>' +
-        '<div class="wf-track"><div class="wf-bar ' + (dec ? 'decrease' : 'increase') +
-          '" style="left:' + pct(lo) + '%;width:' + Math.max(0.5, pct(hi) - pct(lo)) + '%"></div></div>' +
-        '<div class="wf-val"><span class="v">' + disp + '</span>' + deltaHtml(s.o, true) + '</div>' +
-      '</div>'
-    );
-  }
-
-  rows.push( anchorRow('is-total', 'IP Net Revenue', netEnd, ipnr) );
+    return '<div class="wf-row">' +
+      '<div class="wf-label">' + it.l + '</div>' +
+      '<div class="wf-track"><div class="wf-bar ' + (dec ? 'decrease' : 'increase') +
+        '" style="left:' + pct(lo) + '%;width:' + Math.max(0.5, pct(hi) - pct(lo)) + '%"></div></div>' +
+      '<div class="wf-val"><span class="v">' + disp + '</span>' + deltaHtml(it.o, true) + '</div>' +
+    '</div>';
+  });
 
   rows.push(
     '<div class="wf-legend">' +
