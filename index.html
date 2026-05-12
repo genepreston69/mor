@@ -2527,7 +2527,9 @@ function parseAnalytic(wb) {
   const ip_rev_charity = grab(14);
   const ip_rev_denials = grab(15);
   const ip_net_revenue = grab(16);
+  const npr_before_bd = grab(30);
   const ip_bad_debt = grab(31);
+  const npr_after_bd = grab(35);
   const net_revenue = grab(46);
   const total_opex = grab(65);
   const ebitda = grab(66);
@@ -2550,12 +2552,14 @@ function parseAnalytic(wb) {
   expectLabel(ip_rev_charity,  ['charity'],          14, 'IP Rev Deducts - Charity');
   expectLabel(ip_rev_denials,  ['denials'],          15, 'IP Rev Deducts - Denials');
   expectLabel(ip_net_revenue,  ['net','revenue'],    16, 'IP Net Revenue');
+  expectLabel(npr_before_bd,   ['net','patient','before'], 30, 'Net Patient Revenue before Bad Debt Provision');
   expectLabel(ip_bad_debt,     ['bad','debt'],       31, 'IP Bad Debt');
+  expectLabel(npr_after_bd,    ['net','patient','after'],  35, 'Net Patient Revenue after Bad Debt Provision');
   expectLabel(net_revenue,     ['net','revenue'],    46, 'Net Revenue');
   expectLabel(total_opex,      ['total'],            65, 'Total Operating Expenses');
   expectLabel(ebitda,          ['ebitda'],           66, 'EBITDA');
 
-  for (const obj of [net_revenue, total_opex, ebitda, ip_gross, ip_contractual, supplemental, ip_rev_admin, ip_rev_charity, ip_rev_denials, ip_net_revenue, ip_bad_debt]) {
+  for (const obj of [net_revenue, total_opex, ebitda, ip_gross, ip_contractual, supplemental, ip_rev_admin, ip_rev_charity, ip_rev_denials, ip_net_revenue, npr_before_bd, npr_after_bd, ip_bad_debt]) {
     obj.ppd_mar = pd_mar ? obj.mar_act / pd_mar : 0;
     obj.ppd_bud = pd_bud ? obj.mar_bud / pd_bud : 0;
     obj.mar_var = obj.mar_act - obj.mar_bud;
@@ -2670,7 +2674,7 @@ function parseAnalytic(wb) {
   const period = typeof periodRaw === 'string' ? periodRaw : '';
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-  return { facility, period, months, patient_days, ip_gross, ip_contractual, supplemental, ip_rev_admin, ip_rev_charity, ip_rev_denials, ip_net_revenue, ip_bad_debt, net_revenue, total_opex, ebitda, categories, revenue_detail };
+  return { facility, period, months, patient_days, ip_gross, ip_contractual, supplemental, ip_rev_admin, ip_rev_charity, ip_rev_denials, ip_net_revenue, npr_before_bd, npr_after_bd, ip_bad_debt, net_revenue, total_opex, ebitda, categories, revenue_detail };
 }
 
 // ---- MOR Standard Deck parser ----
@@ -3439,7 +3443,9 @@ function renderRevenue() {
   const chr = DATA.ip_rev_charity;
   const den = DATA.ip_rev_denials;
   const ipnr = DATA.ip_net_revenue;
-  const ibd = DATA.ip_bad_debt;
+  const nprB = DATA.npr_before_bd;
+  const nprA = DATA.npr_after_bd;
+  const nr = DATA.net_revenue;
   if (!ipg || !ipc || !ipnr) { el.innerHTML = ''; return; }
 
   const isP = view === 'ppd';
@@ -3447,14 +3453,27 @@ function renderRevenue() {
   const pd = epd ? epd.mar_act : 0;
   const f = (n) => (isP && pd) ? fmtPPD(n / pd) : fmt$(n);
   const v = (o) => o ? o.mar_act : 0;
+  const vb = (o) => o ? o.mar_bud : 0;
 
   // Build the waterfall sequence. Anchors render as solid bars from the
-  // baseline (gross, subtotals, net); steps render as floating bars that
-  // bridge the running total before/after the line. Each step subtracts
-  // its actual value from the running total — a positive value reduces
-  // revenue (decrease), a negative value (contra account or bad-debt
-  // recovery) adds back (increase). Bar geometry is computed on raw
-  // dollars; the ratios are unaffected by the per-patient-day toggle.
+  // baseline (gross, P&L subtotals, net); steps render as floating bars
+  // that bridge the running total before/after the line. Each step
+  // subtracts its value from the running total — a positive value reduces
+  // revenue (deduction), a negative value adds back (contra account,
+  // bad-debt recovery, or net revenue rolled in from another service
+  // line). The IP detail lines (rows 10-15) foot to IP Net Revenue
+  // exactly; from there the waterfall steps to each reported P&L subtotal
+  // (Net Patient Revenue before / after bad debt) and finally to Net
+  // Revenue, so the last bar always equals the Net Revenue KPI. Each
+  // bridge between two reported subtotals is a single step equal to their
+  // difference, which keeps the waterfall reconciled to the workbook even
+  // where consolidation eliminations make the underlying components not
+  // foot. Bar geometry is computed on raw dollars; the ratios are
+  // unaffected by the per-patient-day toggle.
+  const bridge = (label, fromObj, toObj) => ({
+    l: label,
+    o: { mar_act: v(fromObj) - v(toObj), mar_bud: vb(fromObj) - vb(toObj) },
+  });
   const seq = [
     { anchor: true, l: 'IP Gross Revenue', o: ipg },
     { l: 'IP Contractual Deductions',                o: ipc },
@@ -3464,16 +3483,22 @@ function renderRevenue() {
     { l: 'IP Rev Deducts &mdash; Denials',           o: den },
     { anchor: true, l: 'IP Net Revenue', o: ipnr },
   ];
-  if (ibd) {
-    seq.push({ l: 'IP Bad Debt', o: ibd });
-    seq.push({ anchor: true, l: 'IP Net Revenue after Bad Debt', computed: true });
+  if (nprB && nprA && nr) {
+    seq.push(bridge('OP &amp; Physician Net Revenue', ipnr, nprB));
+    seq.push({ anchor: true, l: 'Net Patient Revenue before Bad Debt', o: nprB });
+    seq.push(bridge('Bad Debt Provision', nprB, nprA));
+    seq.push({ anchor: true, l: 'Net Patient Revenue after Bad Debt', o: nprA });
+    seq.push(bridge('Other Operating Revenue', nprA, nr));
+    seq.push({ anchor: true, l: 'Net Revenue', o: nr });
   }
 
-  // First pass — running totals and scale.
+  // First pass — running totals and scale. Anchors re-seat the running
+  // total on the reported figure so any rounding in a bridge step is
+  // absorbed at the next subtotal.
   let running = 0, scaleMax = 1;
   for (const it of seq) {
     if (it.anchor) {
-      running = it.computed ? running : v(it.o);
+      running = v(it.o);
       it.run = running;
     } else {
       it.before = running;
@@ -3499,11 +3524,11 @@ function renderRevenue() {
     if (it.anchor) {
       const cls = i === 0 ? 'is-start' : (i === seq.length - 1 ? 'is-total' : 'is-subtotal');
       const barCls = i === 0 ? 'start' : 'total';
-      const val = it.computed ? it.run : v(it.o);
+      const val = v(it.o);
       return '<div class="wf-row ' + cls + '">' +
         '<div class="wf-label">' + it.l + '</div>' +
         '<div class="wf-track"><div class="wf-bar ' + barCls + '" style="left:0%;width:' + pct(val) + '%"></div></div>' +
-        '<div class="wf-val"><span class="v">' + f(val) + '</span>' + (it.computed ? '' : deltaHtml(it.o, false)) + '</div>' +
+        '<div class="wf-val"><span class="v">' + f(val) + '</span>' + deltaHtml(it.o, false) + '</div>' +
       '</div>';
     }
     const val = v(it.o);
