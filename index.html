@@ -1303,6 +1303,14 @@ footer {
     font-size: 10px !important;
     line-height: 1.35 !important;
     width: 100% !important;
+    /* Safari pagination fix: the screen rule `body { min-height: 100vh }`
+       makes Safari treat the body as exactly one printable page tall and
+       leaves pages 2+ blank. Reset height constraints and clear any
+       inherited clipping so content paginates naturally. */
+    min-height: 0 !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
   /* Hide interactive / non-printable elements */
