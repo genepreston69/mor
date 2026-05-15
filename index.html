@@ -56,6 +56,13 @@ body {
   padding: 9px 16px;
 }
 
+/* FROZEN HEADER (top-banner + header-bar stay pinned while content scrolls) */
+.freeze-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
 /* HEADER CARD */
 .header-bar {
   background: var(--teal-dark);
@@ -117,6 +124,134 @@ body {
   max-width: 1280px;
   margin: 0 auto;
   padding: 28px 24px 40px;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+.dashboard-main { min-width: 0; }
+
+/* SIDEBAR (frozen alongside the header) */
+.sidebar {
+  position: sticky;
+  /* Sits below the frozen header; tweak if header height changes. */
+  top: 110px;
+  align-self: start;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  max-height: calc(100vh - 130px);
+  overflow-y: auto;
+  font-size: 13px;
+}
+.sidebar-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--muted);
+  margin: 0 0 8px;
+  padding: 0 6px;
+}
+.sidebar-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+}
+.sidebar-nav li { margin: 0; }
+.sidebar-nav a,
+.sidebar-nav button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  padding: 7px 10px;
+  border-radius: 4px;
+  color: var(--ink-2);
+  text-decoration: none;
+  line-height: 1.3;
+  transition: background 0.12s, color 0.12s;
+}
+.sidebar-nav a:hover,
+.sidebar-nav button:hover {
+  background: #eef4f6;
+  color: var(--teal-dark);
+}
+.sidebar-nav a.active,
+.sidebar-nav button.active {
+  background: var(--teal-dark);
+  color: #ffffff;
+}
+.sidebar-divider {
+  height: 1px;
+  background: var(--border-soft);
+  margin: 8px 4px 10px;
+}
+.sidebar-nav .manual-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--teal-dark);
+}
+.sidebar-nav .manual-btn::before {
+  content: "📖";
+  font-size: 14px;
+}
+
+/* Anchor offset so sticky header doesn't cover section titles */
+.section-head { scroll-margin-top: 130px; }
+
+/* MANUAL VIEWER PANE */
+.manual-pane {
+  display: none;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  min-height: calc(100vh - 160px);
+  overflow: hidden;
+}
+.manual-pane.active { display: flex; flex-direction: column; }
+.manual-pane-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.manual-pane-head .title {
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 14px;
+}
+.manual-pane-head .close {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.manual-pane-head .close:hover { background: #eef4f6; color: var(--teal-dark); }
+.manual-pane iframe {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  min-height: calc(100vh - 200px);
+}
+
+/* Responsive: collapse sidebar on narrow viewports */
+@media (max-width: 900px) {
+  .container { grid-template-columns: 1fr; gap: 16px; }
+  .sidebar { position: static; max-height: none; }
 }
 
 /* PAGE TITLE */
@@ -1324,8 +1459,13 @@ footer {
   .note-btn,
   .note-edit-btn,
   .note-delete-btn,
+  .sidebar,
+  .manual-pane,
   button,
   input[type="file"] { display: none !important; }
+
+  /* Un-freeze the header for print so pagination flows */
+  .freeze-header { position: static !important; }
 
   /* Header — compact single-line banner */
   .header-bar { display: block !important; background: var(--teal-dark) !important; padding: 6px 0 !important; }
@@ -1337,11 +1477,14 @@ footer {
   .header-right { display: flex !important; }
   .date-stamp { display: block !important; font-size: 11px !important; }
 
-  /* Container — full width, minimal padding */
+  /* Container — full width, minimal padding; collapse sidebar grid */
   .container {
     max-width: 100% !important;
     padding: 8px 0 0 !important;
+    display: block !important;
+    grid-template-columns: none !important;
   }
+  .dashboard-main { display: block !important; }
 
   /* Page title */
   .page-title { font-size: 20px !important; margin-bottom: 1px !important; }
@@ -1615,6 +1758,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 </head>
 <body>
 
+<div class="freeze-header">
 <div class="top-banner" id="top-banner">MOR DEEP DIVE</div>
 
 <div class="header-bar">
@@ -1643,8 +1787,40 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     </div>
   </div>
 </div>
+</div><!-- /.freeze-header -->
 
 <div class="container">
+
+  <aside class="sidebar" aria-label="Dashboard navigation">
+    <div class="sidebar-title">Sections</div>
+    <ul class="sidebar-nav" id="sidebar-section-nav">
+      <li><a href="#sec-volume" data-target="sec-volume">Volume &amp; Mix</a></li>
+      <li><a href="#sec-volume-commentary" data-target="sec-volume-commentary">Volume Commentary</a></li>
+      <li><a href="#sec-opportunities" data-target="sec-opportunities">Top Opportunities</a></li>
+      <li><a href="#sec-revenue-waterfall" data-target="sec-revenue-waterfall">Revenue Waterfall</a></li>
+      <li><a href="#sec-revenue-detail" data-target="sec-revenue-detail">Revenue Detail</a></li>
+      <li><a href="#sec-revenue-commentary" data-target="sec-revenue-commentary">Revenue Commentary</a></li>
+      <li><a href="#sec-insights" data-target="sec-insights">Strategic Insights</a></li>
+      <li><a href="#sec-expense" data-target="sec-expense">Expense Drill-Down</a></li>
+      <li><a href="#sec-expense-commentary" data-target="sec-expense-commentary">Expense Commentary</a></li>
+      <li><a href="#sec-labor" data-target="sec-labor">Labor Management</a></li>
+      <li><a href="#sec-trended" data-target="sec-trended">Trended Performance</a></li>
+    </ul>
+    <div class="sidebar-divider"></div>
+    <ul class="sidebar-nav">
+      <li><button type="button" class="manual-btn" id="manual-toggle-btn" onclick="toggleManualPane()">Instruction Manual</button></li>
+    </ul>
+  </aside>
+
+  <main class="dashboard-main">
+
+  <div class="manual-pane" id="manual-pane" aria-hidden="true">
+    <div class="manual-pane-head">
+      <span class="title">📖 MOR Deep Dive — Instruction Manual</span>
+      <button type="button" class="close" onclick="closeManualPane()">← Back to dashboard</button>
+    </div>
+    <iframe id="manual-iframe" title="MOR Deep Dive Instruction Manual" src="about:blank" loading="lazy"></iframe>
+  </div>
 
   <div class="page-title serif">Month-End <span class="accent">Operating Review</span></div>
   <div class="page-sub">Variance analytics · Expense drill-downs · Per-patient-day normalization · Opportunity surfacing</div>
@@ -1711,7 +1887,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <button class="es-btn" onclick="toggleUpload()">Open File Upload</button>
   </div>
 
-  <div class="section-head">
+  <div class="section-head" id="sec-volume">
     <h2>Volume, Payor Mix &amp; Service Mix</h2>
     <span class="desc">Operational composition · Source: MOR Standard Deck</span>
   </div>
@@ -1731,7 +1907,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     </div>
   </div>
 
-  <div class="section-head">
+  <div class="section-head" id="sec-volume-commentary">
     <h2>Volume Commentary</h2>
     <span class="desc">Census, length-of-stay, and payor mix narrative</span>
   </div>
@@ -1742,21 +1918,21 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <textarea id="volume-mgmt-commentary" data-mgmt-key="volume" placeholder="Add management commentary on volume performance..."></textarea>
   </div>
 
-  <div class="section-head">
+  <div class="section-head" id="sec-opportunities">
     <h2>Top Opportunities</h2>
     <span class="desc" id="opp-desc">Largest absolute variances vs. budget</span>
   </div>
   <div class="section-divider"></div>
   <div class="opp-grid" id="opp-grid"></div>
 
-  <div class="section-head">
+  <div class="section-head" id="sec-revenue-waterfall">
     <h2>Revenue Waterfall</h2>
     <span class="desc" id="rev-bridge-desc">IP gross revenue to net · Contractual deductions, admin, charity, denials, and bad debt</span>
   </div>
   <div class="section-divider"></div>
   <div class="waterfall" id="rev-grid"></div>
 
-  <div class="section-head">
+  <div class="section-head" id="sec-revenue-detail">
     <h2>Revenue Detail Drill-Down</h2>
     <span class="desc">Click any revenue line to expand its component detail · Source: Month End Analytic</span>
   </div>
@@ -1780,7 +1956,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     </table>
   </div>
 
-  <div class="section-head">
+  <div class="section-head" id="sec-revenue-commentary">
     <h2>Revenue Commentary</h2>
     <span class="desc">Net revenue, deductions, and bad debt narrative</span>
   </div>
@@ -1791,14 +1967,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <textarea id="revenue-mgmt-commentary" data-mgmt-key="revenue" placeholder="Add management commentary on revenue performance..."></textarea>
   </div>
 
-  <div class="section-head">
+  <div class="section-head" id="sec-insights">
     <h2>Strategic Insights</h2>
     <span class="desc">Where the dollars are actually moving · Read-throughs the standard MOR doesn't surface</span>
   </div>
   <div class="section-divider"></div>
   <div class="insight-grid" id="insight-grid"></div>
 
-  <div class="section-head">
+  <div class="section-head" id="sec-expense">
     <h2>Operating Expense Drill-Down</h2>
     <span class="desc">Click any category to expand GL-level detail · Sorted by variance magnitude</span>
   </div>
@@ -1822,7 +1998,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     </table>
   </div>
 
-  <div class="section-head">
+  <div class="section-head" id="sec-expense-commentary">
     <h2>Expense Commentary</h2>
     <span class="desc">Operating expense variance narrative</span>
   </div>
@@ -1833,14 +2009,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <textarea id="expense-mgmt-commentary" data-mgmt-key="expense" placeholder="Add management commentary on operating expense variances..."></textarea>
   </div>
 
-  <div class="section-head">
+  <div class="section-head" id="sec-labor">
     <h2>Labor Management</h2>
     <span class="desc">EPOB Paid · Equivalent EPOB · Paid FTEs · Labor Cost · Source: MOR Standard Deck</span>
   </div>
   <div class="section-divider"></div>
   <div id="labor-section"></div>
 
-  <div class="section-head">
+  <div class="section-head" id="sec-trended">
     <h2>Trended Performance</h2>
     <span class="desc">Trailing actuals through current period · Source: MOR Standard Deck (Trended P&amp;L)</span>
   </div>
@@ -1852,6 +2028,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     Variances shown as Budget − Actual (favorable when actual is below budget for expenses)
   </footer>
 
+  </main>
 </div>
 
 <!-- Note Modal -->
@@ -4470,7 +4647,61 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   const lastFile = localStorage.getItem(LAST_FILE_KEY);
   if (lastFile) renderSourceWorkbookStatus({ name: lastFile, sha256: null }, true);
+
+  // Clicking a section link in the sidebar closes the manual pane if open.
+  document.querySelectorAll('#sidebar-section-nav a').forEach(a => {
+    a.addEventListener('click', () => closeManualPane());
+  });
 });
+
+const MANUAL_URL = 'mor_deep_dive_manual.html';
+
+function openManualPane() {
+  const pane = document.getElementById('manual-pane');
+  const iframe = document.getElementById('manual-iframe');
+  const btn = document.getElementById('manual-toggle-btn');
+  const main = document.querySelector('.dashboard-main');
+  if (!pane || !iframe) return;
+  // Load on first open; keep cached after that.
+  if (!iframe.dataset.loaded) {
+    iframe.src = MANUAL_URL;
+    iframe.dataset.loaded = '1';
+  }
+  pane.classList.add('active');
+  pane.setAttribute('aria-hidden', 'false');
+  if (btn) btn.classList.add('active');
+  // Hide all dashboard children except the manual pane.
+  if (main) {
+    Array.from(main.children).forEach(el => {
+      if (el.id !== 'manual-pane') el.dataset._prevDisplay = el.style.display, el.style.display = 'none';
+    });
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function closeManualPane() {
+  const pane = document.getElementById('manual-pane');
+  const btn = document.getElementById('manual-toggle-btn');
+  const main = document.querySelector('.dashboard-main');
+  if (!pane) return;
+  pane.classList.remove('active');
+  pane.setAttribute('aria-hidden', 'true');
+  if (btn) btn.classList.remove('active');
+  if (main) {
+    Array.from(main.children).forEach(el => {
+      if (el.id !== 'manual-pane' && '_prevDisplay' in el.dataset) {
+        el.style.display = el.dataset._prevDisplay;
+        delete el.dataset._prevDisplay;
+      }
+    });
+  }
+}
+
+function toggleManualPane() {
+  const pane = document.getElementById('manual-pane');
+  if (pane && pane.classList.contains('active')) closeManualPane();
+  else openManualPane();
+}
 
 document.getElementById('staffed-beds-input').value = getStaffedBeds() || '';
 loadStored();
