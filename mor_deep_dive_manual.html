@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MOR Deep Dive — Instruction Manual</title>
+<style>
+  :root {
+    --navy-900: #0b1d3a;
+    --navy-800: #122b54;
+    --navy-700: #1b3b6f;
+    --navy-50:  #eef3fb;
+    --slate-50: #f1f5f9;
+    --slate-100:#e2e8f0;
+    --slate-200:#cbd5e1;
+    --slate-400:#94a3b8;
+    --slate-500:#64748b;
+    --slate-700:#334155;
+    --slate-900:#0f172a;
+    --teal-600: #0d9488;
+    --teal-500: #14b8a6;
+    --teal-50:  #ccfbf1;
+    --green-600:#16a34a;
+    --green-50: #dcfce7;
+    --red-600:  #dc2626;
+    --red-50:   #fee2e2;
+    --amber-600:#d97706;
+    --amber-50: #fef3c7;
+    --shadow-sm: 0 1px 2px rgba(15,23,42,.04), 0 1px 1px rgba(15,23,42,.04);
+    --shadow-md: 0 4px 12px rgba(15,23,42,.06), 0 2px 4px rgba(15,23,42,.04);
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+    background: var(--slate-50);
+    color: var(--slate-900);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== Banner ===== */
+  .banner {
+    background: linear-gradient(135deg, var(--navy-900) 0%, var(--navy-700) 100%);
+    color: white;
+    padding: 32px 40px;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+  }
+  .banner::after {
+    content: "";
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 6px;
+    background: var(--teal-500);
+  }
+  .banner-eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 11px;
+    color: var(--teal-500);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .banner h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .banner-sub {
+    margin-top: 8px;
+    color: var(--slate-200);
+    font-size: 14px;
+    max-width: 720px;
+  }
+  .banner-meta {
+    margin-top: 16px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .meta-chip {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* ===== Layout ===== */
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 32px;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 40px 80px;
+  }
+
+  /* ===== Sidebar TOC ===== */
+  .toc {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    background: white;
+    border: 1px solid var(--slate-100);
+    border-radius: 8px;
+    padding: 20px 16px;
+    box-shadow: var(--shadow-sm);
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+  .toc-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--slate-500);
+    margin: 0 0 12px;
+  }
+  .toc ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: toc-counter;
+  }
+  .toc li { counter-increment: toc-counter; margin-bottom: 2px; }
+  .toc a {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: var(--slate-700);
+    text-decoration: none;
+    font-size: 13px;
+    line-height: 1.35;
+    transition: all 0.15s;
+  }
+  .toc a:hover {
+    background: var(--navy-50);
+    color: var(--navy-800);
+  }
+  .toc a::before {
+    content: counter(toc-counter);
+    color: var(--slate-400);
+    font-weight: 600;
+    font-size: 11px;
+    min-width: 18px;
+  }
+
+  /* ===== Content ===== */
+  .content { min-width: 0; }
+  .intro-card {
+    background: white;
+    border: 1px solid var(--slate-100);
+    border-left: 4px solid var(--teal-500);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow-sm);
+  }
+  .intro-card p { margin: 0 0 12px; }
+  .intro-card p:last-child { margin-bottom: 0; }
+  .intro-card code {
+    background: var(--slate-100);
+    color: var(--navy-800);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.88em;
+  }
+
+  section.manual-section {
+    background: white;
+    border: 1px solid var(--slate-100);
+    border-radius: 8px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+    scroll-margin-top: 24px;
+  }
+  section h2 {
+    margin: 0 0 16px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--navy-900);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--slate-100);
+  }
+  section h2 .num {
+    color: var(--teal-600);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  section h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--navy-800);
+    margin: 22px 0 10px;
+    letter-spacing: -0.2px;
+  }
+  section p { margin: 0 0 12px; color: var(--slate-700); }
+  section strong { color: var(--slate-900); font-weight: 600; }
+  section ul, section ol {
+    margin: 0 0 14px;
+    padding-left: 22px;
+    color: var(--slate-700);
+  }
+  section li { margin-bottom: 6px; }
+  section code {
+    background: var(--slate-100);
+    color: var(--navy-800);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.86em;
+  }
+
+  /* ===== Callouts ===== */
+  .callout {
+    margin: 14px 0;
+    padding: 14px 16px;
+    border-radius: 6px;
+    border-left: 4px solid;
+    font-size: 14px;
+  }
+  .callout-title {
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout-info    { background: var(--navy-50);  border-color: var(--navy-700);  color: var(--slate-700); }
+  .callout-info .callout-title    { color: var(--navy-800); }
+  .callout-tip     { background: var(--teal-50);  border-color: var(--teal-600);  color: var(--slate-700); }
+  .callout-tip .callout-title     { color: var(--teal-600); }
+  .callout-warn    { background: var(--amber-50); border-color: var(--amber-600); color: var(--slate-700); }
+  .callout-warn .callout-title    { color: var(--amber-600); }
+  .callout-danger  { background: var(--red-50);   border-color: var(--red-600);   color: var(--slate-700); }
+  .callout-danger .callout-title  { color: var(--red-600); }
+
+  /* ===== Tables ===== */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 14px 0;
+    border: 1px solid var(--slate-100);
+    border-radius: 6px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  thead { background: var(--navy-900); }
+  thead th {
+    color: white;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  tbody td {
+    padding: 10px 14px;
+    border-top: 1px solid var(--slate-100);
+    color: var(--slate-700);
+    vertical-align: top;
+  }
+  tbody tr:nth-child(even) { background: #fafbfd; }
+  tbody td:first-child { font-weight: 600; color: var(--navy-800); }
+  tbody code { font-size: 0.85em; }
+
+  /* ===== Code block ===== */
+  pre.code {
+    background: var(--navy-900);
+    color: #e2e8f0;
+    padding: 16px 18px;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    margin: 14px 0;
+    border-left: 3px solid var(--teal-500);
+  }
+  pre.code .kw { color: #f59e0b; }
+  pre.code .fn { color: #5eead4; }
+  pre.code .str{ color: #86efac; }
+
+  /* ===== Checklist ===== */
+  .checklist { list-style: none; padding-left: 0; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: background 0.15s;
+    cursor: pointer;
+    margin-bottom: 4px;
+  }
+  .checklist li:hover { background: var(--slate-50); }
+  .checklist input[type="checkbox"] {
+    margin-top: 4px;
+    width: 16px;
+    height: 16px;
+    accent-color: var(--teal-600);
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  .checklist li.done { opacity: 0.55; }
+  .checklist li.done .check-label { text-decoration: line-through; }
+  .check-label { line-height: 1.5; }
+
+  /* ===== Kbd / UI element badges ===== */
+  .ui {
+    display: inline-block;
+    background: var(--navy-800);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.82em;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
+  }
+
+  /* ===== Status pills (mimicking the dashboard) ===== */
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .pill-green { background: var(--green-50); color: var(--green-600); }
+  .pill-red   { background: var(--red-50);   color: var(--red-600); }
+  .pill-amber { background: var(--amber-50); color: var(--amber-600); }
+
+  /* ===== Footer ===== */
+  footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 12px;
+    color: var(--slate-500);
+    border-top: 1px solid var(--slate-100);
+    background: white;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; padding: 20px; }
+    .toc { position: static; max-height: none; margin-bottom: 16px; }
+    .banner { padding: 24px 20px; }
+    .banner h1 { font-size: 22px; }
+    section.manual-section { padding: 20px; }
+  }
+
+  /* ===== Print ===== */
+  @media print {
+    body { background: white; }
+    .banner { box-shadow: none; padding: 16px 0; }
+    .toc { display: none; }
+    .layout { display: block; padding: 0; max-width: none; }
+    section.manual-section {
+      box-shadow: none;
+      border: none;
+      border-top: 1px solid var(--slate-200);
+      page-break-inside: avoid;
+      padding: 14px 0;
+    }
+    .intro-card { box-shadow: none; }
+    pre.code { background: #f1f5f9; color: var(--navy-900); border: 1px solid var(--slate-200); }
+    footer { border-top: 1px solid var(--slate-200); }
+  }
+</style>
+</head>
+<body>
+
+<header class="banner">
+  <div class="banner-eyebrow">Facility Finance · Standard Operating Procedure</div>
+  <h1>MOR Deep Dive — Instruction Manual</h1>
+  <p class="banner-sub">End-to-end guide for running the Monthly Operating Review dashboard: loading data, reviewing variances, capturing commentary, and submitting to SharePoint.</p>
+  <div class="banner-meta">
+    <span class="meta-chip">Audience: Facility Finance</span>
+    <span class="meta-chip">Tool: index.html (browser-local)</span>
+    <span class="meta-chip">Submission: Power Automate → SharePoint</span>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ========== TOC ========== -->
+  <nav class="toc" aria-label="Table of contents">
+    <p class="toc-title">Contents</p>
+    <ol>
+      <li><a href="#s1">What this app is</a></li>
+      <li><a href="#s2">Opening the dashboard</a></li>
+      <li><a href="#s3">Loading the month's data</a></li>
+      <li><a href="#s4">Reading the dashboard</a></li>
+      <li><a href="#s5">Adding notes</a></li>
+      <li><a href="#s6">Adjusting thresholds</a></li>
+      <li><a href="#s7">Submitting to SharePoint</a></li>
+      <li><a href="#s8">Printing and sharing</a></li>
+      <li><a href="#s9">Forecast Narrative Builder</a></li>
+      <li><a href="#s10">Tips, gotchas, storage</a></li>
+      <li><a href="#s11">Monthly close checklist</a></li>
+    </ol>
+  </nav>
+
+  <main class="content">
+
+    <div class="intro-card">
+      <p>This manual walks a facility finance user through running the <strong>Monthly Operating Review (MOR) Deep Dive</strong> dashboard end-to-end: loading the month's data, reviewing variances, capturing commentary, and submitting the finished package to SharePoint.</p>
+      <p>If you maintain the Power Automate flow or the receiving SharePoint lists, see <code>POWER_AUTOMATE_FLOW.md</code> and <code>SHAREPOINT_PAYLOAD.md</code> instead — those describe the wire format and the receiver side.</p>
+    </div>
+
+    <!-- ========== §1 ========== -->
+    <section class="manual-section" id="s1">
+      <h2><span class="num">§1</span> What this app is</h2>
+      <p><code>index.html</code> is a single-file dashboard that runs entirely in your browser. It does <strong>not</strong> upload your Excel files anywhere — parsing happens locally and uploaded data is kept in your browser's local storage. The only network call the dashboard makes is the final <span class="ui">⇪ Submit to SharePoint</span> action, which sends a structured JSON summary (not the spreadsheet itself) to your Power Automate endpoint.</p>
+      <p>The companion file <code>Forecast_Narrative_Builder.html</code> is a smaller tool for drafting forecast narratives from the same source workbooks; it is covered briefly in §9.</p>
+
+      <h3>What you need before you start</h3>
+      <ul>
+        <li>A modern browser (Chrome, Edge, or Firefox — current version).</li>
+        <li>The month's <strong>Month End Analytic</strong> export (<code>.xlsx</code>).</li>
+        <li>The month's <strong>MOR Standard Deck</strong> (<code>.xlsx</code>) — the dashboard reads the <code>MOR_MTD</code> tab.</li>
+        <li>The shared secret and Power Automate endpoint URL for SharePoint submission (from IT — only needed the first time you submit on a new device/browser).</li>
+        <li>Your name and role as you want them recorded on the submission (e.g. "Gene Preston", "Facility CFO").</li>
+      </ul>
+    </section>
+
+    <!-- ========== §2 ========== -->
+    <section class="manual-section" id="s2">
+      <h2><span class="num">§2</span> Opening the dashboard</h2>
+      <p>Open <code>index.html</code> by double-clicking it, or by serving it from any static host. No build step, no install, no login.</p>
+      <p>On first load you'll see:</p>
+      <ul>
+        <li>A teal <strong>MOR DEEP DIVE</strong> banner at the top.</li>
+        <li>A facility brand block on the left (it will read "Hospital / MOR Dashboard" until data is loaded).</li>
+        <li>A header toolbar on the right with: <span class="ui">Thresholds</span>, the <span class="ui">cycle</span> dropdown, <span class="ui">📎 Workbook</span>, <span class="ui">⇪ Submit to SharePoint</span>, and <span class="ui">Print</span>.</li>
+        <li>A <strong>Data Source · Upload Monthly Files</strong> panel.</li>
+        <li>An empty-state message: <em>"No Data Loaded — Upload your source files to populate the dashboard."</em></li>
+      </ul>
+    </section>
+
+    <!-- ========== §3 ========== -->
+    <section class="manual-section" id="s3">
+      <h2><span class="num">§3</span> Loading the month's data</h2>
+      <p>In the <strong>Data Source</strong> panel:</p>
+      <ol>
+        <li>Click the <strong>Month End Analytic (.xlsx)</strong> slot and pick the analytic export. The slot will show the file name and a green check when it parses successfully.</li>
+        <li>Click the <strong>MOR Standard Deck (.xlsx)</strong> slot and pick the deck. The dashboard reads the <code>MOR_MTD</code> tab.</li>
+        <li>Enter <strong>Staffed Beds</strong> for the facility (used to compute occupancy and per-patient-day metrics). The value is remembered between sessions.</li>
+        <li>The status line at the bottom of the panel will say <em>"Loaded data persists in your browser until you upload new files or reset."</em> Click <span class="ui">Hide</span> to collapse the panel.</li>
+      </ol>
+
+      <h3>Resetting or replacing data</h3>
+      <ul>
+        <li>Re-uploading either file replaces only that side of the data.</li>
+        <li><span class="ui">Clear Data</span> wipes the cached parse of both files <strong>but keeps</strong> your notes, commentary, thresholds, and SharePoint settings.</li>
+        <li>Notes and management commentary live under separate keys — see §10 if you need to clear them.</li>
+      </ul>
+
+      <div class="callout callout-warn">
+        <div class="callout-title">⚠ If a file won't load</div>
+        <ul style="margin-bottom:0;">
+          <li>Confirm the file is <code>.xlsx</code> (not <code>.xls</code> or a CSV exported with the wrong template).</li>
+          <li>The deck <strong>must</strong> contain a sheet named <code>MOR_MTD</code>. Tabs that have been renamed (e.g. "MOR MTD" with a space) will not parse.</li>
+          <li>If the analytic was emailed as a <code>.zip</code> or saved from SharePoint with a <code>(1)</code> suffix appended, that's fine — only the extension matters.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ========== §4 ========== -->
+    <section class="manual-section" id="s4">
+      <h2><span class="num">§4</span> Reading the dashboard</h2>
+      <p>Once both files are loaded the dashboard populates top to bottom. Every section can be reviewed in place; no navigation between pages.</p>
+
+      <h3>View toggle: <code>$ Dollars</code> vs <code>Per Patient Day</code></h3>
+      <p>The tab bar above the KPIs lets you flip the whole dashboard between <strong>Dollar</strong> mode and <strong>PPD</strong> mode. PPD divides every dollar figure by patient days for the period and surfaces unit-economics outliers that dollar variances can hide.</p>
+
+      <h3>Sections in order</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Section</th><th>What it shows</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>KPI grid</td><td>Net revenue, total opex, EBITDA, patient days, etc. with MAR actual vs budget and a status pill.</td></tr>
+            <tr><td>Volume, Payor Mix &amp; Service Mix</td><td>Three mini-tables sourced from the standard deck.</td></tr>
+            <tr><td>Volume Commentary</td><td>Auto-generated narrative on census/LOS/payor mix, plus a Management Commentary textarea for your overlay.</td></tr>
+            <tr><td>Top Opportunities</td><td>The largest absolute variances vs. budget — your headline call-outs.</td></tr>
+            <tr><td>Revenue Waterfall</td><td>IP gross to net revenue with deductions, charity, denials, and bad debt.</td></tr>
+            <tr><td>Revenue Detail Drill-Down</td><td>Click a revenue line to expand its components.</td></tr>
+            <tr><td>Revenue Commentary</td><td>Net revenue and YTD narrative, plus management commentary.</td></tr>
+            <tr><td>Strategic Insights</td><td>Cross-cutting reads the standard MOR doesn't surface.</td></tr>
+            <tr><td>Operating Expense Drill-Down</td><td>Categories sorted by variance magnitude; click to expand GL detail.</td></tr>
+            <tr><td>Expense Commentary</td><td>Variance narrative and management commentary.</td></tr>
+            <tr><td>Labor Management</td><td>EPOB Paid, Equivalent EPOB, Paid FTEs, Labor Cost, AHR, and the three impact rows.</td></tr>
+            <tr><td>Trended Performance</td><td>Trailing actuals through the current period.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Status pills</h3>
+      <p>Each row in the KPI grid, drill-downs, and volume tables gets a colored status pill <span class="pill pill-green">Green</span> <span class="pill pill-amber">Amber</span> <span class="pill pill-red">Red</span> based on materiality thresholds. The default thresholds are described in §6.</p>
+
+      <div class="callout callout-info">
+        <div class="callout-title">Variance sign convention</div>
+        <p>Variances are computed as <strong>Budget − Actual</strong>. For expenses this means <em>favorable when actual is below budget</em>. The same convention is shown in the footer of every print-out.</p>
+      </div>
+    </section>
+
+    <!-- ========== §5 ========== -->
+    <section class="manual-section" id="s5">
+      <h2><span class="num">§5</span> Adding notes</h2>
+      <p>Two kinds of commentary are captured in the dashboard:</p>
+
+      <h3>Line-item notes</h3>
+      <p>Any row in the expense drill-down, revenue drill-down, or callouts that meets the materiality threshold is <strong>required</strong> to carry a note before submission. Click the row to expand it, then click the <span class="ui">Add note</span> icon to open the note modal. Type your note and <span class="ui">Save Note</span>.</p>
+      <ul>
+        <li>Notes are saved per row identifier (GL number or volume label) and persist across sessions.</li>
+        <li>The note modal also has a <span class="ui">Delete Note</span> button (only visible when a note already exists) if you typed one in error.</li>
+        <li>A small badge on each section header tells you how many noted rows vs. how many <em>require</em> a note.</li>
+      </ul>
+
+      <h3>Management commentary</h3>
+      <p>Three large textareas at the bottom of the <strong>Volume</strong>, <strong>Revenue</strong>, and <strong>Expense Commentary</strong> sections capture your narrative summary. These are free-form and are not driven by thresholds. They appear in the SharePoint payload under <code>management_commentary.{volume,revenue,expense}</code>.</p>
+    </section>
+
+    <!-- ========== §6 ========== -->
+    <section class="manual-section" id="s6">
+      <h2><span class="num">§6</span> Adjusting thresholds</h2>
+      <p>Click the <span class="ui">⚙ Thresholds</span> button in the header to open the thresholds modal. Three tabs:</p>
+      <ol>
+        <li><strong>Global defaults</strong> — the dollar threshold that drives the "requires a note" rule on summary lines and expense categories (default: <code>$3,000</code>), plus the per-metric volume thresholds (ADC, Inpatient Days, LOS, Occupancy, Admissions, Equivalent ADC).</li>
+        <li><strong>Per-category</strong> — override the global dollar threshold for a specific expense category (e.g. raise it for Salaries &amp; Wages where small swings are not material).</li>
+        <li><strong>Per-GL account</strong> — override at the individual GL line level. Use the search box at the top to filter.</li>
+      </ol>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">⛁ Inheritance rule</div>
+        <p>Blank fields <strong>inherit from the level above</strong>. So a blank GL value falls back to the category value; a blank category value falls back to the global default.</p>
+      </div>
+
+      <p><span class="ui">Reset to defaults</span> at the bottom-left of the modal restores the ship defaults across all three tabs. <span class="ui">Save</span> applies your changes; <span class="ui">Cancel</span> discards them.</p>
+      <p>Changes recompute the status pills and "requires note" flags immediately. Notes you've already written are <strong>not</strong> discarded when you lower a threshold — they remain attached to the row.</p>
+    </section>
+
+    <!-- ========== §7 ========== -->
+    <section class="manual-section" id="s7">
+      <h2><span class="num">§7</span> Submitting to SharePoint</h2>
+      <p>Once the dashboard reads correctly and every required-note row has commentary, you're ready to submit.</p>
+
+      <h3>Step-by-step</h3>
+      <ol>
+        <li><strong>Pick the submission cycle</strong> in the dropdown next to the <span class="ui">⇪ Submit</span> button:
+          <ul>
+            <li><code>FCST01</code> — first forecast cut</li>
+            <li><code>FCST02</code> — refreshed forecast</li>
+            <li><code>MOR Preliminary</code> — preliminary close</li>
+            <li><code>MOR Final</code> — final, signed-off close</li>
+          </ul>
+          The cycle is remembered between sessions. <strong>Each cycle is a separate submission identity</strong> — submitting twice on FCST02 updates the same record; switching to MOR Final creates a new one.
+        </li>
+        <li><strong>(Recommended)</strong> Click <span class="ui">📎 Workbook</span> and select the source spreadsheet for this submission. The browser computes a SHA-256 hash in-session and stamps it onto the submission for forensic tracing. The file name is remembered between sessions; the hash is not — re-pick the file each session if you want the hash recorded. The status next to the button shows <code>&lt;filename&gt; (&lt;8-char hash&gt;…)</code>.</li>
+        <li>Click <span class="ui">⇪ Submit to SharePoint</span>.</li>
+        <li><strong>First-time prompts</strong> (only on a fresh browser):
+          <ul>
+            <li><strong>Endpoint URL</strong> — the Power Automate HTTP trigger URL from IT.</li>
+            <li><strong>Shared secret</strong> — the value of the <code>X-MOR-Secret</code> header.</li>
+            <li><strong>Submitter name</strong> — e.g. "Gene Preston".</li>
+            <li><strong>Submitter role</strong> — e.g. "Facility CFO".</li>
+          </ul>
+          All four are cached in <code>localStorage</code> and never asked again until you reset them.
+        </li>
+        <li>On success you'll see: <em>"Submitted to SharePoint (cycle FCST02, sequence #1)."</em><br>
+          The sequence counter increments by one for each successful submit on the same <code>(facility, period, cycle)</code> combination.
+        </li>
+      </ol>
+
+      <h3>What if the submit fails?</h3>
+      <div class="callout callout-danger">
+        <div class="callout-title">⚠ HTTP 401 — wrong secret</div>
+        <p>Click <span class="ui">Reset secret</span> in the footer of the Thresholds modal and submit again; you'll be re-prompted.</p>
+      </div>
+      <div class="callout callout-warn">
+        <div class="callout-title">Other HTTP / network errors</div>
+        <p>The full payload is logged to the browser console (open DevTools → Console). The sequence counter is <strong>not</strong> incremented on failure, so retrying will not burn a sequence number.</p>
+      </div>
+      <div class="callout callout-info">
+        <div class="callout-title">"Submitting without source workbook reference"</div>
+        <p>A warning toast, not a blocker. The submission still goes through; <code>source_file</code> and <code>source_file_sha256</code> will be blank on the SharePoint row.</p>
+      </div>
+
+      <h3>What gets sent</h3>
+      <p>The payload is a JSON summary of the dashboard state — every KPI, every required-note line with its note, both narratives and management commentary, the labor block, and an audit envelope. The Excel files themselves are <strong>not</strong> uploaded. The full schema is documented in <code>SHAREPOINT_PAYLOAD.md</code>.</p>
+
+      <h3>Resetting cached submission settings</h3>
+      <p>Open the Thresholds modal — at the bottom you'll find three reset links:</p>
+      <ul>
+        <li><span class="ui">Reset endpoint</span> — clears the Power Automate URL.</li>
+        <li><span class="ui">Reset secret</span> — clears the shared secret.</li>
+        <li><span class="ui">Reset submitter info</span> — clears submitter name + role.</li>
+      </ul>
+      <p>Use these when moving to a new environment (e.g. dev → prod) or when the secret rotates. The next submit will re-prompt for any cleared value.</p>
+    </section>
+
+    <!-- ========== §8 ========== -->
+    <section class="manual-section" id="s8">
+      <h2><span class="num">§8</span> Printing and sharing</h2>
+      <p>Click <span class="ui">⎙ Print</span> in the header to render a print-friendly version of the dashboard. All collapsed drill-down rows are expanded automatically so nothing is hidden behind a click in the printed copy. Use your browser's "Save as PDF" target if you need a file artifact rather than a hard copy.</p>
+      <p>For ad-hoc sharing without SharePoint, printing to PDF and emailing the PDF is the supported path.</p>
+    </section>
+
+    <!-- ========== §9 ========== -->
+    <section class="manual-section" id="s9">
+      <h2><span class="num">§9</span> Forecast Narrative Builder</h2>
+      <p><code>Forecast_Narrative_Builder.html</code> is a separate tool for drafting forecast narratives from the source workbooks. Open it the same way you open the dashboard. Drag-and-drop or click the drop zone to load a workbook, adjust the per-line projection inputs, and the tool will emit a narrative block you can paste into your forecast deck or email.</p>
+      <div class="callout callout-info">
+        <div class="callout-title">Scope</div>
+        <p>The builder does <strong>not</strong> submit to SharePoint and does not share state with the MOR Deep Dive dashboard.</p>
+      </div>
+    </section>
+
+    <!-- ========== §10 ========== -->
+    <section class="manual-section" id="s10">
+      <h2><span class="num">§10</span> Tips, gotchas, and where things are stored</h2>
+
+      <h3>One browser, one machine</h3>
+      <p>All of your state — uploaded files, notes, commentary, thresholds, SharePoint settings — lives in your browser's <code>localStorage</code> for the origin that served <code>index.html</code>. Switching browsers or machines means starting fresh. Notes do <strong>not</strong> sync across devices.</p>
+
+      <div class="callout callout-danger">
+        <div class="callout-title">⚠ Private / incognito windows</div>
+        <p><code>localStorage</code> is cleared when a private window closes. Don't run the MOR in a private window unless you intend to re-enter everything from scratch each session.</p>
+      </div>
+
+      <h3>Re-uploading mid-review</h3>
+      <ul>
+        <li>Notes attached to GLs and volume labels that still exist are <strong>preserved</strong> (notes are keyed by GL number / metric label, not by row position).</li>
+        <li>Notes attached to GLs that no longer appear in the new file become <strong>orphaned</strong> — they still occupy space in <code>localStorage</code> but won't surface anywhere on screen. They will <strong>not</strong> be included in the next submission.</li>
+      </ul>
+
+      <h3>Cycle vs period</h3>
+      <p>The <strong>cycle</strong> is the close stage (FCST01/02 or MOR Prelim/Final). The <strong>period</strong> is the calendar month being reported (e.g. "April 2026"), which the dashboard derives from the source workbook. Submitting two cycles for the same period (e.g. FCST02 then MOR Preliminary for April 2026) produces two separate SharePoint records — they're tracked independently.</p>
+
+      <h3>Resubmitting the same cycle</h3>
+      <p>Resubmitting <code>(facility, period, cycle)</code> is fully supported and expected — the SharePoint header row is upserted in place, and the sequence counter increments. The full prior payload is preserved in the audit history list. See <code>POWER_AUTOMATE_FLOW.md</code> §3 for the expected receiver behavior.</p>
+
+      <h3>LocalStorage keys (for IT troubleshooting)</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Key</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>mor_notes</code></td><td>All line-item notes (GL, volume, callout, narrative).</td></tr>
+            <tr><td><code>mor_mgmt_commentary</code></td><td>The three management commentary textareas.</td></tr>
+            <tr><td><code>mor_thresholds</code></td><td>Global / per-category / per-GL threshold overrides.</td></tr>
+            <tr><td><code>mor_beds</code></td><td>Staffed bed count.</td></tr>
+            <tr><td><code>mor_cycle</code></td><td>Last-selected submission cycle.</td></tr>
+            <tr><td><code>mor_sharepoint_url</code></td><td>Power Automate endpoint URL.</td></tr>
+            <tr><td><code>mor_sharepoint_secret</code></td><td>Shared secret for <code>X-MOR-Secret</code>.</td></tr>
+            <tr><td><code>mor_submitted_by</code> / <code>mor_submitted_role</code></td><td>Submitter identity.</td></tr>
+            <tr><td><code>mor_last_source_file</code></td><td>Last attached workbook file name.</td></tr>
+            <tr><td><code>mor_seq:{facility}:{period}:{cycle}</code></td><td>Monotonic sequence counter.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>To wipe everything and start completely fresh, run this in your browser's DevTools console on the page:</p>
+<pre class="code"><span class="fn">Object</span>.keys(localStorage).filter(k =&gt; k.<span class="fn">startsWith</span>(<span class="str">'mor_'</span>)).<span class="fn">forEach</span>(k =&gt; localStorage.<span class="fn">removeItem</span>(k));
+location.<span class="fn">reload</span>();</pre>
+    </section>
+
+    <!-- ========== §11 ========== -->
+    <section class="manual-section" id="s11">
+      <h2><span class="num">§11</span> Monthly close checklist</h2>
+      <p>A suggested order of operations for a normal MOR Final close. <em>Click items to mark them done.</em></p>
+      <ul class="checklist" id="checklist">
+        <li><input type="checkbox"><span class="check-label">Receive the Month End Analytic and MOR Standard Deck exports.</span></li>
+        <li><input type="checkbox"><span class="check-label">Open <code>index.html</code> (or refresh if already open) and upload both files. Confirm staffed beds are correct.</span></li>
+        <li><input type="checkbox"><span class="check-label">Scan the KPI grid for any red pills and skim Top Opportunities.</span></li>
+        <li><input type="checkbox"><span class="check-label">Toggle to <strong>Per Patient Day</strong> view and recheck — small dollar moves often look very different on a PPD basis.</span></li>
+        <li><input type="checkbox"><span class="check-label">Open the expense drill-down. Expand every red category and add notes on each required-note GL.</span></li>
+        <li><input type="checkbox"><span class="check-label">Open the revenue drill-down and do the same.</span></li>
+        <li><input type="checkbox"><span class="check-label">Read the auto-generated Volume / Revenue / Expense commentary. Write your management overlay in the three management commentary textareas.</span></li>
+        <li><input type="checkbox"><span class="check-label">Set the cycle dropdown to <strong>MOR Final</strong>.</span></li>
+        <li><input type="checkbox"><span class="check-label">Click <span class="ui">📎 Workbook</span> and attach the analytic workbook used.</span></li>
+        <li><input type="checkbox"><span class="check-label">Click <span class="ui">⇪ Submit to SharePoint</span>. Confirm the success alert.</span></li>
+        <li><input type="checkbox"><span class="check-label">Click <span class="ui">⎙ Print</span> → Save as PDF for the local archive.</span></li>
+        <li><input type="checkbox"><span class="check-label">Verify the row landed in SharePoint (your IT contact can share the list link). Sequence number should be <code>#1</code> for the first MOR Final submit of the period.</span></li>
+      </ul>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">Need help?</div>
+        <p>If anything is unclear, open an issue in the repository or contact your finance systems administrator.</p>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  MOR Deep Dive · Instruction Manual &nbsp;·&nbsp; Facility Finance SOP
+</footer>
+
+<script>
+  // Interactive checklist
+  document.querySelectorAll('#checklist li').forEach(li => {
+    const cb = li.querySelector('input[type="checkbox"]');
+    li.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'INPUT') cb.checked = !cb.checked;
+      li.classList.toggle('done', cb.checked);
+    });
+  });
+</script>
+
+</body>
+</html>
