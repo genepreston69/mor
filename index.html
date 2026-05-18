@@ -861,6 +861,75 @@ table.detail tr:last-child td { border-bottom: none; }
 .narrative-card .flag.bad { background: var(--bad-bg); color: var(--bad); }
 .narrative-card .flag.good { background: var(--good-bg); color: var(--good); }
 
+/* CATEGORY SIDEBAR — narrative pulled from MOR PowerPoint deck */
+.pptx-sidebar {
+  background: linear-gradient(180deg, #fdfaf3 0%, #faf3e0 100%);
+  border: 1px solid #e8d5a0;
+  border-left: 4px solid #b07a1f;
+  border-radius: 6px;
+  padding: 14px 18px;
+  margin: 6px 0 22px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+.pptx-sidebar .pptx-sb-eyebrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.pptx-sidebar .pptx-sb-label {
+  font-family: Georgia, serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #8a5d18;
+}
+.pptx-sidebar .pptx-sb-source {
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.pptx-sidebar .pptx-sb-title {
+  font-family: Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.pptx-sidebar h5 {
+  font-family: Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 10px 0 4px;
+}
+.pptx-sidebar h5:first-of-type { margin-top: 4px; }
+.pptx-sidebar ul {
+  margin: 0 0 0 18px;
+  padding: 0;
+  list-style: disc;
+}
+.pptx-sidebar ul li { margin: 2px 0; }
+.pptx-sidebar .pptx-sb-empty {
+  font-style: italic;
+  color: var(--muted);
+  font-size: 11px;
+}
+.pptx-sidebar .pptx-sb-meta {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 8px;
+  border-top: 1px dashed #e8d5a0;
+  padding-top: 6px;
+}
+
 /* MANAGEMENT COMMENTARY TEXT BOX */
 .mgmt-commentary {
   width: 100%;
@@ -1209,7 +1278,10 @@ table.detail td .note-btn { float: right; margin-left: 6px; }
   font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 4px; cursor: pointer;
 }
 .upload-grid {
-  display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end;
+  display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 14px; align-items: end;
+}
+@media (max-width: 1100px) {
+  .upload-grid { grid-template-columns: 1fr 1fr; }
 }
 .upload-slot { display: flex; flex-direction: column; }
 .upload-slot label {
@@ -1472,6 +1544,22 @@ footer {
     margin-bottom: 10px !important;
   }
 
+  /* PPTX sidebars — compact for print */
+  .pptx-sidebar {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    padding: 8px 12px !important;
+    margin: 4px 0 10px !important;
+    font-size: 9.5px !important;
+    line-height: 1.4 !important;
+  }
+  .pptx-sidebar .pptx-sb-title { font-size: 12px !important; margin-bottom: 4px !important; }
+  .pptx-sidebar .pptx-sb-label { font-size: 8px !important; }
+  .pptx-sidebar .pptx-sb-source { font-size: 7.5px !important; }
+  .pptx-sidebar h5 { font-size: 10px !important; margin: 5px 0 2px !important; }
+  .pptx-sidebar ul li { margin: 1px 0 !important; }
+  .pptx-sidebar .pptx-sb-meta { font-size: 8px !important; padding-top: 3px !important; margin-top: 4px !important; }
+
   /* Management commentary textareas */
   .mgmt-commentary { break-inside: avoid !important; margin: 8px 0 14px !important; }
   .mgmt-commentary textarea {
@@ -1696,6 +1784,17 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <input type="file" accept=".xlsx,.xls" onchange="handleFile(event,'deck')">
         </div>
       </div>
+      <div class="upload-slot">
+        <label>MOR Narrative Deck (.pptx)</label>
+        <div class="file-drop loaded" id="drop-pptx">
+          <div class="icon">📑</div>
+          <div class="text">
+            <div class="name" id="name-pptx">Default: Apr 2026 deck</div>
+            <div class="meta" id="meta-pptx">Source: MOR PowerPoint — Quality, Volume, Revenue, Opex, BD, HR</div>
+          </div>
+          <input type="file" accept=".pptx" onchange="handlePptxFile(event)">
+        </div>
+      </div>
       <div class="upload-actions">
         <label style="font-size:0.82rem;color:var(--muted);margin-right:8px;">Staffed Beds
           <input id="staffed-beds-input" type="number" min="1" max="999" style="width:60px;margin-left:4px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:0.85rem;" onchange="setStaffedBeds(this.value)">
@@ -1718,6 +1817,17 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
 
   <div class="kpi-grid" id="kpi-grid"></div>
+
+  <div class="section-head" id="sec-quality">
+    <h2>Quality &amp; Patient Care</h2>
+    <span class="desc">Patient satisfaction · Documentation compliance · Source: MOR PowerPoint deck</span>
+  </div>
+  <div class="section-divider"></div>
+  <div id="pptx-quality-sidebar"></div>
+  <div class="mgmt-commentary">
+    <label class="mgmt-commentary-label" for="quality-mgmt-commentary">Management Commentary</label>
+    <textarea id="quality-mgmt-commentary" data-mgmt-key="quality" placeholder="Add management commentary on quality indicators..."></textarea>
+  </div>
 
   <div class="empty-state" id="empty-state" style="display:none;">
     <div class="es-icon">📊</div>
@@ -1756,6 +1866,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="volume-commentary"></div>
+  <div id="pptx-volume-sidebar"></div>
   <div class="mgmt-commentary">
     <label class="mgmt-commentary-label" for="volume-mgmt-commentary">Management Commentary</label>
     <textarea id="volume-mgmt-commentary" data-mgmt-key="volume" placeholder="Add management commentary on volume performance..."></textarea>
@@ -1805,6 +1916,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="revenue-commentary"></div>
+  <div id="pptx-revenue-sidebar"></div>
   <div class="mgmt-commentary">
     <label class="mgmt-commentary-label" for="revenue-mgmt-commentary">Management Commentary</label>
     <textarea id="revenue-mgmt-commentary" data-mgmt-key="revenue" placeholder="Add management commentary on revenue performance..."></textarea>
@@ -1847,6 +1959,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
   <div class="section-divider"></div>
   <div id="expense-commentary"></div>
+  <div id="pptx-opex-sidebar"></div>
   <div class="mgmt-commentary">
     <label class="mgmt-commentary-label" for="expense-mgmt-commentary">Management Commentary</label>
     <textarea id="expense-mgmt-commentary" data-mgmt-key="expense" placeholder="Add management commentary on operating expense variances..."></textarea>
@@ -1866,6 +1979,28 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   <div class="section-divider"></div>
   <div class="trend-grid-lg" id="trend-lg"></div>
   <div class="trend-grid-sm" id="trend-sm"></div>
+
+  <div class="section-head" id="sec-bd">
+    <h2>Business Development</h2>
+    <span class="desc">Inquiry volume · Field marketing productivity · Referral mix · Source: MOR PowerPoint deck</span>
+  </div>
+  <div class="section-divider"></div>
+  <div id="pptx-bd-sidebar"></div>
+  <div class="mgmt-commentary">
+    <label class="mgmt-commentary-label" for="bd-mgmt-commentary">Management Commentary</label>
+    <textarea id="bd-mgmt-commentary" data-mgmt-key="bd" placeholder="Add management commentary on business development..."></textarea>
+  </div>
+
+  <div class="section-head" id="sec-hr">
+    <h2>Human Resources</h2>
+    <span class="desc">Turnover · Open positions · Recruitment · Source: MOR PowerPoint deck</span>
+  </div>
+  <div class="section-divider"></div>
+  <div id="pptx-hr-sidebar"></div>
+  <div class="mgmt-commentary">
+    <label class="mgmt-commentary-label" for="hr-mgmt-commentary">Management Commentary</label>
+    <textarea id="hr-mgmt-commentary" data-mgmt-key="hr" placeholder="Add management commentary on human resources..."></textarea>
+  </div>
 
   <footer id="page-footer">
     Variances shown as Budget − Actual (favorable when actual is below budget for expenses)
@@ -2428,6 +2563,20 @@ function loadStored() {
       }
     }
   } catch (e) { console.warn('No stored data:', e); }
+  // Restore PPTX narrative (independent of Excel data so it survives clears).
+  try {
+    const rawP = localStorage.getItem(PPTX_KEY);
+    const metaP = localStorage.getItem(PPTX_META_KEY);
+    if (rawP) {
+      DATA.pptx = JSON.parse(rawP);
+      if (metaP) {
+        const m = JSON.parse(metaP);
+        document.getElementById('drop-pptx').classList.add('loaded');
+        document.getElementById('name-pptx').textContent = m.name;
+        document.getElementById('meta-pptx').textContent = 'Loaded ' + m.date;
+      }
+    }
+  } catch (e) { /* fall back to default */ }
 }
 
 function saveStored(updates, fileType, fileName) {
@@ -2451,6 +2600,8 @@ function clearStored() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(STORAGE_META_KEY);
   localStorage.removeItem(NOTES_KEY);
+  localStorage.removeItem(PPTX_KEY);
+  localStorage.removeItem(PPTX_META_KEY);
   DATA = {};
   // Reset upload UI
   ['drop-analytic','drop-deck'].forEach(id => {
@@ -2461,6 +2612,11 @@ function clearStored() {
   document.getElementById('meta-analytic').textContent = 'Source: Month End Analytic — tab "127"';
   document.getElementById('name-deck').textContent = 'Click to select file';
   document.getElementById('meta-deck').textContent = 'Source: MOR Standard Deck — MOR_MTD tab';
+  // PPTX slot reverts to the baked default (still loaded visually).
+  const drop = document.getElementById('drop-pptx');
+  if (drop) drop.classList.add('loaded');
+  document.getElementById('name-pptx').textContent = 'Default: Apr 2026 deck';
+  document.getElementById('meta-pptx').textContent = 'Source: MOR PowerPoint — Quality, Volume, Revenue, Opex, BD, HR';
   setStatus('Data cleared. Upload new files to begin.', 'warn');
   render();
 }
@@ -2500,6 +2656,482 @@ function handleFile(event, kind) {
     }
   };
   reader.readAsArrayBuffer(file);
+}
+
+// =========================================================================
+// PPTX NARRATIVE INGEST — Highland MOR PowerPoint deck
+// Slides cover Quality, Volume, Net Revenue, Expense, HR, and Business
+// Development. We unzip the .pptx (CompressionStream-free) client-side,
+// pull paragraph-level text out of each slide, classify the slide by its
+// title, and render six "sidebar" panels — one per category.
+// =========================================================================
+
+const PPTX_KEY = 'mor_pptx_v1';
+const PPTX_META_KEY = 'mor_pptx_meta_v1';
+
+// Apr 2026 baked default — used when no PPTX has been uploaded yet so the
+// dashboard still ships with the desired narrative content.
+const PPTX_DEFAULT = {
+  source: 'Highland_MOR_Apr2026_Updated.pptx (default)',
+  period: 'April 2026',
+  quality: {
+    title: 'Quality & Patient Care',
+    groups: [
+      { heading: 'Patient Satisfaction & Safety', bullets: [
+        'Increases in overall satisfaction, safety and security score, patient involvement in treatment planning/goals, and NPS.',
+        'Survey return rate declined by 2%, primarily due to AMAs and refusals.',
+        'Elopement incident occurred during intake — patient’s mother called 911 and removed the child against medical advice.',
+        'Physical aggression rose vs. prior month, largely driven by chronic patients. Any patient exhibiting aggression requiring restraint or seclusion is now placed on an immediate behavior support plan.',
+        'AMAs and ATDs decreased compared to the prior month.',
+      ]},
+      { heading: 'Care Indicators Compliance', bullets: [
+        'All care indicators improved to 100% compliance in April — result of continued education and follow-up with staff.',
+      ]},
+      { heading: 'Documentation Compliance', bullets: [
+        'Compliance remained strong overall, with most indicators meeting or exceeding the 95% target.',
+        'April exceptions: medication orders authenticated within 48 hours (80%); psychiatric evaluations meeting UR medical necessity oversight criteria (90%); discharge summaries with admission recap (77.78%).',
+        'Routine audits and meeting-level findings reviews continue to drive accountability.',
+        'Provider trainings conducted in April to reinforce documentation standards.',
+      ]},
+      { heading: 'Admission Process Compliance', bullets: [
+        'All admission-process metrics at 100% except obtaining patient signature within 72 hours of admission — patient refused to sign and the refusal was not documented in a timely manner.',
+        'Results reflect strong adherence to documentation standards and the effectiveness of staff training and re-education.',
+      ]},
+    ],
+  },
+  volume: {
+    title: 'Volume — Admissions, ADC, LOS, Payor Mix',
+    groups: [
+      { heading: 'Admissions', bullets: [
+        'Unfavorable April variance to budget of 39 admissions (Acute -29, Detox -10).',
+        'Adolescent admissions +2 to budget; adult admissions -31 to budget.',
+        'Admissions up 28 over April 2025; child/adolescent admissions up 31 over PY. YTD admissions up 139 (16%).',
+        'Medicaid admissions up 154 over prior year.',
+        'Acceptance rate 36.1% in April vs. 38.4% full-year 2025. Bed-capacity deflections of 26 — removing them lifts acceptance to 39.7%.',
+      ]},
+      { heading: 'ADC', bullets: [
+        'ADC unfavorable variance to budget of 10.0 (Acute -8.6, Detox -1.5).',
+        'Adult ADC +4.1 favorable; C/A ADC -4.4 unfavorable.',
+      ]},
+      { heading: 'LOS', bullets: [
+        'ALOS of 10.4 days, 0.4 days favorable to the 10.0-day budget.',
+        'ALOS down 3.9 days vs. prior year — fewer long-term chronic patients and PRTF closure.',
+        'ADC down, but admissions are up 16% over prior year.',
+      ]},
+      { heading: 'Payor Mix', bullets: [
+        'Managed Medicaid mix of 71% supports DPP funding.',
+        'Qualifies Highland for the $2.29M/month WV Directed Payment Program supplemental — a $27.5M annualized revenue mechanism tied to Managed Medicaid volume.',
+        'Net revenue per patient day of $2,314 — 8% above the $2,126 budget.',
+        'Medicare FFS at 6.1% — 4.0% below budget, a rate headwind. DPP more than compensates at current Medicaid concentration.',
+        'Protect the Managed Medicaid referral mix — the highest-leverage financial variable for this facility.',
+      ]},
+    ],
+  },
+  revenue: {
+    title: 'Net Revenue, Denials, Charity, Bad Debt',
+    groups: [
+      { heading: 'Net Revenue', bullets: [
+        'Net Revenue of $5.91M exceeded the $5.70M budget by $209K favorable.',
+        'Net revenue per patient day of $2,313.86 vs. $1,996.92 budget (+15.9%).',
+        'IP Gross Revenue $7.73M vs. $9.32M budget — $1.59M unfavorable.',
+        'Census of 2,555 patient days vs. 2,856 budget (-301 days).',
+        'A one-time favorable bad debt adjustment was the main factor for exceeding the net revenue budget.',
+      ]},
+      { heading: 'Denials', bullets: [
+        'Unfavorable variance of $4,226 in April.',
+        '45 denied days (22 accounts) — ABH issued 40 days (19 accounts).',
+        'UR PI meetings in progress; retraining sessions held with all disciplines.',
+        'Meetings held with ABH to develop mutually beneficial contracts.',
+        'Total recoveries for April: $33,433.',
+      ]},
+      { heading: 'Charity', bullets: [
+        'Charity adjustments ($53K) unfavorable to budget.',
+        '18 patients totaling 151 patient days — average 8.4 days per patient.',
+        'April booking includes charity write-offs for Feb, March, and April (catch-up entry).',
+      ]},
+      { heading: 'Admin Adjustments', bullets: [
+        'No admin adjustments in the period.',
+      ]},
+      { heading: 'Bad Debt', bullets: [
+        'Total Bad Debt of ($401,554) — $593K favorable to budget.',
+      ]},
+    ],
+  },
+  opex: {
+    title: 'Operating Expense Detail',
+    groups: [
+      { heading: 'Salaries, Wages & Benefits', bullets: [
+        'S&W $1.17M actual vs. $1.31M budget — $136K favorable (+10%).',
+        'PPD: $459.20 actual vs. $512.49 budget.',
+        'YTD: $4.70M actual vs. $4.85M budget — $148K favorable.',
+        'Paid EPOB 1% under budget; continuing to flex down direct-care EPOB.',
+      ]},
+      { heading: 'Purchased Services', bullets: [
+        'Purchased Services $157K actual vs. $169K budget — $12K favorable (+7%).',
+        'Continuing to monitor for expense management opportunities.',
+      ]},
+      { heading: 'Professional Fees', bullets: [
+        'Pro Fees $99K actual vs. $72K budget — $27K unfavorable (-38%).',
+        'Down one nurse practitioner; filling gap with PRN. Actively recruiting.',
+      ]},
+      { heading: 'Supplies', bullets: [
+        'Supplies $87K actual vs. $106K budget — $19K favorable (+18%).',
+        'PPD: $34.06 actual vs. $41.33 budget.',
+        'YTD: $307K actual vs. $412K budget — $104K favorable.',
+      ]},
+      { heading: 'Other Expense', bullets: [
+        'Repairs & Maintenance $23K actual vs. $35K budget — $12K favorable (+34%).',
+        'Other Operating $39K actual vs. $37K budget — $2K unfavorable (-5%).',
+      ]},
+    ],
+  },
+  bd: {
+    title: 'Business Development — Inquiries, Field Marketing, Referrals',
+    groups: [
+      { heading: 'BD Staffing Coverage', bullets: [
+        'CL position filled; start date 5/4/26. Second CL position has also been filled.',
+      ]},
+      { heading: 'External & Volume Context', bullets: [
+        'Rolling county Spring breaks continued through April 20.',
+        '678 Total inquiries: -35 vs. prior month; +88 vs. prior year.',
+        '467 Field inquiries: -34 vs. prior month; +67 vs. prior year.',
+        '245 Total admissions: -14 vs. prior month; +5 vs. prior year.',
+        'Conversion at 36% — consistent with prior month.',
+      ]},
+      { heading: 'Service Line', bullets: [
+        'Detox inquiries decreased vs. prior month and prior year: -33 PM; -11 PY.',
+        'Adolescent inquiries increased vs. prior month and prior year: +9 PM; +58 PY.',
+        'Adult inquiries decreased vs. prior month, increased vs. prior year: -12 PM; +46 PY.',
+        'Continued focus on Highland Recovery Center (HRC) service line; awaiting expansion to 3.5 services.',
+        'Adult accounts a priority for the BD team.',
+      ]},
+      { heading: 'Account Mix', bullets: [
+        'Top 3: ER (332) -7 PM; Acute Psych (80) +8 PM; Mental Health Centers (18) -19 PM.',
+        'Bottom 3: PHP/IOP Providers (1) -2 PM; Physicians (1) -3 PM; Other RTC Providers (4) +3 PM.',
+        'Declines vs. PM: CAMC W&C -3; Princeton Community Hospital -5; Logan -5; Davis -6; Help4WV -2.',
+        'Growth vs. PM: Bateman +4; CAMC General +18; Berkeley Medical Center +5; Grant +3; Potomac +7.',
+        'Increased focus on private providers and residential treatment centers.',
+      ]},
+      { heading: 'Marketing & Outreach', bullets: [
+        'Daily bed-availability email blasts continue — twice daily when census requires, including weekends.',
+        'Monthly service-line marketing campaigns — April/May focus on adult services.',
+        'Educational presentation held with 30 providers of Family Care Health Centers on April 1.',
+        'Salesforce data and referral accounts being reallocated to new CLs and DBD for accurate reporting and territory alignment.',
+      ]},
+      { heading: 'PMO & Strategic Focus', bullets: [
+        'BD team meets weekly with CEO on strategy, initiatives, and expectations.',
+        'Recovery Plan and Summer Break Plan developed and implemented.',
+        'Attempting to schedule meeting to finalize contract for state hospital step-down program.',
+        '4th-floor construction to begin in late June.',
+        'Negotiations continuing for addition of 3.5 services at HRC.',
+      ]},
+      { heading: 'Events & Conferences', bullets: [
+        'Share the Vision (WV First Foundation / Community Connections), April 14-16, Huntington WV.',
+        'WV Licensed Professional Counselors Association Conference, April 16-17, Stonewall Jackson, Roanoke WV.',
+        'WV Primary Care Association Conference exhibit planned for June; School Summit in July.',
+      ]},
+    ],
+  },
+  hr: {
+    title: 'Human Resources — Turnover, Recruitment, Physician Pipeline',
+    groups: [
+      { heading: 'Turnover', bullets: [
+        'April monthly turnover 4.12% (annualized ~69.27%).',
+        'YTD turnover elevated due to recalculation that now includes FT/PT employees who transitioned to PRN.',
+        'Involuntary terminations have decreased; projected 90-day turnover expected ~23% lower than last year.',
+        'Improvement attributed to increased leadership involvement in interview and selection.',
+      ]},
+      { heading: 'Open Positions', bullets: [
+        'RN vacancies decreased; several critical night-shift positions now filled.',
+        'As new hires complete onboarding, overtime and incentive utilization expected to decline.',
+        'Wage competitiveness analysis for intake, therapy, dietary, housekeeping complete; under corporate review.',
+        'CL position filled — new hire (with strong central/northern WV connections) starts May 4, 2026.',
+        'Patient Account Rep position filled; candidate starts in the next few weeks.',
+        'Recruitment for step-down unit staff has begun.',
+      ]},
+      { heading: 'Recruitment', bullets: [
+        'HRD and CNO invited to serve on the West Virginia State University Nursing Advisory Board — contributing to recruitment-needs and long-term workforce-development discussions.',
+        'HRD met with new POC for WV Workforce Now; evaluating upcoming events for Highland participation.',
+      ]},
+      { heading: 'Physician Recruitment', bullets: [
+        'Dr. Shick accepted — a returning child psychiatrist with established facility relationships. Anticipated start July.',
+        'On-site child/adolescent psychiatric coverage directly supports the C/A volume strategy and DPP optimization.',
+        'Additional interview scheduled with an NP with strong psych experience.',
+      ]},
+    ],
+  },
+};
+
+// Minimal client-side .pptx unzipper using browser DecompressionStream.
+// Reads the ZIP central directory, decompresses each entry, and returns a
+// { filename: textContent } map for slide XML files only.
+async function _unzipPptxSlides(arrayBuf) {
+  const u8 = new Uint8Array(arrayBuf);
+  const dv = new DataView(arrayBuf);
+  // EOCD signature 0x06054b50 lives in the trailing 22..~65557 bytes.
+  let eocd = -1;
+  const minScan = Math.max(0, u8.length - 65557);
+  for (let i = u8.length - 22; i >= minScan; i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('PPTX: end-of-central-directory not found');
+  const totalEntries = dv.getUint16(eocd + 10, true);
+  const cdOffset = dv.getUint32(eocd + 16, true);
+
+  const slides = {};
+  let p = cdOffset;
+  const decoder = new TextDecoder('utf-8');
+  for (let i = 0; i < totalEntries; i++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method   = dv.getUint16(p + 10, true);
+    const compSize = dv.getUint32(p + 20, true);
+    const nameLen  = dv.getUint16(p + 28, true);
+    const extraLen = dv.getUint16(p + 30, true);
+    const cmtLen   = dv.getUint16(p + 32, true);
+    const localOff = dv.getUint32(p + 42, true);
+    const name = decoder.decode(u8.subarray(p + 46, p + 46 + nameLen));
+    p += 46 + nameLen + extraLen + cmtLen;
+
+    if (!/^ppt\/slides\/slide\d+\.xml$/.test(name)) continue;
+    if (dv.getUint32(localOff, true) !== 0x04034b50) continue;
+    const lNameLen  = dv.getUint16(localOff + 26, true);
+    const lExtraLen = dv.getUint16(localOff + 28, true);
+    const dataStart = localOff + 30 + lNameLen + lExtraLen;
+    const data = u8.subarray(dataStart, dataStart + compSize);
+
+    let text;
+    if (method === 0) {
+      text = decoder.decode(data);
+    } else if (method === 8) {
+      // Raw DEFLATE stream — supported by modern browsers.
+      const stream = new Response(data).body.pipeThrough(new DecompressionStream('deflate-raw'));
+      const buf = await new Response(stream).arrayBuffer();
+      text = decoder.decode(buf);
+    } else {
+      throw new Error('PPTX: unsupported compression method ' + method);
+    }
+    slides[name] = text;
+  }
+  return slides;
+}
+
+// Pull paragraph-level text out of a slide's narrative text body. Each <a:p>
+// is one paragraph (potentially with multiple <a:t> runs concatenated). Table
+// content (<a:tbl>) is stripped first so cell text doesn't flood the bullets.
+function _slideParagraphs(xml) {
+  const cleaned = xml.replace(/<a:tbl[\s>][\s\S]*?<\/a:tbl>/g, '');
+  const paras = [];
+  const pRe = /<a:p[\s>][\s\S]*?<\/a:p>/g;
+  let m;
+  while ((m = pRe.exec(cleaned)) !== null) {
+    const block = m[0];
+    const runs = [];
+    const tRe = /<a:t[^>]*>([\s\S]*?)<\/a:t>/g;
+    let tm;
+    while ((tm = tRe.exec(block)) !== null) runs.push(tm[1]);
+    const text = runs.join('')
+      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim();
+    if (text) paras.push(text);
+  }
+  return paras;
+}
+
+function _classifyPptxSlide(paras) {
+  const head = paras.slice(0, 3).join(' ').toLowerCase();
+  if (head.includes('quality dashboard') || head.includes('quality')) return 'quality';
+  if (head.includes('business development')) return 'bd';
+  if (head.includes('human resources')) return 'hr';
+  if (head.includes('net revenue') || head.includes('revenue')) return 'revenue';
+  if (head.includes('expense')) return 'opex';
+  if (head.includes('volume')) return 'volume';
+  return null;
+}
+
+// Build category groups from raw classified slides. We treat the slide title
+// (the first paragraph if it contains the category dash, e.g. "April 2026 –
+// Volume – Highland") as one possible group heading, and use short
+// non-numeric paragraphs ending in a colon or no end punctuation as
+// sub-headings within the slide. Numeric stat lines stay as bullets.
+function _buildCategoryFromSlides(slides) {
+  const groups = [];
+  let current = null;
+  const ensureCurrent = (fallback) => {
+    if (!current || current.bullets.length === 0 && current._fresh) {
+      // reuse the fresh empty group
+      return;
+    }
+    current = { heading: fallback, bullets: [], _fresh: true };
+    groups.push(current);
+  };
+  for (const slide of slides) {
+    const paras = slide.paragraphs.filter(t => !/^\d+$/.test(t)); // drop bare page numbers
+    if (paras.length === 0) continue;
+    // Slide title — usually "Month Year – Section – Facility". Skip it; we
+    // use sub-headings within the slide instead.
+    const startIdx = (/–|-/.test(paras[0]) && paras[0].length < 80) ? 1 : 0;
+    // If a slide has no inner sub-headings, give it a default group named
+    // after the section in the title.
+    const titleSection = (paras[0].match(/–\s*([^–]+?)\s*–/) || [])[1] || null;
+    current = null;
+    for (let i = startIdx; i < paras.length; i++) {
+      const text = paras[i];
+      const startsWithDigit = /^[\d$(]/.test(text);
+      const endsWithPunct = /[.!?:;,]$/.test(text);
+      const hasInternalDelimiter = /[,;]/.test(text);
+      const looksLikeHeading =
+        !startsWithDigit && text.length < 45 && !hasInternalDelimiter &&
+        (text.endsWith(':') || !endsWithPunct);
+      if (looksLikeHeading) {
+        const heading = text.replace(/[:•]+$/, '').trim();
+        // Merge into prior group if the heading repeats.
+        const prior = groups[groups.length - 1];
+        if (prior && prior.heading === heading) {
+          current = prior;
+        } else {
+          current = { heading, bullets: [] };
+          groups.push(current);
+        }
+      } else {
+        if (!current) {
+          const fallback = titleSection || 'Highlights';
+          const prior = groups[groups.length - 1];
+          if (prior && prior.heading === fallback) {
+            current = prior;
+          } else {
+            current = { heading: fallback, bullets: [] };
+            groups.push(current);
+          }
+        }
+        current.bullets.push(text);
+      }
+    }
+  }
+  // Drop empty groups (e.g. "OP Visits" with body "N/A").
+  return groups.filter(g => g.bullets && g.bullets.length > 0);
+}
+
+async function parsePptxToCategories(file) {
+  const buf = await file.arrayBuffer();
+  const xmls = await _unzipPptxSlides(buf);
+  const slideNames = Object.keys(xmls).sort((a, b) => {
+    const an = parseInt(a.match(/slide(\d+)/)[1], 10);
+    const bn = parseInt(b.match(/slide(\d+)/)[1], 10);
+    return an - bn;
+  });
+  const buckets = { quality: [], volume: [], revenue: [], opex: [], bd: [], hr: [] };
+  for (const name of slideNames) {
+    const paras = _slideParagraphs(xmls[name]);
+    if (paras.length === 0) continue;
+    const cat = _classifyPptxSlide(paras);
+    if (!cat) continue;
+    buckets[cat].push({ name, paragraphs: paras });
+  }
+
+  const out = {
+    source: file.name,
+    period: null,
+    quality: { title: PPTX_DEFAULT.quality.title, groups: _buildCategoryFromSlides(buckets.quality) },
+    volume:  { title: PPTX_DEFAULT.volume.title,  groups: _buildCategoryFromSlides(buckets.volume)  },
+    revenue: { title: PPTX_DEFAULT.revenue.title, groups: _buildCategoryFromSlides(buckets.revenue) },
+    opex:    { title: PPTX_DEFAULT.opex.title,    groups: _buildCategoryFromSlides(buckets.opex)    },
+    bd:      { title: PPTX_DEFAULT.bd.title,      groups: _buildCategoryFromSlides(buckets.bd)      },
+    hr:      { title: PPTX_DEFAULT.hr.title,      groups: _buildCategoryFromSlides(buckets.hr)      },
+  };
+  // Detect period (e.g. "April 2026") from any slide's title text.
+  for (const cat of ['quality','volume','revenue','opex','bd','hr']) {
+    for (const s of buckets[cat]) {
+      const m = (s.paragraphs[0] || '').match(/([A-Z][a-z]+ 20\d{2})/);
+      if (m) { out.period = m[1]; break; }
+    }
+    if (out.period) break;
+  }
+  // Fall back to default content for any category the deck didn't cover.
+  for (const cat of ['quality','volume','revenue','opex','bd','hr']) {
+    if (!out[cat].groups || out[cat].groups.length === 0) {
+      out[cat] = PPTX_DEFAULT[cat];
+    }
+  }
+  return out;
+}
+
+function getPptxData() {
+  if (DATA.pptx) return DATA.pptx;
+  try {
+    const stored = localStorage.getItem(PPTX_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      DATA.pptx = parsed;
+      return parsed;
+    }
+  } catch (e) { /* ignore */ }
+  DATA.pptx = PPTX_DEFAULT;
+  return PPTX_DEFAULT;
+}
+
+function handlePptxFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (typeof DecompressionStream === 'undefined') {
+    setStatus('⚠ Your browser does not support PPTX parsing (DecompressionStream missing). Update to a current Chrome/Edge/Safari.', 'err');
+    return;
+  }
+  setStatus('⏳ Parsing ' + file.name + '...', 'warn');
+  parsePptxToCategories(file).then(content => {
+    DATA.pptx = content;
+    try {
+      localStorage.setItem(PPTX_KEY, JSON.stringify(content));
+      localStorage.setItem(PPTX_META_KEY, JSON.stringify({ name: file.name, date: new Date().toLocaleString() }));
+    } catch (e) { console.warn('PPTX save failed:', e); }
+    const drop = document.getElementById('drop-pptx');
+    drop.classList.add('loaded');
+    document.getElementById('name-pptx').textContent = file.name;
+    document.getElementById('meta-pptx').textContent = 'Loaded just now' + (content.period ? ' · ' + content.period : '');
+    renderPptxSidebars();
+    setStatus('✓ Loaded ' + file.name + ' · Narrative sidebars refreshed', 'ok');
+  }).catch(err => {
+    console.error(err);
+    setStatus('✗ PPTX parse failed: ' + err.message, 'err');
+  });
+}
+
+function _escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function _renderSidebar(containerId, data, label, sourceLabel) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!data || !data.groups || data.groups.length === 0) {
+    el.innerHTML = '<aside class="pptx-sidebar"><div class="pptx-sb-eyebrow"><div class="pptx-sb-label">' + label +
+      '</div><div class="pptx-sb-source">' + _escapeHtml(sourceLabel || '') + '</div></div>' +
+      '<div class="pptx-sb-empty">No PowerPoint narrative loaded for this category.</div></aside>';
+    return;
+  }
+  const groups = data.groups.map(g => {
+    const bullets = (g.bullets || []).map(b => '<li>' + _escapeHtml(b) + '</li>').join('');
+    return '<h5>' + _escapeHtml(g.heading) + '</h5>' + (bullets ? '<ul>' + bullets + '</ul>' : '');
+  }).join('');
+  el.innerHTML =
+    '<aside class="pptx-sidebar">' +
+      '<div class="pptx-sb-eyebrow">' +
+        '<div class="pptx-sb-label">' + label + ' · PowerPoint Narrative</div>' +
+        '<div class="pptx-sb-source">' + _escapeHtml(sourceLabel || '') + '</div>' +
+      '</div>' +
+      '<div class="pptx-sb-title">' + _escapeHtml(data.title || label) + '</div>' +
+      groups +
+    '</aside>';
+}
+
+function renderPptxSidebars() {
+  const p = getPptxData();
+  const src = (p.period ? p.period + ' · ' : '') + (p.source || '');
+  _renderSidebar('pptx-quality-sidebar', p.quality, 'Quality',              src);
+  _renderSidebar('pptx-volume-sidebar',  p.volume,  'Volume',               src);
+  _renderSidebar('pptx-revenue-sidebar', p.revenue, 'Revenue',              src);
+  _renderSidebar('pptx-opex-sidebar',    p.opex,    'Operating Expense',    src);
+  _renderSidebar('pptx-bd-sidebar',      p.bd,      'Business Development', src);
+  _renderSidebar('pptx-hr-sidebar',      p.hr,      'Human Resources',      src);
 }
 
 // ---- Month End Analytic parser ----
@@ -3269,6 +3901,7 @@ function updateHeader() {
 
 function render() {
   updateHeader();
+  renderPptxSidebars();
   const es = document.getElementById('empty-state');
   if (!hasData()) {
     es.style.display = 'block';
@@ -4388,10 +5021,27 @@ async function buildSharePointPayload() {
       ytd_performance: notes['rev:YTD Performance'] || '',
     },
     management_commentary: {
+      quality: mgmt.quality || '',
       volume:  mgmt.volume  || '',
       revenue: mgmt.revenue || '',
       expense: mgmt.expense || '',
+      bd:      mgmt.bd      || '',
+      hr:      mgmt.hr      || '',
     },
+    pptx_narrative: (function() {
+      const p = getPptxData();
+      if (!p) return null;
+      return {
+        source: p.source || null,
+        period: p.period || null,
+        quality: p.quality || null,
+        volume:  p.volume  || null,
+        revenue: p.revenue || null,
+        opex:    p.opex    || null,
+        bd:      p.bd      || null,
+        hr:      p.hr      || null,
+      };
+    })(),
     categories,
     audit: {
       submitted_by:       localStorage.getItem(SUBMITTER_NAME_KEY) || null,
