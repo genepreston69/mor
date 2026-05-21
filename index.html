@@ -85,19 +85,6 @@ body {
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
-.brand .logo {
-  width: 44px;
-  height: 44px;
-  background: var(--teal-dark);
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: Georgia, serif;
-  font-size: 22px;
-  font-weight: 700;
-  border-radius: 2px;
-}
 .brand .name {
   font-family: Georgia, serif;
   font-size: 18px;
@@ -460,29 +447,6 @@ body {
 .opp-card.unfav .opp-amt { color: var(--bad); }
 .opp-card .opp-line { font-size: 12px; color: var(--muted); }
 
-/* INSIGHTS */
-.insight-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 32px;
-}
-.insight {
-  background: #ffffff;
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--accent-teal);
-  border-radius: 6px;
-  padding: 14px 16px;
-  display: flex;
-  gap: 12px;
-}
-.insight.warn { border-left-color: var(--warn); }
-.insight.good { border-left-color: var(--good); }
-.insight.bad { border-left-color: var(--bad); }
-.insight .ico { font-size: 18px; flex-shrink: 0; }
-.insight .body { font-size: 13px; line-height: 1.55; color: var(--ink-2); }
-.insight .body strong { color: var(--ink); font-weight: 700; }
-
 /* REVENUE BRIDGE */
 .rev-grid {
   display: grid;
@@ -598,6 +562,387 @@ body {
 .wf-legend i.decrease { background: var(--bad); }
 .wf-legend i.increase { background: var(--good); }
 
+/* QUALITY & RISK SECTION */
+.q-empty {
+  background: #fafbfc;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 28px 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+.q-empty strong { color: var(--ink); font-weight: 600; }
+
+/* Headline KPI tiles for risk metrics */
+.q-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.q-kpi {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  position: relative;
+}
+.q-kpi::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+.q-kpi.q-good::before   { background: var(--accent-green); }
+.q-kpi.q-watch::before  { background: var(--accent-gold); }
+.q-kpi.q-action::before { background: var(--accent-red); }
+.q-kpi.q-info::before   { background: var(--accent-teal); }
+.q-kpi .label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.q-kpi .value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.q-kpi .delta {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.q-kpi .status-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+.q-kpi.q-good   .status-pill { background: var(--good-bg);  color: var(--good); }
+.q-kpi.q-watch  .status-pill { background: var(--warn-bg);  color: #b07a1f; }
+.q-kpi.q-action .status-pill { background: var(--bad-bg);   color: var(--bad); }
+.q-kpi.q-info   .status-pill { background: #e9eef2;         color: var(--muted); }
+
+@media (max-width: 1100px) {
+  .q-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Discipline Compliance card wrapper */
+.q-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.q-card .q-card-head {
+  background: var(--teal-dark);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  padding: 11px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.q-card .q-card-head .q-card-sub {
+  font-weight: 400;
+  opacity: 0.85;
+  font-size: 11px;
+}
+
+/* Status indicator cell */
+.q-status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.q-status.good   { background: var(--good-bg); color: var(--good); }
+.q-status.watch  { background: var(--warn-bg); color: #b07a1f; }
+.q-status.action { background: var(--bad-bg);  color: var(--bad); }
+.q-status.info   { background: #e9eef2;        color: var(--muted); }
+
+/* Discipline cards — one per discipline */
+.q-discipline-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.q-discipline {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.15s;
+}
+.q-discipline:hover { box-shadow: 0 2px 8px rgba(30,74,95,0.08); }
+.q-discipline .q-disc-head {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.q-discipline.expanded .q-disc-head {
+  background: #f5f7f9;
+}
+.q-disc-arrow {
+  font-size: 10px;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+.q-discipline.expanded .q-disc-arrow { transform: rotate(90deg); }
+.q-disc-name {
+  flex: 1;
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 13px;
+}
+.q-disc-overall {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  font-size: 13px;
+  margin-right: 8px;
+}
+.q-disc-breach {
+  background: var(--bad-bg);
+  color: var(--bad);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 9px;
+}
+.q-disc-clean {
+  background: var(--good-bg);
+  color: var(--good);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 9px;
+}
+.q-disc-detail {
+  display: none;
+  padding: 0;
+}
+.q-discipline.expanded .q-disc-detail { display: block; }
+.q-disc-detail table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.q-disc-detail th {
+  background: #f9fbfc;
+  color: var(--muted);
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-weight: 600;
+  text-align: right;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.q-disc-detail th:first-child { text-align: left; }
+.q-disc-detail td {
+  padding: 7px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.q-disc-detail td:first-child { text-align: left; color: var(--ink); }
+.q-disc-detail tr.q-group-row td {
+  background: #fafbfc;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--teal);
+  padding: 6px 12px;
+}
+.q-disc-detail tr.q-group-row td:not(:first-child) { display: none; }
+
+/* BUSINESS DEVELOPMENT SECTION */
+.bd-empty {
+  background: #fafbfc;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 28px 24px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+.bd-empty strong { color: var(--ink); font-weight: 600; }
+.bd-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.bd-kpi {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  position: relative;
+}
+.bd-kpi::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+.bd-kpi.bd-c1::before { background: var(--accent-teal); }
+.bd-kpi.bd-c2::before { background: var(--accent-green); }
+.bd-kpi.bd-c3::before { background: var(--accent-gold); }
+.bd-kpi.bd-c4::before { background: var(--accent-red); }
+.bd-kpi .label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.bd-kpi .value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.bd-kpi .delta {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.bd-tables-wrap {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.bd-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.bd-card .bd-card-head {
+  background: var(--teal-dark);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  padding: 11px 16px;
+}
+.bd-card .bd-card-head .bd-card-sub {
+  font-weight: 400;
+  opacity: 0.85;
+  margin-left: 10px;
+  font-size: 11px;
+}
+.bd-card table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.bd-card th {
+  background: #f5f7f9;
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  text-align: right;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.bd-card th:first-child { text-align: left; }
+.bd-card td {
+  padding: 10px 14px;
+  text-align: right;
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.bd-card td:first-child { text-align: left; color: var(--ink); font-weight: 500; }
+.bd-card tr:last-child td { border-bottom: none; }
+.bd-card tr:hover td { background: #f9fbfc; }
+.bd-conversion-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  width: 100%;
+}
+.bd-bar {
+  display: inline-block;
+  height: 6px;
+  width: 60px;
+  background: #eef2f5;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+.bd-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent-teal);
+}
+.bd-bar.good > span  { background: var(--accent-green); }
+.bd-bar.warn > span  { background: var(--accent-gold); }
+.bd-bar.bad  > span  { background: var(--accent-red); }
+.bd-pct {
+  display: inline-block;
+  min-width: 48px;
+  text-align: right;
+  font-weight: 600;
+}
+.bd-pct.good { color: var(--good); }
+.bd-pct.warn { color: #b07a1f; }
+.bd-pct.bad  { color: var(--bad); }
+.bd-deflection-pct-cell {
+  color: var(--muted);
+  font-size: 11.5px;
+}
+@media (max-width: 980px) {
+  .bd-tables-wrap { grid-template-columns: 1fr; }
+  .bd-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* DUAL-VIEW DRILL-DOWN (Dollar / PPD stacked) */
+.dual-view-section {
+  margin-bottom: 8px;
+}
+.dual-view-section + .dual-view-section {
+  margin-top: 18px;
+}
+.dual-view-label {
+  font-family: var(--serif, Georgia, 'Times New Roman', serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 10px 0;
+  padding: 6px 12px;
+  background: linear-gradient(to right, rgba(43,122,138,0.08), transparent);
+  border-left: 4px solid var(--accent-teal, var(--teal));
+  letter-spacing: 0.3px;
+}
+
 /* CATEGORY TABLE */
 .cat-wrap {
   background: #ffffff;
@@ -633,7 +978,7 @@ table.cats tbody td {
 table.cats tbody td:first-child { text-align: left; }
 table.cats tbody tr.cat-row { cursor: pointer; transition: background 0.1s; }
 table.cats tbody tr.cat-row:hover { background: #f7f9fb; }
-.cat-name { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink); }
+.cat-name { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--ink); width: 100%; }
 .cat-name .arrow {
   display: inline-block;
   width: 14px;
@@ -861,75 +1206,6 @@ table.detail tr:last-child td { border-bottom: none; }
 .narrative-card .flag.bad { background: var(--bad-bg); color: var(--bad); }
 .narrative-card .flag.good { background: var(--good-bg); color: var(--good); }
 
-/* CATEGORY SIDEBAR — narrative pulled from MOR PowerPoint deck */
-.pptx-sidebar {
-  background: linear-gradient(180deg, #fdfaf3 0%, #faf3e0 100%);
-  border: 1px solid #e8d5a0;
-  border-left: 4px solid #b07a1f;
-  border-radius: 6px;
-  padding: 14px 18px;
-  margin: 6px 0 22px;
-  font-size: 12.5px;
-  line-height: 1.55;
-  color: var(--ink-2);
-  page-break-inside: avoid;
-  break-inside: avoid;
-}
-.pptx-sidebar .pptx-sb-eyebrow {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-.pptx-sidebar .pptx-sb-label {
-  font-family: Georgia, serif;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: #8a5d18;
-}
-.pptx-sidebar .pptx-sb-source {
-  font-size: 9px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-}
-.pptx-sidebar .pptx-sb-title {
-  font-family: Georgia, serif;
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--ink);
-  margin-bottom: 8px;
-}
-.pptx-sidebar h5 {
-  font-family: Georgia, serif;
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--ink);
-  margin: 10px 0 4px;
-}
-.pptx-sidebar h5:first-of-type { margin-top: 4px; }
-.pptx-sidebar ul {
-  margin: 0 0 0 18px;
-  padding: 0;
-  list-style: disc;
-}
-.pptx-sidebar ul li { margin: 2px 0; }
-.pptx-sidebar .pptx-sb-empty {
-  font-style: italic;
-  color: var(--muted);
-  font-size: 11px;
-}
-.pptx-sidebar .pptx-sb-meta {
-  font-size: 10px;
-  color: var(--muted);
-  margin-top: 8px;
-  border-top: 1px dashed #e8d5a0;
-  padding-top: 6px;
-}
-
 /* MANAGEMENT COMMENTARY TEXT BOX */
 .mgmt-commentary {
   width: 100%;
@@ -990,11 +1266,46 @@ table.detail tr:last-child td { border-bottom: none; }
 }
 .note-btn .note-ico { font-size: 11px; }
 .narrative-card h3 .note-btn { float: right; margin-top: -1px; }
-.insight .note-btn { position: absolute; top: 10px; right: 10px; }
-.insight { position: relative; }
 .opp-card .note-btn { float: right; }
 .cat-name .note-btn { margin-left: auto; }
+.cat-name-actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cat-name-actions:empty { display: none; }
+.cat-name-actions .note-btn { margin-left: 0; }  /* wrapper's gap handles spacing */
 table.detail td .note-btn { float: right; margin-left: 6px; }
+
+/* RED FLAG — accounts/categories needing explanation */
+.needs-note {
+  display: inline-block;
+  background: var(--bad);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  margin-right: 6px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.needs-note-cat {
+  display: inline-block;
+  background: #fdecea;
+  color: var(--bad);
+  border: 1px solid var(--bad);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 1px 7px;
+  border-radius: 3px;
+  margin-left: 8px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
 
 /* NOTE CALLOUT — inline display of note text */
 .note-callout {
@@ -1278,7 +1589,7 @@ table.detail td .note-btn { float: right; margin-left: 6px; }
   font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 4px; cursor: pointer;
 }
 .upload-grid {
-  display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 14px; align-items: end;
+  display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end;
 }
 @media (max-width: 1100px) {
   .upload-grid { grid-template-columns: 1fr 1fr; }
@@ -1330,7 +1641,7 @@ footer {
 
 @media (max-width: 1100px) {
   .kpi-grid { grid-template-columns: repeat(3, 1fr); }
-  .opp-grid, .insight-grid { grid-template-columns: 1fr; }
+  .opp-grid { grid-template-columns: 1fr; }
   .rev-grid { grid-template-columns: repeat(2, 1fr); }
   .wf-row { grid-template-columns: 130px 1fr 96px; gap: 8px; }
 }
@@ -1417,7 +1728,6 @@ footer {
   .header-bar { display: block !important; background: var(--teal-dark) !important; padding: 6px 0 !important; }
   .header-inner { max-width: 100% !important; padding: 0 0.25in !important; }
   .brand { display: flex !important; padding: 6px 12px !important; }
-  .brand .logo { width: 28px !important; height: 28px !important; font-size: 14px !important; }
   .brand .name { font-size: 14px !important; }
   .brand .tag { font-size: 8px !important; }
   .header-right { display: flex !important; }
@@ -1497,19 +1807,6 @@ footer {
     overflow: visible !important;
   }
 
-  /* Insight grid — 2 across */
-  .insight-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 6px !important;
-    margin-bottom: 10px !important;
-  }
-  .insight-card {
-    padding: 8px !important;
-    box-shadow: none !important;
-    border: 1px solid #ccc !important;
-    overflow: visible !important;
-  }
-
   /* Expense table — full width, no truncation */
   .cat-wrap {
     overflow: visible !important;
@@ -1543,22 +1840,6 @@ footer {
     border: 1px solid #ccc !important;
     margin-bottom: 10px !important;
   }
-
-  /* PPTX sidebars — compact for print */
-  .pptx-sidebar {
-    break-inside: avoid !important;
-    page-break-inside: avoid !important;
-    padding: 8px 12px !important;
-    margin: 4px 0 10px !important;
-    font-size: 9.5px !important;
-    line-height: 1.4 !important;
-  }
-  .pptx-sidebar .pptx-sb-title { font-size: 12px !important; margin-bottom: 4px !important; }
-  .pptx-sidebar .pptx-sb-label { font-size: 8px !important; }
-  .pptx-sidebar .pptx-sb-source { font-size: 7.5px !important; }
-  .pptx-sidebar h5 { font-size: 10px !important; margin: 5px 0 2px !important; }
-  .pptx-sidebar ul li { margin: 1px 0 !important; }
-  .pptx-sidebar .pptx-sb-meta { font-size: 8px !important; padding-top: 3px !important; margin-top: 4px !important; }
 
   /* Management commentary textareas */
   .mgmt-commentary { break-inside: avoid !important; margin: 8px 0 14px !important; }
@@ -1602,7 +1883,7 @@ footer {
 
   /* Remove all overflow:hidden that causes truncation */
   [style*="overflow"],
-  .card, .mini-card, .opp-card, .rev-card, .insight-card, .trend-card,
+  .card, .mini-card, .opp-card, .rev-card, .trend-card,
   .cat-wrap, .detail-wrap { overflow: visible !important; }
 
   /* Page break logic */
@@ -1610,7 +1891,7 @@ footer {
   .section-divider { break-after: avoid !important; }
   .kpi-grid { break-inside: avoid !important; }
   .split-grid { break-inside: avoid !important; }
-  .mini-card, .opp-card, .rev-card, .insight-card, .waterfall { break-inside: avoid !important; }
+  .mini-card, .opp-card, .rev-card, .waterfall { break-inside: avoid !important; }
   .callout, .commentary { break-inside: avoid !important; }
   /* Allow the expense table to break across pages — it can be long */
   .cat-wrap { break-inside: auto !important; }
@@ -1724,11 +2005,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 <div class="header-bar">
   <div class="header-inner">
     <div class="brand">
-      <div class="logo" id="brand-logo">H</div>
-      <div>
-        <div class="name" id="brand-name">Hospital</div>
-        <div class="tag" id="brand-tag">MOR Dashboard</div>
-      </div>
+      <div class="name" id="brand-name"></div>
+        <div class="tag" id="brand-tag"></div>
     </div>
     <div class="header-right">
       <div class="date-stamp" id="date-stamp"></div>
@@ -1785,14 +2063,36 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         </div>
       </div>
       <div class="upload-slot">
-        <label>MOR Narrative Deck (.pptx)</label>
-        <div class="file-drop loaded" id="drop-pptx">
-          <div class="icon">📑</div>
+        <label>BD Inbound Referrals (.xlsx)</label>
+        <div class="file-drop" id="drop-referrals">
+          <div class="icon">📥</div>
           <div class="text">
-            <div class="name" id="name-pptx">Default: Apr 2026 deck</div>
-            <div class="meta" id="meta-pptx">Source: MOR PowerPoint — Quality, Volume, Revenue, Opex, BD, HR</div>
+            <div class="name" id="name-referrals">Click to select file</div>
+            <div class="meta" id="meta-referrals">Source: Inbound Referral Full Breakdown</div>
           </div>
-          <input type="file" accept=".pptx" onchange="handlePptxFile(event)">
+          <input type="file" accept=".xlsx,.xls" onchange="handleFile(event,'referrals')">
+        </div>
+      </div>
+      <div class="upload-slot">
+        <label>BD Deflections (.xlsx)</label>
+        <div class="file-drop" id="drop-deflections">
+          <div class="icon">🚫</div>
+          <div class="text">
+            <div class="name" id="name-deflections">Click to select file</div>
+            <div class="meta" id="meta-deflections">Source: Deflections Report (Salesforce export)</div>
+          </div>
+          <input type="file" accept=".xlsx,.xls" onchange="handleFile(event,'deflections')">
+        </div>
+      </div>
+      <div class="upload-slot">
+        <label>Quality & Risk Workbook (.xlsx)</label>
+        <div class="file-drop" id="drop-quality">
+          <div class="icon">🩺</div>
+          <div class="text">
+            <div class="name" id="name-quality">Click to select file</div>
+            <div class="meta" id="meta-quality">Source: Acute Quality and Risk Workbook</div>
+          </div>
+          <input type="file" accept=".xlsx,.xls" onchange="handleFile(event,'quality')">
         </div>
       </div>
       <div class="upload-actions">
@@ -1806,10 +2106,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   </div>
 
   <div class="tab-bar">
-    <div class="tab-group">
-      <button id="btn-dollars" class="active" onclick="setView('dollars')">$ Dollars</button>
-      <button id="btn-ppd" onclick="setView('ppd')">Per Patient Day</button>
-    </div>
     <div class="tab-meta">
       <span id="header-meta"><span class="dot"></span> Upload source files to begin</span>
       <button class="refresh-btn">↻ Refresh</button>
@@ -1819,14 +2115,20 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   <div class="kpi-grid" id="kpi-grid"></div>
 
   <div class="section-head" id="sec-quality">
-    <h2>Quality &amp; Patient Care</h2>
-    <span class="desc">Patient satisfaction · Documentation compliance · Source: MOR PowerPoint deck</span>
+    <h2>Quality &amp; Risk</h2>
+    <span class="desc" id="quality-desc">Patient safety · Incident rates · Discipline compliance · Source: Quality &amp; Risk Workbook</span>
   </div>
   <div class="section-divider"></div>
-  <div id="pptx-quality-sidebar"></div>
+  <div id="quality-content"></div>
+
+  <div class="section-head" id="sec-quality-commentary">
+    <h2>Quality &amp; Risk Commentary</h2>
+    <span class="desc">Incident analysis · Compliance breaches · Risk mitigation narrative</span>
+  </div>
+  <div class="section-divider"></div>
   <div class="mgmt-commentary">
     <label class="mgmt-commentary-label" for="quality-mgmt-commentary">Management Commentary</label>
-    <textarea id="quality-mgmt-commentary" data-mgmt-key="quality" placeholder="Add management commentary on quality indicators..."></textarea>
+    <textarea id="quality-mgmt-commentary" data-mgmt-key="quality" placeholder="Add management commentary on quality and risk indicators — incident drivers, compliance breach mitigation, sentinel events, and corrective actions in progress..."></textarea>
   </div>
 
   <div class="empty-state" id="empty-state" style="display:none;">
@@ -1865,8 +2167,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <span class="desc">Census, length-of-stay, and payor mix narrative</span>
   </div>
   <div class="section-divider"></div>
-  <div id="volume-commentary"></div>
-  <div id="pptx-volume-sidebar"></div>
   <div class="mgmt-commentary">
     <label class="mgmt-commentary-label" for="volume-mgmt-commentary">Management Commentary</label>
     <textarea id="volume-mgmt-commentary" data-mgmt-key="volume" placeholder="Add management commentary on volume performance..."></textarea>
@@ -1891,23 +2191,25 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <span class="desc">Click any revenue line to expand its component detail · Source: Month End Analytic</span>
   </div>
   <div class="section-divider"></div>
-  <div class="cat-wrap">
-    <table class="cats">
-      <thead id="rev-cat-thead">
-        <tr>
-          <th>Revenue Line</th>
-          <th>Actual</th>
-          <th>Budget</th>
-          <th>Variance</th>
-          <th>Var %</th>
-          <th>YTD Actual</th>
-          <th>YTD Var</th>
-          <th>3-Mo Trend</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="rev-cat-tbody"></tbody>
-    </table>
+
+  <div class="dual-view-section">
+    <h3 class="dual-view-label">Dollar View</h3>
+    <div class="cat-wrap">
+      <table class="cats">
+        <thead id="rev-cat-thead-dollars"></thead>
+        <tbody id="rev-cat-tbody-dollars"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="dual-view-section">
+    <h3 class="dual-view-label">Per Patient Day View</h3>
+    <div class="cat-wrap">
+      <table class="cats">
+        <thead id="rev-cat-thead-ppd"></thead>
+        <tbody id="rev-cat-tbody-ppd"></tbody>
+      </table>
+    </div>
   </div>
 
   <div class="section-head" id="sec-revenue-commentary">
@@ -1915,42 +2217,35 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <span class="desc">Net revenue, deductions, and bad debt narrative</span>
   </div>
   <div class="section-divider"></div>
-  <div id="revenue-commentary"></div>
-  <div id="pptx-revenue-sidebar"></div>
   <div class="mgmt-commentary">
     <label class="mgmt-commentary-label" for="revenue-mgmt-commentary">Management Commentary</label>
     <textarea id="revenue-mgmt-commentary" data-mgmt-key="revenue" placeholder="Add management commentary on revenue performance..."></textarea>
   </div>
-
-  <div class="section-head" id="sec-insights">
-    <h2>Strategic Insights</h2>
-    <span class="desc">Where the dollars are actually moving · Read-throughs the standard MOR doesn't surface</span>
-  </div>
-  <div class="section-divider"></div>
-  <div class="insight-grid" id="insight-grid"></div>
 
   <div class="section-head" id="sec-expense">
     <h2>Operating Expense Drill-Down</h2>
     <span class="desc">Click any category to expand GL-level detail · Sorted by variance magnitude</span>
   </div>
   <div class="section-divider"></div>
-  <div class="cat-wrap">
-    <table class="cats">
-      <thead id="cat-thead">
-        <tr>
-          <th>Category</th>
-          <th>Actual</th>
-          <th>Budget</th>
-          <th>Variance</th>
-          <th>Var %</th>
-          <th>YTD Actual</th>
-          <th>YTD Var</th>
-          <th>3-Mo Trend</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="cat-tbody"></tbody>
-    </table>
+
+  <div class="dual-view-section">
+    <h3 class="dual-view-label">Dollar View</h3>
+    <div class="cat-wrap">
+      <table class="cats">
+        <thead id="cat-thead-dollars"></thead>
+        <tbody id="cat-tbody-dollars"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="dual-view-section">
+    <h3 class="dual-view-label">Per Patient Day View</h3>
+    <div class="cat-wrap">
+      <table class="cats">
+        <thead id="cat-thead-ppd"></thead>
+        <tbody id="cat-tbody-ppd"></tbody>
+      </table>
+    </div>
   </div>
 
   <div class="section-head" id="sec-expense-commentary">
@@ -1958,8 +2253,6 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <span class="desc">Operating expense variance narrative</span>
   </div>
   <div class="section-divider"></div>
-  <div id="expense-commentary"></div>
-  <div id="pptx-opex-sidebar"></div>
   <div class="mgmt-commentary">
     <label class="mgmt-commentary-label" for="expense-mgmt-commentary">Management Commentary</label>
     <textarea id="expense-mgmt-commentary" data-mgmt-key="expense" placeholder="Add management commentary on operating expense variances..."></textarea>
@@ -1982,21 +2275,26 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   <div class="section-head" id="sec-bd">
     <h2>Business Development</h2>
-    <span class="desc">Inquiry volume · Field marketing productivity · Referral mix · Source: MOR PowerPoint deck</span>
+    <span class="desc">Inbound referrals, conversion, and deflections · Source: BD reports (Salesforce / referral CRM)</span>
   </div>
   <div class="section-divider"></div>
-  <div id="pptx-bd-sidebar"></div>
+  <div id="bd-content"></div>
+
+  <div class="section-head" id="sec-bd-commentary">
+    <h2>BD Commentary</h2>
+    <span class="desc">Referral source, conversion, and deflection narrative</span>
+  </div>
+  <div class="section-divider"></div>
   <div class="mgmt-commentary">
     <label class="mgmt-commentary-label" for="bd-mgmt-commentary">Management Commentary</label>
-    <textarea id="bd-mgmt-commentary" data-mgmt-key="bd" placeholder="Add management commentary on business development..."></textarea>
+    <textarea id="bd-mgmt-commentary" data-mgmt-key="bd" placeholder="Add management commentary on business development performance — top referral source dynamics, conversion drivers, and material deflection patterns..."></textarea>
   </div>
 
   <div class="section-head" id="sec-hr">
     <h2>Human Resources</h2>
-    <span class="desc">Turnover · Open positions · Recruitment · Source: MOR PowerPoint deck</span>
+    <span class="desc">Turnover · Open positions · Recruitment</span>
   </div>
   <div class="section-divider"></div>
-  <div id="pptx-hr-sidebar"></div>
   <div class="mgmt-commentary">
     <label class="mgmt-commentary-label" for="hr-mgmt-commentary">Management Commentary</label>
     <textarea id="hr-mgmt-commentary" data-mgmt-key="hr" placeholder="Add management commentary on human resources..."></textarea>
@@ -2063,12 +2361,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
 <script>
 let DATA = {};
-let view = 'dollars';
+// View toggle removed — drill-downs now render dollar + PPD sections in parallel.
+// KPIs, Trends, Revenue Waterfall always show dollars.
 const BEDS_KEY = 'mor_beds';
 
 function printReport() {
-  // Expand all collapsed GL detail rows so they appear in print
-  document.querySelectorAll('.gl-row').forEach(r => r.style.display = 'table-row');
+  // Expand all collapsed drill-downs so GL detail appears in print output
+  document.querySelectorAll('tr.detail-row').forEach(r => r.classList.add('open'));
+  document.querySelectorAll('tr.cat-row').forEach(r => r.classList.add('expanded'));
   // Small delay to let DOM update before print dialog
   setTimeout(() => window.print(), 100);
 }
@@ -2147,21 +2447,25 @@ const THRESHOLDS_KEY = 'mor_thresholds';
 // USER-EDITABLE THRESHOLDS — global + per-category + per-GL overrides
 // =========================================================================
 const THRESHOLD_DEFAULTS = {
-  status_action_pct:   15,
-  status_watch_pct:    5,
-  detail_unfav_min:    2000,
-  detail_fav_min:      10000,
+  status_action_pct:    15,
+  status_watch_pct:     5,
+  detail_unfav_min:     2000,
+  detail_fav_min:       10000,
+  detail_unfav_min_ppd: 5,
+  detail_fav_min_ppd:   25,
 };
 
 // Which threshold keys apply at which scope
-const THRESHOLD_KEYS_ALL = ['detail_unfav_min','detail_fav_min','status_action_pct','status_watch_pct'];
-const THRESHOLD_KEYS_GL  = ['detail_unfav_min','detail_fav_min']; // status pills are category-only
+const THRESHOLD_KEYS_ALL = ['detail_unfav_min','detail_fav_min','detail_unfav_min_ppd','detail_fav_min_ppd','status_action_pct','status_watch_pct'];
+const THRESHOLD_KEYS_GL  = ['detail_unfav_min','detail_fav_min','detail_unfav_min_ppd','detail_fav_min_ppd']; // status pills are category-only
 
 const THRESHOLD_META = {
-  status_action_pct:   { label: 'Status Action %',     kind: 'percent_whole' },
-  status_watch_pct:    { label: 'Status Watch %',      kind: 'percent_whole' },
-  detail_unfav_min:    { label: 'Detail unfav min $',  kind: 'dollars' },
-  detail_fav_min:      { label: 'Detail fav min $',    kind: 'dollars' },
+  status_action_pct:    { label: 'Status Action %',     kind: 'percent_whole' },
+  status_watch_pct:     { label: 'Status Watch %',      kind: 'percent_whole' },
+  detail_unfav_min:     { label: 'Detail unfav min $',  kind: 'dollars' },
+  detail_fav_min:       { label: 'Detail fav min $',    kind: 'dollars' },
+  detail_unfav_min_ppd: { label: 'Detail unfav min $/PPD', kind: 'dollars' },
+  detail_fav_min_ppd:   { label: 'Detail fav min $/PPD',   kind: 'dollars' },
 };
 
 function loadThresholds() {
@@ -2414,6 +2718,7 @@ function saveNote(key, text) {
 
 // Hide note buttons on trivial items (|variance| < this threshold)
 const NOTE_MIN_VARIANCE = 3000;
+const NOTE_MIN_VARIANCE_PPD = 5; // PPD-view button visibility threshold
 
 function noteBtn(key, label) {
   const has = getNotes()[key] ? ' has-note' : '';
@@ -2424,11 +2729,58 @@ function noteBtn(key, label) {
     (has ? 'Edit Note' : 'Add Note') + '</button>';
 }
 
-// Variance-gated variant: returns empty string if |variance| is below the threshold.
-// Pass variance = null (or omit) to always show the button.
-function noteBtnVar(key, label, variance) {
-  if (variance != null && Math.abs(variance) < NOTE_MIN_VARIANCE) return '';
+// Variance-gated variant: returns empty string if |variance| is below the
+// threshold for the active view. viewMode = 'dollars' (default) or 'ppd'.
+function noteBtnVar(key, label, variance, viewMode) {
+  if (variance == null) return noteBtn(key, label);
+  const min = viewMode === 'ppd' ? NOTE_MIN_VARIANCE_PPD : NOTE_MIN_VARIANCE;
+  if (Math.abs(variance) < min) return '';
   return noteBtn(key, label);
+}
+
+// Red-flag system: a GL/account line "needs an explanation" when its variance
+// exceeds the configured threshold for the active view AND no note has been
+// saved against its key. viewMode = 'dollars' (default) or 'ppd'.
+function needsNote(noteKey, variance, viewMode, category, gl) {
+  if (variance == null || isNaN(variance)) return false;
+  if (getNotes()[noteKey]) return false;
+  const suffix = viewMode === 'ppd' ? '_ppd' : '';
+  const unfavMin = getThreshold('detail_unfav_min' + suffix, category, gl);
+  const favMin   = getThreshold('detail_fav_min'   + suffix, category, gl);
+  if (variance < 0 && Math.abs(variance) >= unfavMin) return true;
+  if (variance > 0 && variance >= favMin) return true;
+  return false;
+}
+function needsNoteBadge(noteKey, catName, viewMode) {
+  const cat  = (catName || '').replace(/"/g, '&quot;');
+  const view = viewMode === 'ppd' ? 'ppd' : 'dollars';
+  return '<span class="needs-note" data-needs-note-key="' + noteKey +
+    '" data-needs-note-cat="' + cat +
+    '" data-needs-note-view="' + view +
+    '" title="Variance exceeds threshold — add a note to address.">⚑ FLAG</span>';
+}
+function needsNoteCatBadge(catName, count, viewMode) {
+  if (!count || count <= 0) return '';
+  const cat  = catName.replace(/"/g, '&quot;');
+  const view = viewMode === 'ppd' ? 'ppd' : 'dollars';
+  return '<span class="needs-note-cat" data-needs-note-cat="' + cat +
+    '" data-needs-note-view="' + view +
+    '" data-count="' + count + '" title="' + count +
+    ' account(s) need explanations">⚑ ' + count + '</span>';
+}
+// Called from saveNoteFromModal to keep parent-category counts in sync without
+// triggering a full re-render. View-scoped so dollar and PPD counts move
+// independently when the corresponding flag toggles.
+function bumpCatBadge(catName, viewMode, delta) {
+  document.querySelectorAll('.needs-note-cat').forEach(el => {
+    if (el.getAttribute('data-needs-note-cat') !== catName) return;
+    if (el.getAttribute('data-needs-note-view') !== viewMode) return;
+    const current = parseInt(el.getAttribute('data-count') || '0', 10);
+    const next = Math.max(0, current + delta);
+    el.setAttribute('data-count', next);
+    if (next === 0) { el.style.display = 'none'; }
+    else { el.style.display = ''; el.textContent = '⚑ ' + next; }
+  });
 }
 
 function noteCallout(key) {
@@ -2491,6 +2843,20 @@ function saveNoteFromModal() {
       }
     } else {
       el.style.display = 'none';
+    }
+  });
+  // Toggle red-flag badge for this key, and bump parent category count
+  document.querySelectorAll('.needs-note[data-needs-note-key="' + key + '"]').forEach(flag => {
+    const catName  = flag.getAttribute('data-needs-note-cat')  || '';
+    const viewMode = flag.getAttribute('data-needs-note-view') || 'dollars';
+    const wasVisible = flag.style.display !== 'none';
+    const shouldShow = !(text && text.trim());
+    if (shouldShow && !wasVisible) {
+      flag.style.display = '';
+      if (catName) bumpCatBadge(catName, viewMode, +1);
+    } else if (!shouldShow && wasVisible) {
+      flag.style.display = 'none';
+      if (catName) bumpCatBadge(catName, viewMode, -1);
     }
   });
   closeNoteModal();
@@ -2559,24 +2925,25 @@ function loadStored() {
           document.getElementById('name-deck').textContent = m.deck.name;
           document.getElementById('meta-deck').textContent = 'Loaded ' + m.deck.date;
         }
+        if (m.referrals) {
+          const d = document.getElementById('drop-referrals'); if (d) d.classList.add('loaded');
+          const n = document.getElementById('name-referrals'); if (n) n.textContent = m.referrals.name;
+          const x = document.getElementById('meta-referrals'); if (x) x.textContent = 'Loaded ' + m.referrals.date;
+        }
+        if (m.deflections) {
+          const d = document.getElementById('drop-deflections'); if (d) d.classList.add('loaded');
+          const n = document.getElementById('name-deflections'); if (n) n.textContent = m.deflections.name;
+          const x = document.getElementById('meta-deflections'); if (x) x.textContent = 'Loaded ' + m.deflections.date;
+        }
+        if (m.quality) {
+          const d = document.getElementById('drop-quality'); if (d) d.classList.add('loaded');
+          const n = document.getElementById('name-quality'); if (n) n.textContent = m.quality.name;
+          const x = document.getElementById('meta-quality'); if (x) x.textContent = 'Loaded ' + m.quality.date;
+        }
         setStatus('✓ Using stored data from your last upload. Drop new files to refresh.', 'ok');
       }
     }
   } catch (e) { console.warn('No stored data:', e); }
-  // Restore PPTX narrative (independent of Excel data so it survives clears).
-  try {
-    const rawP = localStorage.getItem(PPTX_KEY);
-    const metaP = localStorage.getItem(PPTX_META_KEY);
-    if (rawP) {
-      DATA.pptx = JSON.parse(rawP);
-      if (metaP) {
-        const m = JSON.parse(metaP);
-        document.getElementById('drop-pptx').classList.add('loaded');
-        document.getElementById('name-pptx').textContent = m.name;
-        document.getElementById('meta-pptx').textContent = 'Loaded ' + m.date;
-      }
-    }
-  } catch (e) { /* fall back to default */ }
 }
 
 function saveStored(updates, fileType, fileName) {
@@ -2600,23 +2967,22 @@ function clearStored() {
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(STORAGE_META_KEY);
   localStorage.removeItem(NOTES_KEY);
-  localStorage.removeItem(PPTX_KEY);
-  localStorage.removeItem(PPTX_META_KEY);
   DATA = {};
   // Reset upload UI
-  ['drop-analytic','drop-deck'].forEach(id => {
+  ['drop-analytic','drop-deck','drop-referrals','drop-deflections','drop-quality'].forEach(id => {
     const el = document.getElementById(id);
-    el.classList.remove('loaded');
+    if (el) el.classList.remove('loaded');
   });
   document.getElementById('name-analytic').textContent = 'Click to select file';
   document.getElementById('meta-analytic').textContent = 'Source: Month End Analytic — tab "127"';
   document.getElementById('name-deck').textContent = 'Click to select file';
   document.getElementById('meta-deck').textContent = 'Source: MOR Standard Deck — MOR_MTD tab';
-  // PPTX slot reverts to the baked default (still loaded visually).
-  const drop = document.getElementById('drop-pptx');
-  if (drop) drop.classList.add('loaded');
-  document.getElementById('name-pptx').textContent = 'Default: Apr 2026 deck';
-  document.getElementById('meta-pptx').textContent = 'Source: MOR PowerPoint — Quality, Volume, Revenue, Opex, BD, HR';
+  const nR = document.getElementById('name-referrals');     if (nR) nR.textContent = 'Click to select file';
+  const mR = document.getElementById('meta-referrals');     if (mR) mR.textContent = 'Source: Inbound Referral Full Breakdown';
+  const nD = document.getElementById('name-deflections');   if (nD) nD.textContent = 'Click to select file';
+  const mD = document.getElementById('meta-deflections');   if (mD) mD.textContent = 'Source: Deflections Report (Salesforce export)';
+  const nQ = document.getElementById('name-quality');       if (nQ) nQ.textContent = 'Click to select file';
+  const mQ = document.getElementById('meta-quality');       if (mQ) mQ.textContent = 'Source: Acute Quality and Risk Workbook';
   setStatus('Data cleared. Upload new files to begin.', 'warn');
   render();
 }
@@ -2637,8 +3003,16 @@ function handleFile(event, kind) {
       let updates;
       if (kind === 'analytic') {
         updates = parseAnalytic(wb);
-      } else {
+      } else if (kind === 'deck') {
         updates = parseDeck(wb);
+      } else if (kind === 'referrals') {
+        updates = parseInboundReferrals(wb);
+      } else if (kind === 'deflections') {
+        updates = parseDeflections(wb);
+      } else if (kind === 'quality') {
+        updates = parseQualityWorkbook(wb);
+      } else {
+        throw new Error('Unknown file kind: ' + kind);
       }
       Object.assign(DATA, updates);
       recomputePPD();
@@ -2656,482 +3030,6 @@ function handleFile(event, kind) {
     }
   };
   reader.readAsArrayBuffer(file);
-}
-
-// =========================================================================
-// PPTX NARRATIVE INGEST — Highland MOR PowerPoint deck
-// Slides cover Quality, Volume, Net Revenue, Expense, HR, and Business
-// Development. We unzip the .pptx (CompressionStream-free) client-side,
-// pull paragraph-level text out of each slide, classify the slide by its
-// title, and render six "sidebar" panels — one per category.
-// =========================================================================
-
-const PPTX_KEY = 'mor_pptx_v1';
-const PPTX_META_KEY = 'mor_pptx_meta_v1';
-
-// Apr 2026 baked default — used when no PPTX has been uploaded yet so the
-// dashboard still ships with the desired narrative content.
-const PPTX_DEFAULT = {
-  source: 'Highland_MOR_Apr2026_Updated.pptx (default)',
-  period: 'April 2026',
-  quality: {
-    title: 'Quality & Patient Care',
-    groups: [
-      { heading: 'Patient Satisfaction & Safety', bullets: [
-        'Increases in overall satisfaction, safety and security score, patient involvement in treatment planning/goals, and NPS.',
-        'Survey return rate declined by 2%, primarily due to AMAs and refusals.',
-        'Elopement incident occurred during intake — patient’s mother called 911 and removed the child against medical advice.',
-        'Physical aggression rose vs. prior month, largely driven by chronic patients. Any patient exhibiting aggression requiring restraint or seclusion is now placed on an immediate behavior support plan.',
-        'AMAs and ATDs decreased compared to the prior month.',
-      ]},
-      { heading: 'Care Indicators Compliance', bullets: [
-        'All care indicators improved to 100% compliance in April — result of continued education and follow-up with staff.',
-      ]},
-      { heading: 'Documentation Compliance', bullets: [
-        'Compliance remained strong overall, with most indicators meeting or exceeding the 95% target.',
-        'April exceptions: medication orders authenticated within 48 hours (80%); psychiatric evaluations meeting UR medical necessity oversight criteria (90%); discharge summaries with admission recap (77.78%).',
-        'Routine audits and meeting-level findings reviews continue to drive accountability.',
-        'Provider trainings conducted in April to reinforce documentation standards.',
-      ]},
-      { heading: 'Admission Process Compliance', bullets: [
-        'All admission-process metrics at 100% except obtaining patient signature within 72 hours of admission — patient refused to sign and the refusal was not documented in a timely manner.',
-        'Results reflect strong adherence to documentation standards and the effectiveness of staff training and re-education.',
-      ]},
-    ],
-  },
-  volume: {
-    title: 'Volume — Admissions, ADC, LOS, Payor Mix',
-    groups: [
-      { heading: 'Admissions', bullets: [
-        'Unfavorable April variance to budget of 39 admissions (Acute -29, Detox -10).',
-        'Adolescent admissions +2 to budget; adult admissions -31 to budget.',
-        'Admissions up 28 over April 2025; child/adolescent admissions up 31 over PY. YTD admissions up 139 (16%).',
-        'Medicaid admissions up 154 over prior year.',
-        'Acceptance rate 36.1% in April vs. 38.4% full-year 2025. Bed-capacity deflections of 26 — removing them lifts acceptance to 39.7%.',
-      ]},
-      { heading: 'ADC', bullets: [
-        'ADC unfavorable variance to budget of 10.0 (Acute -8.6, Detox -1.5).',
-        'Adult ADC +4.1 favorable; C/A ADC -4.4 unfavorable.',
-      ]},
-      { heading: 'LOS', bullets: [
-        'ALOS of 10.4 days, 0.4 days favorable to the 10.0-day budget.',
-        'ALOS down 3.9 days vs. prior year — fewer long-term chronic patients and PRTF closure.',
-        'ADC down, but admissions are up 16% over prior year.',
-      ]},
-      { heading: 'Payor Mix', bullets: [
-        'Managed Medicaid mix of 71% supports DPP funding.',
-        'Qualifies Highland for the $2.29M/month WV Directed Payment Program supplemental — a $27.5M annualized revenue mechanism tied to Managed Medicaid volume.',
-        'Net revenue per patient day of $2,314 — 8% above the $2,126 budget.',
-        'Medicare FFS at 6.1% — 4.0% below budget, a rate headwind. DPP more than compensates at current Medicaid concentration.',
-        'Protect the Managed Medicaid referral mix — the highest-leverage financial variable for this facility.',
-      ]},
-    ],
-  },
-  revenue: {
-    title: 'Net Revenue, Denials, Charity, Bad Debt',
-    groups: [
-      { heading: 'Net Revenue', bullets: [
-        'Net Revenue of $5.91M exceeded the $5.70M budget by $209K favorable.',
-        'Net revenue per patient day of $2,313.86 vs. $1,996.92 budget (+15.9%).',
-        'IP Gross Revenue $7.73M vs. $9.32M budget — $1.59M unfavorable.',
-        'Census of 2,555 patient days vs. 2,856 budget (-301 days).',
-        'A one-time favorable bad debt adjustment was the main factor for exceeding the net revenue budget.',
-      ]},
-      { heading: 'Denials', bullets: [
-        'Unfavorable variance of $4,226 in April.',
-        '45 denied days (22 accounts) — ABH issued 40 days (19 accounts).',
-        'UR PI meetings in progress; retraining sessions held with all disciplines.',
-        'Meetings held with ABH to develop mutually beneficial contracts.',
-        'Total recoveries for April: $33,433.',
-      ]},
-      { heading: 'Charity', bullets: [
-        'Charity adjustments ($53K) unfavorable to budget.',
-        '18 patients totaling 151 patient days — average 8.4 days per patient.',
-        'April booking includes charity write-offs for Feb, March, and April (catch-up entry).',
-      ]},
-      { heading: 'Admin Adjustments', bullets: [
-        'No admin adjustments in the period.',
-      ]},
-      { heading: 'Bad Debt', bullets: [
-        'Total Bad Debt of ($401,554) — $593K favorable to budget.',
-      ]},
-    ],
-  },
-  opex: {
-    title: 'Operating Expense Detail',
-    groups: [
-      { heading: 'Salaries, Wages & Benefits', bullets: [
-        'S&W $1.17M actual vs. $1.31M budget — $136K favorable (+10%).',
-        'PPD: $459.20 actual vs. $512.49 budget.',
-        'YTD: $4.70M actual vs. $4.85M budget — $148K favorable.',
-        'Paid EPOB 1% under budget; continuing to flex down direct-care EPOB.',
-      ]},
-      { heading: 'Purchased Services', bullets: [
-        'Purchased Services $157K actual vs. $169K budget — $12K favorable (+7%).',
-        'Continuing to monitor for expense management opportunities.',
-      ]},
-      { heading: 'Professional Fees', bullets: [
-        'Pro Fees $99K actual vs. $72K budget — $27K unfavorable (-38%).',
-        'Down one nurse practitioner; filling gap with PRN. Actively recruiting.',
-      ]},
-      { heading: 'Supplies', bullets: [
-        'Supplies $87K actual vs. $106K budget — $19K favorable (+18%).',
-        'PPD: $34.06 actual vs. $41.33 budget.',
-        'YTD: $307K actual vs. $412K budget — $104K favorable.',
-      ]},
-      { heading: 'Other Expense', bullets: [
-        'Repairs & Maintenance $23K actual vs. $35K budget — $12K favorable (+34%).',
-        'Other Operating $39K actual vs. $37K budget — $2K unfavorable (-5%).',
-      ]},
-    ],
-  },
-  bd: {
-    title: 'Business Development — Inquiries, Field Marketing, Referrals',
-    groups: [
-      { heading: 'BD Staffing Coverage', bullets: [
-        'CL position filled; start date 5/4/26. Second CL position has also been filled.',
-      ]},
-      { heading: 'External & Volume Context', bullets: [
-        'Rolling county Spring breaks continued through April 20.',
-        '678 Total inquiries: -35 vs. prior month; +88 vs. prior year.',
-        '467 Field inquiries: -34 vs. prior month; +67 vs. prior year.',
-        '245 Total admissions: -14 vs. prior month; +5 vs. prior year.',
-        'Conversion at 36% — consistent with prior month.',
-      ]},
-      { heading: 'Service Line', bullets: [
-        'Detox inquiries decreased vs. prior month and prior year: -33 PM; -11 PY.',
-        'Adolescent inquiries increased vs. prior month and prior year: +9 PM; +58 PY.',
-        'Adult inquiries decreased vs. prior month, increased vs. prior year: -12 PM; +46 PY.',
-        'Continued focus on Highland Recovery Center (HRC) service line; awaiting expansion to 3.5 services.',
-        'Adult accounts a priority for the BD team.',
-      ]},
-      { heading: 'Account Mix', bullets: [
-        'Top 3: ER (332) -7 PM; Acute Psych (80) +8 PM; Mental Health Centers (18) -19 PM.',
-        'Bottom 3: PHP/IOP Providers (1) -2 PM; Physicians (1) -3 PM; Other RTC Providers (4) +3 PM.',
-        'Declines vs. PM: CAMC W&C -3; Princeton Community Hospital -5; Logan -5; Davis -6; Help4WV -2.',
-        'Growth vs. PM: Bateman +4; CAMC General +18; Berkeley Medical Center +5; Grant +3; Potomac +7.',
-        'Increased focus on private providers and residential treatment centers.',
-      ]},
-      { heading: 'Marketing & Outreach', bullets: [
-        'Daily bed-availability email blasts continue — twice daily when census requires, including weekends.',
-        'Monthly service-line marketing campaigns — April/May focus on adult services.',
-        'Educational presentation held with 30 providers of Family Care Health Centers on April 1.',
-        'Salesforce data and referral accounts being reallocated to new CLs and DBD for accurate reporting and territory alignment.',
-      ]},
-      { heading: 'PMO & Strategic Focus', bullets: [
-        'BD team meets weekly with CEO on strategy, initiatives, and expectations.',
-        'Recovery Plan and Summer Break Plan developed and implemented.',
-        'Attempting to schedule meeting to finalize contract for state hospital step-down program.',
-        '4th-floor construction to begin in late June.',
-        'Negotiations continuing for addition of 3.5 services at HRC.',
-      ]},
-      { heading: 'Events & Conferences', bullets: [
-        'Share the Vision (WV First Foundation / Community Connections), April 14-16, Huntington WV.',
-        'WV Licensed Professional Counselors Association Conference, April 16-17, Stonewall Jackson, Roanoke WV.',
-        'WV Primary Care Association Conference exhibit planned for June; School Summit in July.',
-      ]},
-    ],
-  },
-  hr: {
-    title: 'Human Resources — Turnover, Recruitment, Physician Pipeline',
-    groups: [
-      { heading: 'Turnover', bullets: [
-        'April monthly turnover 4.12% (annualized ~69.27%).',
-        'YTD turnover elevated due to recalculation that now includes FT/PT employees who transitioned to PRN.',
-        'Involuntary terminations have decreased; projected 90-day turnover expected ~23% lower than last year.',
-        'Improvement attributed to increased leadership involvement in interview and selection.',
-      ]},
-      { heading: 'Open Positions', bullets: [
-        'RN vacancies decreased; several critical night-shift positions now filled.',
-        'As new hires complete onboarding, overtime and incentive utilization expected to decline.',
-        'Wage competitiveness analysis for intake, therapy, dietary, housekeeping complete; under corporate review.',
-        'CL position filled — new hire (with strong central/northern WV connections) starts May 4, 2026.',
-        'Patient Account Rep position filled; candidate starts in the next few weeks.',
-        'Recruitment for step-down unit staff has begun.',
-      ]},
-      { heading: 'Recruitment', bullets: [
-        'HRD and CNO invited to serve on the West Virginia State University Nursing Advisory Board — contributing to recruitment-needs and long-term workforce-development discussions.',
-        'HRD met with new POC for WV Workforce Now; evaluating upcoming events for Highland participation.',
-      ]},
-      { heading: 'Physician Recruitment', bullets: [
-        'Dr. Shick accepted — a returning child psychiatrist with established facility relationships. Anticipated start July.',
-        'On-site child/adolescent psychiatric coverage directly supports the C/A volume strategy and DPP optimization.',
-        'Additional interview scheduled with an NP with strong psych experience.',
-      ]},
-    ],
-  },
-};
-
-// Minimal client-side .pptx unzipper using browser DecompressionStream.
-// Reads the ZIP central directory, decompresses each entry, and returns a
-// { filename: textContent } map for slide XML files only.
-async function _unzipPptxSlides(arrayBuf) {
-  const u8 = new Uint8Array(arrayBuf);
-  const dv = new DataView(arrayBuf);
-  // EOCD signature 0x06054b50 lives in the trailing 22..~65557 bytes.
-  let eocd = -1;
-  const minScan = Math.max(0, u8.length - 65557);
-  for (let i = u8.length - 22; i >= minScan; i--) {
-    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
-  }
-  if (eocd < 0) throw new Error('PPTX: end-of-central-directory not found');
-  const totalEntries = dv.getUint16(eocd + 10, true);
-  const cdOffset = dv.getUint32(eocd + 16, true);
-
-  const slides = {};
-  let p = cdOffset;
-  const decoder = new TextDecoder('utf-8');
-  for (let i = 0; i < totalEntries; i++) {
-    if (dv.getUint32(p, true) !== 0x02014b50) break;
-    const method   = dv.getUint16(p + 10, true);
-    const compSize = dv.getUint32(p + 20, true);
-    const nameLen  = dv.getUint16(p + 28, true);
-    const extraLen = dv.getUint16(p + 30, true);
-    const cmtLen   = dv.getUint16(p + 32, true);
-    const localOff = dv.getUint32(p + 42, true);
-    const name = decoder.decode(u8.subarray(p + 46, p + 46 + nameLen));
-    p += 46 + nameLen + extraLen + cmtLen;
-
-    if (!/^ppt\/slides\/slide\d+\.xml$/.test(name)) continue;
-    if (dv.getUint32(localOff, true) !== 0x04034b50) continue;
-    const lNameLen  = dv.getUint16(localOff + 26, true);
-    const lExtraLen = dv.getUint16(localOff + 28, true);
-    const dataStart = localOff + 30 + lNameLen + lExtraLen;
-    const data = u8.subarray(dataStart, dataStart + compSize);
-
-    let text;
-    if (method === 0) {
-      text = decoder.decode(data);
-    } else if (method === 8) {
-      // Raw DEFLATE stream — supported by modern browsers.
-      const stream = new Response(data).body.pipeThrough(new DecompressionStream('deflate-raw'));
-      const buf = await new Response(stream).arrayBuffer();
-      text = decoder.decode(buf);
-    } else {
-      throw new Error('PPTX: unsupported compression method ' + method);
-    }
-    slides[name] = text;
-  }
-  return slides;
-}
-
-// Pull paragraph-level text out of a slide's narrative text body. Each <a:p>
-// is one paragraph (potentially with multiple <a:t> runs concatenated). Table
-// content (<a:tbl>) is stripped first so cell text doesn't flood the bullets.
-function _slideParagraphs(xml) {
-  const cleaned = xml.replace(/<a:tbl[\s>][\s\S]*?<\/a:tbl>/g, '');
-  const paras = [];
-  const pRe = /<a:p[\s>][\s\S]*?<\/a:p>/g;
-  let m;
-  while ((m = pRe.exec(cleaned)) !== null) {
-    const block = m[0];
-    const runs = [];
-    const tRe = /<a:t[^>]*>([\s\S]*?)<\/a:t>/g;
-    let tm;
-    while ((tm = tRe.exec(block)) !== null) runs.push(tm[1]);
-    const text = runs.join('')
-      .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-      .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim();
-    if (text) paras.push(text);
-  }
-  return paras;
-}
-
-function _classifyPptxSlide(paras) {
-  const head = paras.slice(0, 3).join(' ').toLowerCase();
-  if (head.includes('quality dashboard') || head.includes('quality')) return 'quality';
-  if (head.includes('business development')) return 'bd';
-  if (head.includes('human resources')) return 'hr';
-  if (head.includes('net revenue') || head.includes('revenue')) return 'revenue';
-  if (head.includes('expense')) return 'opex';
-  if (head.includes('volume')) return 'volume';
-  return null;
-}
-
-// Build category groups from raw classified slides. We treat the slide title
-// (the first paragraph if it contains the category dash, e.g. "April 2026 –
-// Volume – Highland") as one possible group heading, and use short
-// non-numeric paragraphs ending in a colon or no end punctuation as
-// sub-headings within the slide. Numeric stat lines stay as bullets.
-function _buildCategoryFromSlides(slides) {
-  const groups = [];
-  let current = null;
-  const ensureCurrent = (fallback) => {
-    if (!current || current.bullets.length === 0 && current._fresh) {
-      // reuse the fresh empty group
-      return;
-    }
-    current = { heading: fallback, bullets: [], _fresh: true };
-    groups.push(current);
-  };
-  for (const slide of slides) {
-    const paras = slide.paragraphs.filter(t => !/^\d+$/.test(t)); // drop bare page numbers
-    if (paras.length === 0) continue;
-    // Slide title — usually "Month Year – Section – Facility". Skip it; we
-    // use sub-headings within the slide instead.
-    const startIdx = (/–|-/.test(paras[0]) && paras[0].length < 80) ? 1 : 0;
-    // If a slide has no inner sub-headings, give it a default group named
-    // after the section in the title.
-    const titleSection = (paras[0].match(/–\s*([^–]+?)\s*–/) || [])[1] || null;
-    current = null;
-    for (let i = startIdx; i < paras.length; i++) {
-      const text = paras[i];
-      const startsWithDigit = /^[\d$(]/.test(text);
-      const endsWithPunct = /[.!?:;,]$/.test(text);
-      const hasInternalDelimiter = /[,;]/.test(text);
-      const looksLikeHeading =
-        !startsWithDigit && text.length < 45 && !hasInternalDelimiter &&
-        (text.endsWith(':') || !endsWithPunct);
-      if (looksLikeHeading) {
-        const heading = text.replace(/[:•]+$/, '').trim();
-        // Merge into prior group if the heading repeats.
-        const prior = groups[groups.length - 1];
-        if (prior && prior.heading === heading) {
-          current = prior;
-        } else {
-          current = { heading, bullets: [] };
-          groups.push(current);
-        }
-      } else {
-        if (!current) {
-          const fallback = titleSection || 'Highlights';
-          const prior = groups[groups.length - 1];
-          if (prior && prior.heading === fallback) {
-            current = prior;
-          } else {
-            current = { heading: fallback, bullets: [] };
-            groups.push(current);
-          }
-        }
-        current.bullets.push(text);
-      }
-    }
-  }
-  // Drop empty groups (e.g. "OP Visits" with body "N/A").
-  return groups.filter(g => g.bullets && g.bullets.length > 0);
-}
-
-async function parsePptxToCategories(file) {
-  const buf = await file.arrayBuffer();
-  const xmls = await _unzipPptxSlides(buf);
-  const slideNames = Object.keys(xmls).sort((a, b) => {
-    const an = parseInt(a.match(/slide(\d+)/)[1], 10);
-    const bn = parseInt(b.match(/slide(\d+)/)[1], 10);
-    return an - bn;
-  });
-  const buckets = { quality: [], volume: [], revenue: [], opex: [], bd: [], hr: [] };
-  for (const name of slideNames) {
-    const paras = _slideParagraphs(xmls[name]);
-    if (paras.length === 0) continue;
-    const cat = _classifyPptxSlide(paras);
-    if (!cat) continue;
-    buckets[cat].push({ name, paragraphs: paras });
-  }
-
-  const out = {
-    source: file.name,
-    period: null,
-    quality: { title: PPTX_DEFAULT.quality.title, groups: _buildCategoryFromSlides(buckets.quality) },
-    volume:  { title: PPTX_DEFAULT.volume.title,  groups: _buildCategoryFromSlides(buckets.volume)  },
-    revenue: { title: PPTX_DEFAULT.revenue.title, groups: _buildCategoryFromSlides(buckets.revenue) },
-    opex:    { title: PPTX_DEFAULT.opex.title,    groups: _buildCategoryFromSlides(buckets.opex)    },
-    bd:      { title: PPTX_DEFAULT.bd.title,      groups: _buildCategoryFromSlides(buckets.bd)      },
-    hr:      { title: PPTX_DEFAULT.hr.title,      groups: _buildCategoryFromSlides(buckets.hr)      },
-  };
-  // Detect period (e.g. "April 2026") from any slide's title text.
-  for (const cat of ['quality','volume','revenue','opex','bd','hr']) {
-    for (const s of buckets[cat]) {
-      const m = (s.paragraphs[0] || '').match(/([A-Z][a-z]+ 20\d{2})/);
-      if (m) { out.period = m[1]; break; }
-    }
-    if (out.period) break;
-  }
-  // Fall back to default content for any category the deck didn't cover.
-  for (const cat of ['quality','volume','revenue','opex','bd','hr']) {
-    if (!out[cat].groups || out[cat].groups.length === 0) {
-      out[cat] = PPTX_DEFAULT[cat];
-    }
-  }
-  return out;
-}
-
-function getPptxData() {
-  if (DATA.pptx) return DATA.pptx;
-  try {
-    const stored = localStorage.getItem(PPTX_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      DATA.pptx = parsed;
-      return parsed;
-    }
-  } catch (e) { /* ignore */ }
-  DATA.pptx = PPTX_DEFAULT;
-  return PPTX_DEFAULT;
-}
-
-function handlePptxFile(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  if (typeof DecompressionStream === 'undefined') {
-    setStatus('⚠ Your browser does not support PPTX parsing (DecompressionStream missing). Update to a current Chrome/Edge/Safari.', 'err');
-    return;
-  }
-  setStatus('⏳ Parsing ' + file.name + '...', 'warn');
-  parsePptxToCategories(file).then(content => {
-    DATA.pptx = content;
-    try {
-      localStorage.setItem(PPTX_KEY, JSON.stringify(content));
-      localStorage.setItem(PPTX_META_KEY, JSON.stringify({ name: file.name, date: new Date().toLocaleString() }));
-    } catch (e) { console.warn('PPTX save failed:', e); }
-    const drop = document.getElementById('drop-pptx');
-    drop.classList.add('loaded');
-    document.getElementById('name-pptx').textContent = file.name;
-    document.getElementById('meta-pptx').textContent = 'Loaded just now' + (content.period ? ' · ' + content.period : '');
-    renderPptxSidebars();
-    setStatus('✓ Loaded ' + file.name + ' · Narrative sidebars refreshed', 'ok');
-  }).catch(err => {
-    console.error(err);
-    setStatus('✗ PPTX parse failed: ' + err.message, 'err');
-  });
-}
-
-function _escapeHtml(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-function _renderSidebar(containerId, data, label, sourceLabel) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  if (!data || !data.groups || data.groups.length === 0) {
-    el.innerHTML = '<aside class="pptx-sidebar"><div class="pptx-sb-eyebrow"><div class="pptx-sb-label">' + label +
-      '</div><div class="pptx-sb-source">' + _escapeHtml(sourceLabel || '') + '</div></div>' +
-      '<div class="pptx-sb-empty">No PowerPoint narrative loaded for this category.</div></aside>';
-    return;
-  }
-  const groups = data.groups.map(g => {
-    const bullets = (g.bullets || []).map(b => '<li>' + _escapeHtml(b) + '</li>').join('');
-    return '<h5>' + _escapeHtml(g.heading) + '</h5>' + (bullets ? '<ul>' + bullets + '</ul>' : '');
-  }).join('');
-  el.innerHTML =
-    '<aside class="pptx-sidebar">' +
-      '<div class="pptx-sb-eyebrow">' +
-        '<div class="pptx-sb-label">' + label + ' · PowerPoint Narrative</div>' +
-        '<div class="pptx-sb-source">' + _escapeHtml(sourceLabel || '') + '</div>' +
-      '</div>' +
-      '<div class="pptx-sb-title">' + _escapeHtml(data.title || label) + '</div>' +
-      groups +
-    '</aside>';
-}
-
-function renderPptxSidebars() {
-  const p = getPptxData();
-  const src = (p.period ? p.period + ' · ' : '') + (p.source || '');
-  _renderSidebar('pptx-quality-sidebar', p.quality, 'Quality',              src);
-  _renderSidebar('pptx-volume-sidebar',  p.volume,  'Volume',               src);
-  _renderSidebar('pptx-revenue-sidebar', p.revenue, 'Revenue',              src);
-  _renderSidebar('pptx-opex-sidebar',    p.opex,    'Operating Expense',    src);
-  _renderSidebar('pptx-bd-sidebar',      p.bd,      'Business Development', src);
-  _renderSidebar('pptx-hr-sidebar',      p.hr,      'Human Resources',      src);
 }
 
 // ---- Month End Analytic parser ----
@@ -3570,13 +3468,6 @@ function fmtPct(n) {
   return sign + n.toFixed(1) + '%';
 }
 
-function setView(v) {
-  view = v;
-  document.getElementById('btn-dollars').classList.toggle('active', v==='dollars');
-  document.getElementById('btn-ppd').classList.toggle('active', v==='ppd');
-  render();
-}
-
 function sparkline(monthly_act, monthly_bud, color) {
   // Show trailing months with data (up to 3)
   const curIdx = getCurrentMonthIdx();
@@ -3599,6 +3490,737 @@ function sparkline(monthly_act, monthly_bud, color) {
     <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2"/>
     ${vals.map((v,i) => `<circle cx="${i*step+2}" cy="${h - ((v-min)/range)*(h-4) - 2}" r="3" fill="${color}"/>`).join('')}
   </svg>`;
+}
+
+
+// =========================================================================
+// QUALITY & RISK — Parses the Acute Quality and Risk Workbook (77-tab file)
+// and renders an executive summary + discipline compliance dashboard. The
+// month displayed is driven by the analytic file's period via
+// getCurrentMonthIdx(), so this section stays in lock-step with the rest of
+// the dashboard automatically.
+//
+// Column positions are detected DYNAMICALLY by scanning for 'JAN' / 'Jan' in
+// the header rows. This is necessary because some workbook tabs have an
+// empty column A (which SheetJS excludes from the used range, shifting all
+// array indices by one), while other tabs include column A. Hardcoded
+// positions would work for one tab and silently fail for the other.
+// =========================================================================
+
+function qIsBlank(v) {
+  if (v == null) return true;
+  if (typeof v === 'number' && isNaN(v)) return true;
+  if (typeof v === 'string') {
+    const t = v.trim();
+    return t === '' || t === '-';
+  }
+  return false;
+}
+function qNum(v) {
+  if (qIsBlank(v)) return null;
+  const n = Number(v);
+  return isFinite(n) ? n : null;
+}
+
+// Direction inference for master summary metrics.
+// 'higher' = compliance % style (higher value is better)
+// 'lower'  = incident/event/rate style (lower value is better)
+// 'binary' = Y/N rows (Y = good)
+function qMetricDirection(section, label) {
+  const s = (section || '').toLowerCase();
+  const l = (label   || '').toLowerCase();
+  // Binary Y/N rows
+  if (s.includes('governing board') || s.includes('camera') ||
+      s.includes('rounding') || s.includes('meeting')) return 'binary';
+  // Compliance style sections
+  if (s.includes('compliance') || s.includes('observsmart')) return 'higher';
+  // Compliance-style labels (within X hours, completed, signed/dated)
+  if (l.includes('completed') || l.includes('within ') ||
+      l.includes('signed') || (s === '' && l.includes('compliance'))) {
+    return 'higher';
+  }
+  // Closed incidents — higher = better (matches total)
+  if (l.includes('closed')) return 'higher';
+  // Default: lower is better (most risk/safety counts and rates)
+  return 'lower';
+}
+
+// Status from numeric value, target, and direction. Returns null when no
+// target is set (informational row). Threshold: ≥goal = good for "higher";
+// within 5% below = watch; otherwise action. For "lower" direction: ≤target
+// = good; up to 10% above = watch; otherwise action.
+function qStatus(value, target, direction) {
+  if (direction === 'binary') {
+    if (value == null) return null;
+    const v = String(value).toUpperCase().trim();
+    return v === 'Y' || v === 'YES' ? 'good' : 'action';
+  }
+  if (target == null || value == null) return null;
+  if (direction === 'higher') {
+    if (value >= target) return 'good';
+    if (value >= target - 0.05) return 'watch';
+    return 'action';
+  }
+  // direction === 'lower'
+  if (value <= target) return 'good';
+  // For counts (target >= 1), 10% above; for rates (small targets), absolute room
+  const watchBand = target >= 1 ? target * 1.10 : target + 0.5;
+  if (value <= watchBand) return 'watch';
+  return 'action';
+}
+
+// Format a metric value for display based on the metric's apparent unit
+function qFormatValue(value, label) {
+  if (value == null) return '—';
+  if (typeof value === 'string') return value;     // binary Y/N
+  const l = (label || '').toLowerCase();
+  // Percent-style metrics
+  if (l.includes('%') || l.includes(' rate of return') ||
+      (Math.abs(value) > 0 && Math.abs(value) < 1.001 &&
+       (l.includes('compliance') || l.includes('completed') ||
+        l.includes('within') || l.includes('signed')))) {
+    return (value * 100).toFixed(1) + '%';
+  }
+  // Rate-per-1000 style (typically < 20, contains '1000')
+  if (l.includes('/1000') || l.includes('per 1000') || l.includes('rate/1000')) {
+    return value.toFixed(2);
+  }
+  // Whole-number counts
+  if (Number.isInteger(value)) return value.toLocaleString();
+  // Default — 2 decimals
+  return value.toFixed(2);
+}
+
+// Format target the same way as value
+function qFormatTarget(target, label) {
+  if (target == null) return '—';
+  return qFormatValue(target, label);
+}
+
+// ---- Parse the master Quality and Risk Summary tab ----
+// Some workbooks have column A entirely empty, which causes SheetJS to start
+// the sheet's used range at column B. This shifts every column index by one
+// vs. what tools like pandas show. To stay robust to layout variations, we
+// dynamically detect the JAN column from the first section header row and
+// derive label / target / month columns relative to it.
+function parseQualityMaster(ws) {
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+
+  // Step 1: find the JAN column by scanning the first ~10 rows
+  let janCol = -1;
+  let firstHeaderRow = -1;
+  for (let i = 0; i < Math.min(rows.length, 15); i++) {
+    const r = rows[i] || [];
+    for (let c = 0; c < r.length; c++) {
+      const v = r[c];
+      if (typeof v === 'string' && v.trim().toUpperCase() === 'JAN') {
+        janCol = c;
+        firstHeaderRow = i;
+        break;
+      }
+    }
+    if (janCol >= 0) break;
+  }
+  if (janCol < 0) {
+    throw new Error("Quality workbook: could not locate JAN column in master summary tab. The 'Quality and Risk Summary' tab layout may have changed.");
+  }
+
+  // Step 2: derive layout. The master tab uses sequential months Jan..Dec.
+  // Label is typically 2 columns left of JAN; target/goal 1 column left.
+  // If those columns don't exist (range starts at JAN), label is whatever
+  // non-numeric is in the row.
+  const labelCol  = Math.max(0, janCol - 2);
+  const targetCol = Math.max(0, janCol - 1);
+  const monthCols = [];
+  for (let i = 0; i < 12; i++) monthCols.push(janCol + i);
+
+  const metrics = [];
+  let currentSection = null;
+  const skipLabels = new Set(['Incident - Commentary and Analysis','Analysis/Action planning',
+    'January','February','March','April','May','June','July','August',
+    'September','October','November','December']);
+
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i] || [];
+    // Section header detection: JAN appears in the janCol column
+    const janCell = r[janCol];
+    if (typeof janCell === 'string' && janCell.trim().toUpperCase() === 'JAN') {
+      const lbl = r[labelCol];
+      currentSection = !qIsBlank(lbl) ? String(lbl).trim() : null;
+      continue;
+    }
+
+    const label = r[labelCol];
+    if (qIsBlank(label) || typeof label !== 'string') continue;
+    const lbl = label.trim();
+    if (skipLabels.has(lbl)) continue;
+
+    const direction = qMetricDirection(currentSection, lbl);
+    const c2 = r[targetCol];
+
+    if (direction === 'binary') {
+      // Read months as upper-case strings
+      const monthly = monthCols.map(c => {
+        const v = r[c];
+        return qIsBlank(v) ? null : String(v).trim().toUpperCase();
+      });
+      metrics.push({
+        section: currentSection, label: lbl,
+        target: typeof c2 === 'string' ? c2 : null,
+        monthly, direction, is_binary: true,
+      });
+    } else {
+      const monthly = monthCols.map(c => qNum(r[c]));
+      metrics.push({
+        section: currentSection, label: lbl,
+        target: qNum(c2), monthly, direction, is_binary: false,
+      });
+    }
+  }
+  return metrics;
+}
+
+// ---- Parse a single discipline Dashboard tab ----
+// Dashboard tabs interleave quarterly rollups between months:
+// Jan, Feb, Mar, Q1, Apr, May, Jun, Q2, Jul, Aug, Sep, Q3, Oct, Nov, Dec, Q4, YTD
+// We detect the 'Jan' column on the header row and compute month positions
+// from there, surviving any future layout shift.
+function parseQualityDiscipline(ws, name) {
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+  // Locate header row (contains 'Indicators') and the Jan column on it
+  let headerRow = -1;
+  let janCol = -1;
+  let goalCol = -1;
+  for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    const r = rows[i] || [];
+    let foundIndicators = false;
+    for (let c = 0; c < r.length; c++) {
+      const v = r[c];
+      if (typeof v !== 'string') continue;
+      const s = v.trim().toLowerCase();
+      if (s === 'indicators') foundIndicators = true;
+      if (s === 'jan') janCol = c;
+      if (s === 'goal') goalCol = c;
+    }
+    if (foundIndicators && janCol >= 0) { headerRow = i; break; }
+  }
+  if (headerRow < 0 || janCol < 0) return null;
+
+  // Compute month columns — Jan,Feb,Mar then skip Q1, Apr,May,Jun then skip Q2, etc.
+  // monthOffset[i] = i + Math.floor(i/3)  →  [0,1,2,4,5,6,8,9,10,12,13,14]
+  const monthCols = [];
+  for (let i = 0; i < 12; i++) monthCols.push(janCol + i + Math.floor(i / 3));
+  // YTD typically sits 4 columns after Dec (after Q4)
+  const ytdCol = janCol + 16;
+  // Goal column (already discovered) — if not labeled, default to one before Jan
+  if (goalCol < 0) goalCol = Math.max(0, janCol - 1);
+  // Label column: leftmost non-numeric column on data rows. By convention col[0].
+  const labelCol = 0;
+  // Sub-label / category column: between label and goal
+  const subLabelCol = goalCol > 1 ? goalCol - 1 : -1;
+
+  const indicators = [];
+  let currentGroup = null;
+  for (let i = headerRow + 1; i < rows.length; i++) {
+    const r = rows[i] || [];
+    const label = r[labelCol];
+    if (qIsBlank(label) || typeof label !== 'string') continue;
+    const goal = qNum(r[goalCol]);
+    const monthly = monthCols.map(c => qNum(r[c]));
+    const ytd  = qNum(r[ytdCol]);
+    const subLabel = subLabelCol >= 0 && !qIsBlank(r[subLabelCol]) ? String(r[subLabelCol]).trim() : null;
+    const hasData = goal != null || monthly.some(v => v != null);
+    if (!hasData) {
+      // Sub-header row (group separator)
+      currentGroup = String(label).trim();
+      continue;
+    }
+    indicators.push({
+      group: currentGroup,
+      sub_label: subLabel,
+      label: String(label).trim(),
+      goal, monthly, ytd,
+    });
+  }
+  return { name, indicators };
+}
+
+// ---- Top-level parser entry ----
+function parseQualityWorkbook(wb) {
+  const masterWs = wb.Sheets['Quality and Risk Summary'];
+  if (!masterWs) throw new Error("Quality workbook: 'Quality and Risk Summary' tab not found");
+  const metrics = parseQualityMaster(masterWs);
+  if (!metrics.length) throw new Error('Quality workbook: master summary parsed but no metrics found');
+
+  const DISCIPLINES = [
+    ['Admission-Intake',     'Admission-Intake Dashboard'],
+    ['Provider',             'Provider Dashboard'],
+    ['Nursing',              'Nursing Dashboard'],
+    ['Clinical Services',    'Clinical Serv Dashboard'],
+    ['Medicare-Medicaid Req','Medicare-Medicaid Req Dashboard'],
+  ];
+  const disciplines = [];
+  for (const [name, sheet] of DISCIPLINES) {
+    const ws = wb.Sheets[sheet];
+    if (!ws) continue;          // tolerant — skip missing dashboards
+    const d = parseQualityDiscipline(ws, name);
+    if (d && d.indicators.length) disciplines.push(d);
+  }
+  if (!disciplines.length) {
+    throw new Error('Quality workbook: no discipline dashboards found (Admission-Intake, Provider, Nursing, Clinical Serv, Medicare-Medicaid Req)');
+  }
+  return { quality: { metrics, disciplines } };
+}
+
+// =========================================================================
+// QUALITY & RISK RENDERER
+// =========================================================================
+
+// Headline KPI metric definitions — these get top-billing tiles. Each entry
+// names which row in the master metrics array to surface; we match on a
+// section+label substring. The order here is the display order.
+const Q_HEADLINE_METRICS = [
+  { match: m => m.section === 'INCIDENT REPORT TRACKING' && m.label.toLowerCase() === 'total incidents',
+    title: 'Total Incidents', priority: 1 },
+  { match: m => m.label.toLowerCase().includes('injury rate'),
+    title: 'Injury Rate /1000', priority: 2 },
+  { match: m => m.label.toLowerCase().includes('physical aggression incidents'),
+    title: 'Aggression /1000', priority: 3 },
+  { match: m => m.section === 'INCIDENT REPORT TRACKING' && m.label.toLowerCase() === 'sentinel events',
+    title: 'Sentinel Events', priority: 4 },
+  { match: m => m.label.toLowerCase() === 'ama % of total discharges',
+    title: 'AMA %', priority: 5 },
+  { match: m => m.section === 'ELOPEMENTS' && m.label.toLowerCase() === 'successful elopements',
+    title: 'Elopements', priority: 6 },
+  { match: m => m.section === 'CPR EVENTS',
+    title: 'CPR Events', priority: 7 },
+  { match: m => m.label.toLowerCase().includes('readmissions within 30'),
+    title: '30-Day Readmits', priority: 8 },
+];
+
+function renderQuality() {
+  const el = document.getElementById('quality-content');
+  if (!el) return;
+  const q = DATA.quality || null;
+  if (!q || !q.metrics || !q.metrics.length) {
+    el.innerHTML =
+      '<div class="q-empty">' +
+        '<strong>No quality data loaded yet.</strong><br>' +
+        'Upload the Quality &amp; Risk Workbook above to populate incident rates, compliance metrics, and discipline audit results.' +
+      '</div>';
+    // Update the desc to be neutral when no data
+    const desc = document.getElementById('quality-desc');
+    if (desc) desc.textContent = 'Awaiting Quality & Risk Workbook upload';
+    return;
+  }
+
+  const monthIdx  = getCurrentMonthIdx();
+  const monthName = getMonthName();
+  const monthShort= getMonthShort();
+  const valueAt = (m, idx) => m.monthly[idx];
+  const prevIdx = Math.max(0, monthIdx - 1);
+
+  // ---- 1. Headline KPI tiles ----
+  const tiles = [];
+  for (const def of Q_HEADLINE_METRICS) {
+    const m = q.metrics.find(def.match);
+    if (!m) continue;
+    const v = valueAt(m, monthIdx);
+    const pv = prevIdx === monthIdx ? null : valueAt(m, prevIdx);
+    if (v == null && (m.target == null)) continue;     // hide if no data
+    const status = qStatus(v, m.target, m.direction) || 'info';
+    const cls = status === 'good' ? 'q-good' : status === 'watch' ? 'q-watch' : status === 'action' ? 'q-action' : 'q-info';
+    const statusLabel = status === 'good' ? 'On Track' : status === 'watch' ? 'Watch' : status === 'action' ? 'Action Needed' : '—';
+    const valueText = qFormatValue(v, m.label);
+    let deltaText = '';
+    if (m.target != null) {
+      deltaText = 'Target ' + qFormatTarget(m.target, m.label);
+    } else if (pv != null && typeof pv === 'number' && typeof v === 'number') {
+      const d = v - pv;
+      const sign = d > 0 ? '+' : d < 0 ? '−' : '±';
+      deltaText = 'vs prior ' + sign + qFormatValue(Math.abs(d), m.label);
+    } else {
+      deltaText = 'No target set';
+    }
+    tiles.push(
+      '<div class="q-kpi ' + cls + '">' +
+        '<div class="label">' + escapeHtml(def.title) + '</div>' +
+        '<div class="value">' + escapeHtml(valueText) + '</div>' +
+        '<div class="delta">' + escapeHtml(deltaText) + '</div>' +
+        '<span class="status-pill">' + escapeHtml(statusLabel) + '</span>' +
+      '</div>'
+    );
+  }
+  const kpiHtml = tiles.length ? '<div class="q-kpi-grid">' + tiles.join('') + '</div>' : '';
+
+  // ---- 2. Discipline compliance cards ----
+  const discCards = [];
+  for (const d of (q.disciplines || [])) {
+    // Compute monthly aggregates: count, average compliance, breach count
+    let n = 0, sum = 0, breaches = 0;
+    const indicators = d.indicators.map(ind => {
+      const v = ind.monthly[monthIdx];
+      const status = qStatus(v, ind.goal, 'higher');
+      if (v != null) { n++; sum += v; }
+      if (status === 'action' || status === 'watch') breaches++;
+      return { ...ind, value: v, status };
+    });
+    if (n === 0) continue;        // hide discipline with no data this month
+    const avgPct = n > 0 ? (sum / n) * 100 : 0;
+    const breachBadge = breaches > 0
+      ? '<span class="q-disc-breach">' + breaches + ' below goal</span>'
+      : '<span class="q-disc-clean">all on track</span>';
+
+    // Group indicators by their group label
+    const groups = {};
+    const groupOrder = [];
+    for (const ind of indicators) {
+      const g = ind.group || '';
+      if (!(g in groups)) { groups[g] = []; groupOrder.push(g); }
+      groups[g].push(ind);
+    }
+    // Build detail table
+    const detailRows = [];
+    for (const g of groupOrder) {
+      if (g) detailRows.push('<tr class="q-group-row"><td colspan="4">' + escapeHtml(g) + '</td></tr>');
+      for (const ind of groups[g]) {
+        const valTxt = ind.value == null ? '—' : (ind.value * 100).toFixed(1) + '%';
+        const goalTxt = ind.goal == null ? '—' : (ind.goal * 100).toFixed(0) + '%';
+        const status = ind.status || 'info';
+        const statusLabel = status === 'good' ? 'On Track' : status === 'watch' ? 'Watch' : status === 'action' ? 'Action' : '—';
+        detailRows.push(
+          '<tr>' +
+            '<td>' + escapeHtml(ind.label) + '</td>' +
+            '<td>' + valTxt + '</td>' +
+            '<td>' + goalTxt + '</td>' +
+            '<td><span class="q-status ' + status + '">' + escapeHtml(statusLabel) + '</span></td>' +
+          '</tr>'
+        );
+      }
+    }
+    discCards.push(
+      '<div class="q-discipline" onclick="this.classList.toggle(\'expanded\')">' +
+        '<div class="q-disc-head">' +
+          '<span class="q-disc-arrow">▶</span>' +
+          '<span class="q-disc-name">' + escapeHtml(d.name) + '</span>' +
+          '<span class="q-disc-overall">' + avgPct.toFixed(1) + '%</span>' +
+          breachBadge +
+        '</div>' +
+        '<div class="q-disc-detail">' +
+          '<table>' +
+            '<thead><tr><th>Indicator</th><th>' + escapeHtml(monthShort) + '</th><th>Goal</th><th>Status</th></tr></thead>' +
+            '<tbody>' + detailRows.join('') + '</tbody>' +
+          '</table>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+  const disciplineHtml =
+    '<div class="q-card">' +
+      '<div class="q-card-head">' +
+        '<span>Discipline Compliance — ' + escapeHtml(monthName) + '</span>' +
+        '<span class="q-card-sub">Click any discipline to expand indicators</span>' +
+      '</div>' +
+      '<div style="padding:14px;">' +
+        '<div class="q-discipline-stack">' + discCards.join('') + '</div>' +
+      '</div>' +
+    '</div>';
+
+  el.innerHTML =
+    kpiHtml +
+    disciplineHtml;
+
+  // Update section description
+  const desc = document.getElementById('quality-desc');
+  if (desc) {
+    const totalBreaches = discCards.length
+      ? q.disciplines.reduce((s, d) => {
+          return s + d.indicators.filter(ind => {
+            const v = ind.monthly[monthIdx];
+            const st = qStatus(v, ind.goal, 'higher');
+            return st === 'action' || st === 'watch';
+          }).length;
+        }, 0)
+      : 0;
+    desc.textContent = 'Patient safety, incident rates & discipline compliance · ' + monthName + ' · ' +
+      (totalBreaches === 0 ? 'All compliance indicators on track' : totalBreaches + ' compliance indicators below goal');
+  }
+}
+
+
+// =========================================================================
+// BUSINESS DEVELOPMENT — Inbound Referrals + Deflections parsers and renderer
+// =========================================================================
+
+// Parse the Inbound Referral Full Breakdown workbook.
+// Expected layout: row 0 = headers (Inbound Referral Source, total_referrals,
+// admissions, conversion_%); rows 1..N = data, one row per referral source.
+// Returns { bd: { referrals: [{ source, referrals, admissions, conversion }],
+//                  referrals_period: <string from filename if recognizable> } }
+// merged into existing DATA.bd.
+function parseInboundReferrals(wb) {
+  const firstName = wb.SheetNames[0];
+  const ws = wb.Sheets[firstName];
+  if (!ws) throw new Error('Inbound Referrals: workbook has no sheets');
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+  if (!rows.length) throw new Error('Inbound Referrals: sheet is empty');
+
+  // Find header row — tolerant to formatting/whitespace
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(5, rows.length); i++) {
+    const r = rows[i] || [];
+    const cell0 = (r[0] || '').toString().toLowerCase();
+    if (cell0.includes('referral source') || cell0.includes('inbound referral')) {
+      headerIdx = i; break;
+    }
+  }
+  if (headerIdx < 0) throw new Error('Inbound Referrals: could not locate header row (expected "Inbound Referral Source" in column A)');
+
+  const referrals = [];
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const r = rows[i] || [];
+    const source = (r[0] || '').toString().trim();
+    if (!source) continue;
+    // Stop at totals row if any source label hints at it
+    if (/^total/i.test(source)) break;
+    const refs = Number(r[1]);
+    const adm  = Number(r[2]);
+    const conv = Number(r[3]);
+    if (!isFinite(refs)) continue;
+    referrals.push({
+      source,
+      referrals:  isFinite(refs) ? refs : 0,
+      admissions: isFinite(adm)  ? adm  : 0,
+      // Some exports give conversion as 35.53 (percent), others as 0.3553. Normalize to percent.
+      conversion: isFinite(conv) ? (conv > 1.5 ? conv : conv * 100) : (refs > 0 ? (adm/refs)*100 : 0),
+    });
+  }
+
+  if (!referrals.length) throw new Error('Inbound Referrals: header found but no data rows parsed');
+
+  return { bd_referrals: referrals };
+}
+
+// Parse the Salesforce Deflections Report.
+// Expected layout: header rows at top (title, generated date, filter list),
+// then a row with "Deflection Reason" in column B and "Record Count" in column
+// C, then data rows, ending with a "Total" row in column B.
+// Returns { bd_deflections: [{ reason, count }], bd_deflections_total, bd_deflections_period }
+function parseDeflections(wb) {
+  const firstName = wb.SheetNames[0];
+  const ws = wb.Sheets[firstName];
+  if (!ws) throw new Error('Deflections: workbook has no sheets');
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+  if (!rows.length) throw new Error('Deflections: sheet is empty');
+
+  // Locate header row — "Deflection Reason" can appear in col A, B, or C depending on report
+  let headerIdx = -1;
+  let reasonCol = -1, countCol = -1;
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i] || [];
+    for (let c = 0; c < r.length; c++) {
+      const cell = (r[c] || '').toString().toLowerCase().replace(/\s+/g, ' ').trim();
+      if (cell.startsWith('deflection reason')) {
+        headerIdx = i;
+        reasonCol = c;
+        // Find count column on the same row
+        for (let cc = c + 1; cc < r.length; cc++) {
+          const lbl = (r[cc] || '').toString().toLowerCase();
+          if (lbl.includes('record count') || lbl.includes('count')) { countCol = cc; break; }
+        }
+        if (countCol < 0) countCol = c + 1;
+        break;
+      }
+    }
+    if (headerIdx >= 0) break;
+  }
+  if (headerIdx < 0) throw new Error('Deflections: could not locate header row (expected "Deflection Reason")');
+
+  // Pull period from the filter rows (look for a row containing "Custom (xx/xx/xx to xx/xx/xx)")
+  let period = null;
+  for (let i = 0; i < headerIdx; i++) {
+    const r = rows[i] || [];
+    for (const cell of r) {
+      if (!cell) continue;
+      const m = cell.toString().match(/\(\s*(\d{1,2}\/\d{1,2}\/\d{2,4})\s+to\s+(\d{1,2}\/\d{1,2}\/\d{2,4})\s*\)/i);
+      if (m) { period = m[1] + ' – ' + m[2]; break; }
+    }
+    if (period) break;
+  }
+
+  const deflections = [];
+  let total = null;
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const r = rows[i] || [];
+    const reason = (r[reasonCol] || '').toString().trim();
+    const countCellRaw = r[countCol];
+    const count = Number(countCellRaw);
+    if (!reason) continue;
+    if (/^total/i.test(reason)) {
+      if (isFinite(count)) total = count;
+      continue;
+    }
+    if (!isFinite(count)) continue;
+    deflections.push({ reason, count });
+  }
+
+  if (!deflections.length) throw new Error('Deflections: header found but no data rows parsed');
+
+  // If total wasn't found, compute it
+  if (total == null) total = deflections.reduce((s, d) => s + d.count, 0);
+
+  return {
+    bd_deflections: deflections,
+    bd_deflections_total: total,
+    bd_deflections_period: period,
+  };
+}
+
+// Render the Business Development section.
+// Pulls from DATA.bd_referrals, DATA.bd_deflections, DATA.bd_deflections_total,
+// DATA.bd_deflections_period. Renders an empty-state hint when no BD data is loaded.
+function renderBusinessDevelopment() {
+  const el = document.getElementById('bd-content');
+  if (!el) return;
+
+  const refs = DATA.bd_referrals || null;
+  const defs = DATA.bd_deflections || null;
+  const defTotal = DATA.bd_deflections_total != null ? DATA.bd_deflections_total : null;
+  const defPeriod = DATA.bd_deflections_period || null;
+
+  if (!refs && !defs) {
+    el.innerHTML =
+      '<div class="bd-empty">' +
+        '<strong>No BD data loaded yet.</strong><br>' +
+        'Upload the Inbound Referral and Deflections reports above to populate top referral sources, conversion rates, and deflection reasons.' +
+      '</div>';
+    return;
+  }
+
+  // ---- Aggregate metrics ----
+  let totalRefs = 0, totalAdms = 0;
+  if (refs) {
+    refs.forEach(r => { totalRefs += r.referrals; totalAdms += r.admissions; });
+  }
+  const overallConv = totalRefs > 0 ? (totalAdms / totalRefs) * 100 : 0;
+
+  // Color thresholds for conversion %
+  const convClass = pct => pct >= 40 ? 'good' : pct >= 25 ? 'warn' : 'bad';
+
+  // ---- KPI cards ----
+  const kpis = [];
+  if (refs) {
+    kpis.push({
+      cls: 'bd-c1',
+      label: 'Total Inbound Referrals',
+      val: fmtNum(totalRefs),
+      delta: refs.length + ' distinct sources',
+    });
+    kpis.push({
+      cls: 'bd-c2',
+      label: 'Admissions',
+      val: fmtNum(totalAdms),
+      delta: 'Converted from referrals',
+    });
+    kpis.push({
+      cls: 'bd-c3',
+      label: 'Overall Conversion',
+      val: overallConv.toFixed(1) + '%',
+      delta: 'Admits ÷ Referrals',
+    });
+  }
+  if (defs) {
+    kpis.push({
+      cls: 'bd-c4',
+      label: 'Deflections',
+      val: fmtNum(defTotal || 0),
+      delta: defPeriod ? ('Period: ' + defPeriod) : (defs.length + ' reason categories'),
+    });
+  }
+  const kpiHtml = kpis.length
+    ? '<div class="bd-kpi-grid">' + kpis.map(k =>
+        '<div class="bd-kpi ' + k.cls + '">' +
+          '<div class="label">' + k.label + '</div>' +
+          '<div class="value">' + k.val + '</div>' +
+          '<div class="delta">' + k.delta + '</div>' +
+        '</div>'
+      ).join('') + '</div>'
+    : '';
+
+  // ---- Top 10 Referrals Table ----
+  let refTable = '';
+  if (refs) {
+    const top = refs.slice().sort((a,b) => b.referrals - a.referrals).slice(0, 10);
+    const top10Refs = top.reduce((s, r) => s + r.referrals, 0);
+    const top10Adms = top.reduce((s, r) => s + r.admissions, 0);
+    const top10Share = totalRefs > 0 ? (top10Refs / totalRefs) * 100 : 0;
+    const rows = top.map(r => {
+      const cc = convClass(r.conversion);
+      const barW = Math.max(2, Math.min(100, r.conversion));
+      return '<tr>' +
+        '<td>' + escapeHtml(r.source) + '</td>' +
+        '<td>' + fmtNum(r.referrals) + '</td>' +
+        '<td>' + fmtNum(r.admissions) + '</td>' +
+        '<td>' +
+          '<span class="bd-conversion-cell">' +
+            '<span class="bd-bar ' + cc + '"><span style="width:' + barW + '%"></span></span>' +
+            '<span class="bd-pct ' + cc + '">' + r.conversion.toFixed(1) + '%</span>' +
+          '</span>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+    refTable =
+      '<div class="bd-card">' +
+        '<div class="bd-card-head">Top 10 Referral Sources' +
+          '<span class="bd-card-sub">' +
+            fmtNum(top10Refs) + ' refs · ' + fmtNum(top10Adms) + ' admits · ' +
+            top10Share.toFixed(0) + '% of all inbound' +
+          '</span>' +
+        '</div>' +
+        '<table>' +
+          '<thead><tr><th>Referral Source</th><th>Referrals</th><th>Admissions</th><th>Conversion</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+      '</div>';
+  }
+
+  // ---- Deflections Table ----
+  let defTable = '';
+  if (defs) {
+    const totalForPct = defTotal || defs.reduce((s, d) => s + d.count, 0);
+    const sorted = defs.slice().sort((a,b) => b.count - a.count);
+    const rows = sorted.map(d => {
+      const pct = totalForPct > 0 ? (d.count / totalForPct) * 100 : 0;
+      return '<tr>' +
+        '<td>' + escapeHtml(d.reason) + '</td>' +
+        '<td>' + fmtNum(d.count) + '</td>' +
+        '<td class="bd-deflection-pct-cell">' + pct.toFixed(1) + '%</td>' +
+      '</tr>';
+    }).join('');
+    defTable =
+      '<div class="bd-card">' +
+        '<div class="bd-card-head">Deflections by Reason' +
+          (defPeriod ? '<span class="bd-card-sub">' + defPeriod + '</span>' : '') +
+        '</div>' +
+        '<table>' +
+          '<thead><tr><th>Reason</th><th>Count</th><th>Share</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+      '</div>';
+  }
+
+  const tablesHtml = (refTable || defTable)
+    ? '<div class="bd-tables-wrap">' + refTable + defTable + '</div>'
+    : '';
+
+  el.innerHTML = kpiHtml + tablesHtml;
+}
+
+// Light HTML escaper for user-visible BD strings (referral sources can contain &)
+function escapeHtml(s) {
+  return (s || '').toString().replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
 }
 
 
@@ -3785,7 +4407,7 @@ function renderTrends() {
     document.getElementById('trend-sm').innerHTML = '';
     return;
   }
-  const isP = view === 'ppd';
+  const isP = false; // always dollars (toggle removed)
   const periods = trended.periods;
   const ipDays = trended.series.ip_days;
 
@@ -3888,7 +4510,6 @@ function updateHeader() {
   // Update page title and branding
   document.title = facility + ' — MOR Deep Dive | ' + monthName;
   document.getElementById('top-banner').textContent = facility.toUpperCase() + ' · MOR DEEP DIVE';
-  document.getElementById('brand-logo').textContent = facility.charAt(0).toUpperCase();
   document.getElementById('brand-name').textContent = facility;
   document.getElementById('brand-tag').textContent = period || 'MOR Dashboard';
 
@@ -3901,7 +4522,6 @@ function updateHeader() {
 
 function render() {
   updateHeader();
-  renderPptxSidebars();
   const es = document.getElementById('empty-state');
   if (!hasData()) {
     es.style.display = 'block';
@@ -3909,21 +4529,19 @@ function render() {
   }
   es.style.display = 'none';
   renderKPIs();
+  renderQuality();
   if (DATA.deck) renderVolumeTables();
-  if (DATA.deck) renderVolumeCommentary();
   renderTrends();
   renderOpps();
   renderRevenue();
   renderRevenueDetail();
-  renderRevenueCommentary();
-  renderInsights();
-  renderExpenseCommentary();
   renderCategories();
   renderLabor();
+  renderBusinessDevelopment();
 }
 
 function renderKPIs() {
-  const isP = view === 'ppd';
+  const isP = false; // always dollars (toggle removed)
   const nr = DATA.net_revenue;
   const eb = DATA.ebitda;
   const op = DATA.total_opex;
@@ -3994,107 +4612,6 @@ function renderOpps() {
   }).join('');
 }
 
-function renderInsights() {
-  const cats = DATA.categories;
-  const nr = DATA.net_revenue;
-  const eb = DATA.ebitda;
-  const pd = getEffectivePatientDays();
-  const monthName = getMonthName();
-  const insights = [];
-
-  // 1. EBITDA margin insight
-  if (nr.mar_act && nr.mar_act !== 0) {
-    const ebMargin = (eb.mar_act / nr.mar_act * 100).toFixed(1);
-    const ebMarginBud = nr.mar_bud !== 0 ? (eb.mar_bud / nr.mar_bud * 100).toFixed(1) : '—';
-    const ebVar = eb.mar_act - eb.mar_bud;
-    const ebFav = ebVar >= 0;
-    const pdVar = pd.mar_act - pd.mar_bud;
-    let context = '';
-    if (ebFav && pdVar < 0) {
-      const ppdFavCtx = nr.ppd_mar > nr.ppd_bud;
-      if (ppdFavCtx) {
-        context = ' despite a ' + Math.abs(Math.round(pdVar)) + '-day census shortfall — rate/mix execution offset volume headwinds.';
-      } else {
-        context = ' despite a ' + Math.abs(Math.round(pdVar)) + '-day census shortfall — driver should be confirmed.';
-      }
-    } else if (ebFav) {
-      context = ' — strong operational execution.';
-    } else {
-      context = '.';
-    }
-    insights.push({ type: ebFav ? 'good' : 'bad', ico: ebFav ? '🚀' : '⚠️', noteKey: 'insight:EBITDA',
-      body: '<strong>EBITDA margin of ' + ebMargin + '%</strong> (budget ' + ebMarginBud + '%) on ' + fmt$(nr.mar_act) + ' net revenue. EBITDA ' + (ebFav ? 'beat' : 'missed') + ' budget by ' + fmt$(Math.abs(ebVar)) + context });
-  }
-
-  // 2. Net revenue PPD insight
-  const nrPpd = nr.ppd_mar;
-  const nrPpdBud = nr.ppd_bud;
-  if (nrPpd && nrPpdBud && nrPpdBud !== 0) {
-    const ppdFav = nrPpd >= nrPpdBud;
-    let payorNote = '';
-    if (DATA.deck) {
-      const medicaid = DATA.deck.payor_mix.find(p => p.label === 'Medicaid');
-      if (medicaid && medicaid.act >= 0.50) {
-        payorNote = ' Medicaid accounts for ' + (medicaid.act * 100).toFixed(0) + '% of admissions.';
-      }
-    }
-    insights.push({ type: ppdFav ? 'good' : 'warn', ico: '💎', noteKey: 'insight:PPD',
-      body: '<strong>Net revenue per patient day of ' + fmtPPD(nrPpd) + '</strong> ' + (ppdFav ? 'beat' : 'fell short of') + ' the ' + fmtPPD(nrPpdBud) + ' budget by ' + fmtPPD(Math.abs(nrPpd - nrPpdBud)) + '.' + payorNote });
-  }
-
-  // 3. Generate insights for top expense categories by absolute variance
-  const sorted = cats.slice().sort((a, b) => Math.abs(b.mar_var) - Math.abs(a.mar_var));
-  const icons = { 'Salaries & Wages':'👥', 'Benefits':'🏥', 'Contract Labor':'👥', 'Purchased Services':'🛠️',
-    'Professional Fees':'⚕️', 'Supplies':'📦', 'Utilities':'💡', 'Repairs & Maintenance':'🔧',
-    'Rent / Lease':'🏢', 'Insurance':'🛡️', 'Marketing':'📣', 'Taxes':'🧾', 'Other Operating':'📋' };
-
-  for (const cat of sorted.slice(0, 6)) {
-    const fav = cat.mar_var > 0;
-    const varAbs = Math.abs(cat.mar_var);
-    if (varAbs < 500) continue; // skip immaterial variances
-    const varPct = cat.mar_bud !== 0 ? (cat.mar_var / Math.abs(cat.mar_bud) * 100) : 0;
-    const ico = icons[cat.name] || '📊';
-
-    let body = '<strong>' + cat.name + ' ' + fmt$(varAbs) + ' ' + (fav ? 'favorable' : 'unfavorable') + '</strong>';
-    body += ' (' + fmt$(cat.mar_act) + ' actual vs ' + fmt$(cat.mar_bud) + ' budget)';
-
-    // PPD context
-    if (pd.mar_act > 0) {
-      body += ' at ' + fmtPPD(cat.ppd_mar) + '/PPD vs ' + fmtPPD(cat.ppd_bud) + ' budget.';
-    } else {
-      body += '.';
-    }
-
-    // Top driver from detail lines
-    if (cat.details.length > 0) {
-      const topDetail = cat.details[0]; // already sorted by |mar_var|
-      if (Math.abs(topDetail.mar_var) > 1000) {
-        const dFav = topDetail.mar_var > 0;
-        body += ' Top driver: ' + topDetail.desc + ' (' + fmt$(Math.abs(topDetail.mar_var)) + ' ' + (dFav ? 'favorable' : 'unfavorable') + ').';
-      }
-    }
-
-    // Contract labor zero check — only an achievement if budget was > 0
-    if (cat.name === 'Contract Labor' && cat.mar_act === 0 && cat.mar_bud > 0) {
-      body += ' Zero contract labor is a meaningful operational achievement.';
-    }
-
-    let type;
-    if (fav) type = 'good';
-    else if (Math.abs(varPct) > 15) type = 'bad';
-    else type = 'warn';
-
-    insights.push({ type, ico, body, noteKey: 'insight:' + cat.name });
-  }
-
-  document.getElementById('insight-grid').innerHTML = insights.map(i => `
-    <div class="insight ${i.type}">
-      <div class="ico">${i.ico}</div>
-      <div class="body">${i.body}</div>
-    </div>
-  `).join('');
-}
-
 function renderRevenue() {
   const el = document.getElementById('rev-grid');
   const ipg = DATA.ip_gross;
@@ -4109,7 +4626,7 @@ function renderRevenue() {
   const nr = DATA.net_revenue;
   if (!ipg || !ipc || !ipnr) { el.innerHTML = ''; return; }
 
-  const isP = view === 'ppd';
+  const isP = false; // always dollars (toggle removed)
   const epd = getEffectivePatientDays();
   const pd = epd ? epd.mar_act : 0;
   const f = (n) => (isP && pd) ? fmtPPD(n / pd) : fmt$(n);
@@ -4224,221 +4741,6 @@ function renderRevenue() {
   );
 
   el.innerHTML = rows.join('');
-}
-
-// ---- Dynamic Commentary Renderers ----
-
-function narrativeCard(cls, title, bullets, noteKey, variance) {
-  const btnHtml = noteKey ? noteBtnVar(noteKey, title, variance) : '';
-  const nb = btnHtml ? ' ' + btnHtml : '';
-  const nc = noteKey ? noteCallout(noteKey) : '';
-  return '<div class="narrative-card ' + cls + '"><h3>' + title + nb + '</h3><ul>' +
-    bullets.map(b => '<li>' + b + '</li>').join('') + '</ul>' + nc + '</div>';
-}
-function flag(cls, label) { return '<span class="flag ' + cls + '">' + label + '</span>'; }
-
-function renderVolumeCommentary() {
-  const el = document.getElementById('volume-commentary');
-  if (!DATA.deck) { el.innerHTML = ''; return; }
-  const d = DATA.deck;
-  const vol = {};
-  d.volume.forEach(v => { vol[v.label] = v; });
-  const adc = vol['ADC'] || {};
-  const los = vol['LOS'] || {};
-  const eqAdc = vol['Equivalent ADC'] || {};
-  const occ = vol['Occupancy'] || {};
-  const adm = d.admissions || {};
-  const staffed = getStaffedBeds();
-
-  // Service mix analysis
-  const adult = d.service_mix.find(s => s.label === 'Adult');
-  const adol = d.service_mix.find(s => s.label === 'Adolescent');
-  const detox = d.service_mix.find(s => s.label === 'Detox');
-
-  const adcVar = (adc.act - adc.bud).toFixed(1);
-  const adcFav = adc.act >= adc.bud;
-
-  // ADC card
-  const adcBullets = [
-    'ADC of <strong>' + adc.act.toFixed(1) + ' was ' + Math.abs(adcVar) + ' days ' + (adcFav ? 'favorable' : 'unfavorable') + '</strong> to the ' + adc.bud.toFixed(1) + ' budget.'
-  ];
-  if (detox) {
-    const detoxAct = (detox.act * adc.act).toFixed(1);
-    const detoxBud = (detox.bud * adc.bud).toFixed(1);
-    const detoxVar = (detoxAct - detoxBud).toFixed(1);
-    adcBullets.push('Detox ADC ran ~' + detoxAct + ' actual vs ~' + detoxBud + ' budget (' + (detoxVar >= 0 ? '+' : '') + detoxVar + ' days) — monitor referral patterns and clinical pathway throughput.');
-  }
-  if (adult) {
-    const adultAct = (adult.act * adc.act).toFixed(1);
-    const adultBud = (adult.bud * adc.bud).toFixed(1);
-    const adultVar = (adultAct - adultBud).toFixed(1);
-    let line = '<strong>Adult ADC ' + (adultVar >= 0 ? 'favorable' : 'unfavorable') + ' by ~' + Math.abs(adultVar).toFixed(1) + ' days</strong> (' + (adult.act*100).toFixed(0) + '% mix × ' + adc.act.toFixed(1) + ' ADC = ' + adultAct + ' actual vs ' + (adult.bud*100).toFixed(0) + '% × ' + adc.bud.toFixed(1) + ' = ' + adultBud + ' budget).';
-    if (adol) {
-      const adolAct = (adol.act * adc.act).toFixed(1);
-      const adolBud = (adol.bud * adc.bud).toFixed(1);
-      const adolVar = (adolAct - adolBud).toFixed(1);
-      line += ' Adolescent ADC ' + (adolVar >= 0 ? 'favorable' : 'unfavorable') + ' by ~' + Math.abs(adolVar).toFixed(1) + ' days.';
-    }
-    adcBullets.push(line);
-  }
-  if (eqAdc.act) {
-    adcBullets.push('Equivalent ADC of ' + eqAdc.act.toFixed(1) + ' vs ' + eqAdc.bud.toFixed(1) + ' budget — confirms the ' + Math.abs(adcVar) + '-day ' + (adcFav ? 'surplus' : 'shortfall') + '.');
-  }
-
-  // LOS card
-  const losVar = los.act - los.bud;
-  const losFav = losVar <= 0;
-  const losBullets = [
-    'ALOS of <strong>' + los.act.toFixed(2) + ' days vs ' + los.bud.toFixed(2) + ' budget — ' + Math.abs(losVar).toFixed(2) + ' days ' + (losFav ? 'favorable' : 'unfavorable') + '</strong>.' + (losFav ? '' : ' LOS is running over plan. This is a headwind to throughput capacity on the existing bed base.')
-  ];
-  if (los.py > 0) {
-    losBullets.push('ALOS ' + (los.act < los.py ? 'down' : 'up') + ' versus prior year (' + los.py.toFixed(1) + ' days).');
-  }
-  if (!losFav) {
-    losBullets.push(flag('bad','Action') + 'With LOS above plan, validate discharge planning processes. Investigate whether clinical holds, placement delays, or authorization lag are extending stays beyond clinical readiness.');
-  }
-
-  // Payor mix card
-  const medicaid = d.payor_mix.find(p => p.label === 'Medicaid');
-  const medicare = d.payor_mix.find(p => p.label === 'Medicare');
-  const commercial = d.payor_mix.find(p => p.label === 'Commercial');
-  const ppd = DATA.net_revenue ? DATA.net_revenue.ppd_mar : 0;
-  const ppdBud = DATA.net_revenue ? DATA.net_revenue.ppd_bud : 0;
-  const ppdPct = ppdBud > 0 ? ((ppd - ppdBud) / ppdBud * 100).toFixed(1) : '—';
-
-  const payorBullets = [];
-  if (medicaid) {
-    payorBullets.push('<strong>Managed Medicaid mix of ' + (medicaid.act*100).toFixed(1) + '% of admissions</strong> — the primary engine of financial performance.');
-    if (medicaid.act >= 0.70) {
-      payorBullets.push(flag('good','Protect') + 'Medicaid concentration above 70% supports DPP supplemental revenue eligibility. Any erosion below 70% triggers material exposure.');
-    }
-  }
-  if (ppd > 0 && ppdBud > 0) {
-    payorBullets.push('Net revenue PPD of ' + fmtPPD(ppd) + ' vs ' + fmtPPD(ppdBud) + ' budget (' + (ppd > ppdBud ? '+' : '') + ppdPct + '%).');
-  }
-  if (medicare) payorBullets.push('Medicare FFS at ' + (medicare.act*100).toFixed(1) + '% of admissions.');
-  if (commercial) payorBullets.push('Commercial mix at ' + (commercial.act*100).toFixed(1) + '%.');
-
-  // Occupancy line — only shown if staffed beds is configured
-  const occBullets = [];
-  if (staffed && staffed > 0) {
-    occBullets.push('Occupancy of <strong>' + (occ.act*100).toFixed(1) + '% vs ' + (occ.bud*100).toFixed(1) + '% budget</strong> on ' + staffed + ' staffed beds.');
-  } else {
-    occBullets.push(flag('warn','Setup') + 'Enter staffed beds in the upload panel to compute occupancy.');
-  }
-  if ((staffed && staffed > 0) && occ.py > 0) {
-    occBullets.push('Prior year occupancy was ' + (occ.py*100).toFixed(1) + '%.');
-  }
-
-  el.innerHTML = '<div class="narrative-block"><div class="narrative-grid">' +
-    narrativeCard(adcFav ? 'good' : 'bad', 'ADC', adcBullets, 'vol:ADC') +
-    narrativeCard(losFav ? 'good' : 'bad', 'LOS', losBullets, 'vol:LOS') +
-    narrativeCard(occ.act >= occ.bud ? 'good' : 'warn', 'Occupancy', occBullets, 'vol:Occupancy') +
-    narrativeCard(medicaid && medicaid.act >= 0.70 ? 'good' : 'warn', 'Payor Mix', payorBullets, 'vol:Payor Mix') +
-  '</div></div>';
-}
-
-function renderRevenueCommentary() {
-  const el = document.getElementById('revenue-commentary');
-  const nr = DATA.net_revenue;
-  const ipg = DATA.ip_gross;
-  const ipc = DATA.ip_contractual;
-  const pd = getEffectivePatientDays();
-  const staffed = getStaffedBeds();
-
-  if (!nr || !ipg) { el.innerHTML = ''; return; }
-
-  const nrVar = nr.mar_act - nr.mar_bud;
-  const nrFav = nrVar >= 0;
-  const pdVar = pd.mar_act - pd.mar_bud;
-
-  // Net Revenue card
-  const nrBullets = [
-    '<strong>Net Revenue of ' + fmt$(nr.mar_act) + (nrFav ? ' exceeded' : ' fell short of') + ' the ' + fmt$(nr.mar_bud) + ' budget</strong> by ' + fmt$(Math.abs(nrVar)) + ' ' + (nrFav ? 'favorable' : 'unfavorable') + '.',
-    'Net revenue per patient day of <strong>' + fmtPPD(nr.ppd_mar) + ' vs ' + fmtPPD(nr.ppd_bud) + ' budget (' + (nr.ppd_bud !== 0 ? ((nr.ppd_mar > nr.ppd_bud ? '+' : '') + ((nr.ppd_mar - nr.ppd_bud) / nr.ppd_bud * 100).toFixed(1) + '%') : '—') + ')</strong>.',
-    'IP Gross Revenue of ' + fmt$(ipg.mar_act) + ' vs ' + fmt$(ipg.mar_bud) + ' budget — ' + fmt$(Math.abs(ipg.mar_act - ipg.mar_bud)) + ' ' + (ipg.mar_act >= ipg.mar_bud ? 'favorable' : 'unfavorable') + '.',
-  ];
-  if (Math.abs(pdVar) > 0) {
-    const ppdFavCtx = nr.ppd_mar > nr.ppd_bud;
-    const offsetNote = (nrFav && pdVar < 0)
-      ? (ppdFavCtx ? 'Rate/mix execution offset the census shortfall.' : 'Driver of favorable revenue despite census shortfall should be confirmed.')
-      : '';
-    nrBullets.push('Census of ' + fmtNum(pd.mar_act) + ' patient days vs ' + fmtNum(pd.mar_bud) + ' budget (' + (pdVar >= 0 ? '+' : '') + Math.round(pdVar) + ' days). ' + offsetNote);
-  }
-  if (staffed && staffed > 0) {
-    const adcAct = pd.mar_act / getDaysInMonth();
-    const occPct = (adcAct / staffed * 100).toFixed(1);
-    nrBullets.push(flag('','Watch') + 'Occupancy of ' + occPct + '% on ' + staffed + ' staffed beds.');
-  }
-
-  // YTD card
-  const ytdVar = nr.ytd_act - nr.ytd_bud;
-  const ytdBullets = [
-    'YTD Net Revenue of ' + fmt$(nr.ytd_act) + ' vs ' + fmt$(nr.ytd_bud) + ' budget — ' + fmt$(Math.abs(ytdVar)) + ' ' + (ytdVar >= 0 ? 'favorable' : 'unfavorable') + '.',
-    'YTD Patient Days of ' + fmtNum(pd.ytd_act) + ' vs ' + fmtNum(pd.ytd_bud) + ' budget.',
-  ];
-
-  el.innerHTML = '<div class="narrative-block"><div class="narrative-grid">' +
-    narrativeCard(nrFav ? 'good' : 'bad', 'Net Revenue', nrBullets, 'rev:Net Revenue', nrVar) +
-    narrativeCard(ytdVar >= 0 ? 'good' : 'warn', 'YTD Performance', ytdBullets, 'rev:YTD Performance', ytdVar) +
-  '</div></div>';
-}
-
-function renderExpenseCommentary() {
-  const el = document.getElementById('expense-commentary');
-  if (!DATA.categories || DATA.categories.length === 0) { el.innerHTML = ''; return; }
-  const cats = DATA.categories;
-  const pd = getEffectivePatientDays().mar_act;
-  const cards = [];
-
-  // Build a card for each major expense category
-  for (const cat of cats) {
-    const fav = cat.mar_var > 0; // mar_var = bud - act; positive = under budget = favorable
-    const varAbs = Math.abs(cat.mar_var);
-    const varPct = cat.mar_bud !== 0 ? (cat.mar_var / Math.abs(cat.mar_bud) * 100) : 0;
-    const cls = fav ? (varAbs > 50000 ? 'good' : 'neutral') :
-                      (Math.abs(varPct) > 15 ? 'bad' : (Math.abs(varPct) > 5 ? 'warn' : 'neutral'));
-
-    const bullets = [
-      '<strong>' + cat.name + ' ' + fmt$(cat.mar_act) + ' actual vs ' + fmt$(cat.mar_bud) + ' budget — ' + fmt$(varAbs) + ' ' + (fav ? 'favorable' : 'unfavorable') + '</strong>' + (Math.abs(varPct) >= 1 ? ' (' + (fav ? '+' : '') + varPct.toFixed(0) + '%).' : '.'),
-    ];
-
-    // PPD context
-    if (pd > 0) {
-      bullets.push('PPD: ' + fmtPPD(cat.mar_act / pd) + ' actual vs ' + fmtPPD(cat.mar_bud / pd) + ' budget.');
-    }
-
-    // YTD line
-    const ytdFav = cat.ytd_var > 0;
-    bullets.push('YTD: ' + fmt$(cat.ytd_act) + ' actual vs ' + fmt$(cat.ytd_bud) + ' budget — ' + fmt$(Math.abs(cat.ytd_var)) + ' ' + (ytdFav ? 'favorable' : 'unfavorable') + '.');
-
-    // Flag material detail-level variances (top 3 unfavorable) — threshold per-GL
-    const unfavDetails = cat.details
-      .filter(d => d.mar_var < -getThreshold('detail_unfav_min', cat.name, d.gl))
-      .slice(0, 3);
-    for (const d of unfavDetails) {
-      const dPct = d.mar_bud > 0 ? ((-d.mar_var) / d.mar_bud * 100).toFixed(0) : null;
-      const pctStr = dPct ? ' (+' + dPct + '%)' : ' (Unbudgeted)';
-      bullets.push(flag('bad','Action') + d.desc + ': ' + fmt$(d.mar_act) + ' actual vs ' + fmt$(d.mar_bud) + ' budget — ' + fmt$(Math.abs(d.mar_var)) + ' unfavorable' + pctStr + '.');
-    }
-
-    // Flag material favorable detail-level variances (top 2) — threshold per-GL
-    const favDetails = cat.details
-      .filter(d => d.mar_var > getThreshold('detail_fav_min', cat.name, d.gl))
-      .slice(0, 2);
-    for (const d of favDetails) {
-      bullets.push(flag('good','Favorable') + d.desc + ': ' + fmt$(d.mar_act) + ' actual vs ' + fmt$(d.mar_bud) + ' budget — ' + fmt$(d.mar_var) + ' favorable.');
-    }
-
-    // Zero contract labor check — only an achievement if budget was > 0
-    if (cat.name === 'Contract Labor' && cat.mar_act === 0 && cat.mar_bud > 0) {
-      bullets.push(flag('good','Win') + 'Zero contract labor — a meaningful operational achievement.');
-    }
-
-    cards.push(narrativeCard(cls, cat.name, bullets, 'exp:' + cat.name, cat.mar_var));
-  }
-
-  el.innerHTML = '<div class="narrative-block"><div class="narrative-grid">' + cards.join('') + '</div></div>';
 }
 
 function renderLabor() {
@@ -4572,37 +4874,46 @@ function renderLabor() {
 }
 
 function renderCategories() {
-  const isP = view === 'ppd';
+  renderCategoriesView('dollars');
+  renderCategoriesView('ppd');
+
+  // Update opportunity section description once (shared by both views)
+  const oppDesc = document.getElementById('opp-desc');
+  if (oppDesc) oppDesc.textContent = 'Largest absolute variances vs. budget · ' + getMonthName();
+}
+
+function renderCategoriesView(viewMode) {
+  const isP = viewMode === 'ppd';
   const epd = getEffectivePatientDays();
   const pd = epd.mar_act;
   const pdBudV = epd.mar_bud;
   const pdY = epd.ytd_act;
   const pdYBud = epd.ytd_bud;
-  const tbody = document.getElementById('cat-tbody');
+  const tbody = document.getElementById('cat-tbody-' + viewMode);
+  const thead = document.getElementById('cat-thead-' + viewMode);
+  if (!tbody || !thead) return;
   const ms = getMonthShort();
+  const unitLabel = isP ? '$/PPD' : '$';
+  const _notes = getNotes();  // cached for category-row note-button visibility check
 
-  // Update table header with current month
-  document.getElementById('cat-thead').innerHTML = '<tr><th>Category</th><th>' + ms + ' Actual</th><th>' + ms + ' Budget</th><th>Variance</th><th>Var %</th><th>YTD Actual</th><th>YTD Var</th><th>3-Mo Trend</th><th>Status</th></tr>';
-
-  // Update opportunity section description
-  const oppDesc = document.getElementById('opp-desc');
-  if (oppDesc) oppDesc.textContent = 'Largest absolute variances vs. budget · ' + getMonthName();
+  // Update table header with current month + unit hint
+  thead.innerHTML = '<tr><th>Category</th><th>' + ms + ' Actual</th><th>' + ms + ' Budget</th><th>Variance (' + unitLabel + ')</th><th>Var %</th><th>YTD Actual</th><th>YTD Var</th><th>3-Mo Trend</th></tr>';
 
   const sorted = DATA.categories.slice().sort((a,b) => Math.abs(b.mar_var) - Math.abs(a.mar_var));
 
   let html = '';
   sorted.forEach((c, idx) => {
-    const marAct = isP ? c.mar_act/pd : c.mar_act;
-    const marBud = isP ? c.mar_bud/pdBudV : c.mar_bud;
-    const marVar = marBud - marAct;
-    const ytdAct = isP ? c.ytd_act/pdY : c.ytd_act;
-    const ytdBud = isP ? c.ytd_bud/pdYBud : c.ytd_bud;
+    const marAct = isP ? (pd    ? c.mar_act/pd       : 0) : c.mar_act;
+    const marBud = isP ? (pdBudV? c.mar_bud/pdBudV   : 0) : c.mar_bud;
+    const marVar = marBud - marAct;             // signed, view-appropriate
+    const ytdAct = isP ? (pdY   ? c.ytd_act/pdY      : 0) : c.ytd_act;
+    const ytdBud = isP ? (pdYBud? c.ytd_bud/pdYBud   : 0) : c.ytd_bud;
     const ytdVar = ytdBud - ytdAct;
     const fmt = isP ? fmtPPD : fmt$;
     const varPct = c.mar_bud !== 0 ? ((c.mar_bud - c.mar_act)/Math.abs(c.mar_bud) * 100) : 0;
     const color = c.mar_var > 0 ? '#5a9b6e' : '#c44536';
 
-    // Status logic
+    // Status logic — driven by the % variance (same for both views since it's a ratio)
     let status, statusCls;
     const absPct = Math.abs(varPct);
     const actionPct = getThreshold('status_action_pct', c.name);
@@ -4611,19 +4922,29 @@ function renderCategories() {
     else if (c.mar_var < 0 && absPct > watchPct) { status = 'Watch'; statusCls = 'watch'; }
     else { status = 'On Track'; statusCls = 'ontrack'; }
 
-    // Variance display
-    const varDisplay = c.mar_var === 0 ? '<span class="var-flat">—</span>' :
-                       (c.mar_var > 0 ? `<span class="var-down">${fmt(Math.abs(marVar))}</span>`
-                                      : `<span class="var-up">${fmt(Math.abs(marVar))}</span>`);
-    const ytdVarDisplay = ytdVar === 0 ? '<span class="var-flat">—</span>' :
+    // Variance display — use VIEW-APPROPRIATE sign for color (fixes the
+    // pre-existing edge case where dollar and PPD signs disagree because
+    // denominators differ between act and bud).
+    const varDisplay = Math.abs(marVar) < (isP ? 0.01 : 1) ? '<span class="var-flat">—</span>' :
+                       (marVar > 0 ? `<span class="var-down">${fmt(Math.abs(marVar))}</span>`
+                                   : `<span class="var-up">${fmt(Math.abs(marVar))}</span>`);
+    const ytdVarDisplay = Math.abs(ytdVar) < (isP ? 0.01 : 1) ? '<span class="var-flat">—</span>' :
                           (ytdVar > 0 ? `<span class="var-down">${fmt(Math.abs(ytdVar))}</span>`
                                       : `<span class="var-up">${fmt(Math.abs(ytdVar))}</span>`);
     const pctDisplay = varPct === 0 ? '—' :
                        (varPct > 0 ? `<span class="var-down">${fmtPct(varPct)}</span>`
                                    : `<span class="var-up">${fmtPct(varPct)}</span>`);
 
-    html += `<tr class="cat-row expanded" onclick="toggleDetail(${idx})">
-      <td><div class="cat-name"><span class="arrow">▶</span>${c.name} ${noteBtnVar('cat:' + c.name, c.name, c.mar_var)}</div></td>
+    // Variance value used for note button + flag visibility in THIS view
+    const catVar = marBud - marAct;
+    const flagCount = (c.details || []).filter(d => {
+      const dVar = isP ? (pdBudV ? d.mar_bud/pdBudV : 0) - (d.ppd_mar !== null ? d.ppd_mar : (pd ? d.mar_act/pd : 0))
+                       : d.mar_var;
+      return needsNote('gl:' + d.gl, dVar, viewMode, c.name, d.gl);
+    }).length;
+
+    html += `<tr class="cat-row" onclick="toggleDetail('${viewMode}',${idx})">
+      <td><div class="cat-name"><span class="arrow">▶</span>${c.name}<span class="cat-name-actions">${(flagCount > 0 || _notes['cat:' + c.name]) ? noteBtn('cat:' + c.name, c.name) : ''}${needsNoteCatBadge(c.name, flagCount, viewMode)}</span></div></td>
       <td>${fmt(marAct)}</td>
       <td>${fmt(marBud)}</td>
       <td>${varDisplay}</td>
@@ -4631,18 +4952,17 @@ function renderCategories() {
       <td>${fmt(ytdAct)}</td>
       <td>${ytdVarDisplay}</td>
       <td>${sparkline(c.monthly_act, c.monthly_bud, color)}</td>
-      <td><span class="status-pill ${statusCls}">${status}</span></td>
     </tr>`;
-    html += noteCalloutRow('cat:' + c.name, 9);
+    html += noteCalloutRow('cat:' + c.name, 8);
 
-    html += `<tr class="detail-row open" id="det-${idx}"><td colspan="9"><div class="detail-wrap">
+    html += `<tr class="detail-row" id="det-${viewMode}-${idx}"><td colspan="8"><div class="detail-wrap">
       <h4>${c.name} — GL Account Detail <span>${c.details.length} active line items</span></h4>
       <table class="detail">
         <thead><tr>
           <th>Line Item</th>
           <th>${ms} Actual</th>
           <th>${ms} Budget</th>
-          <th>Variance</th>
+          <th>Variance (${unitLabel})</th>
           <th>$ / PPD</th>
           <th>YTD Actual</th>
           <th>YTD Budget</th>
@@ -4650,19 +4970,19 @@ function renderCategories() {
         </tr></thead>
         <tbody>
         ${c.details.map(d => {
-          const dMarA = isP ? (d.ppd_mar !== null ? d.ppd_mar : d.mar_act/pd) : d.mar_act;
-          const dMarB = isP ? d.mar_bud/pdBudV : d.mar_bud;
-          const dYA = isP ? d.ytd_act/pdY : d.ytd_act;
-          const dYB = isP ? d.ytd_bud/pdYBud : d.ytd_bud;
+          const dMarA = isP ? (d.ppd_mar !== null ? d.ppd_mar : (pd ? d.mar_act/pd : 0)) : d.mar_act;
+          const dMarB = isP ? (pdBudV ? d.mar_bud/pdBudV : 0) : d.mar_bud;
+          const dYA  = isP ? (pdY    ? d.ytd_act/pdY     : 0) : d.ytd_act;
+          const dYB  = isP ? (pdYBud ? d.ytd_bud/pdYBud  : 0) : d.ytd_bud;
           const fmtD = isP ? fmtPPD : fmt$;
           const dVar = dMarB - dMarA;
           const yVar = dYB - dYA;
-          const dVarHtml = Math.abs(d.mar_var) < 100 ? `<span class="var-flat">${fmtD(Math.abs(dVar))}</span>` :
-                           (d.mar_var > 0 ? `<span class="var-down">${fmtD(Math.abs(dVar))}</span>` : `<span class="var-up">${fmtD(Math.abs(dVar))}</span>`);
-          const yVarHtml = Math.abs(d.ytd_var) < 100 ? `<span class="var-flat">${fmtD(Math.abs(yVar))}</span>` :
-                           (d.ytd_var > 0 ? `<span class="var-down">${fmtD(Math.abs(yVar))}</span>` : `<span class="var-up">${fmtD(Math.abs(yVar))}</span>`);
+          const dVarHtml = Math.abs(dVar) < (isP ? 0.01 : 1) ? `<span class="var-flat">${fmtD(Math.abs(dVar))}</span>` :
+                           (dVar > 0 ? `<span class="var-down">${fmtD(Math.abs(dVar))}</span>` : `<span class="var-up">${fmtD(Math.abs(dVar))}</span>`);
+          const yVarHtml = Math.abs(yVar) < (isP ? 0.01 : 1) ? `<span class="var-flat">${fmtD(Math.abs(yVar))}</span>` :
+                           (yVar > 0 ? `<span class="var-down">${fmtD(Math.abs(yVar))}</span>` : `<span class="var-up">${fmtD(Math.abs(yVar))}</span>`);
           return `<tr>
-            <td><span class="gl-tag">${d.gl}</span>${d.desc} ${noteBtnVar('gl:' + d.gl, d.desc, d.mar_var)}</td>
+            <td><span class="gl-tag">${d.gl}</span>${needsNote('gl:' + d.gl, dVar, viewMode, c.name, d.gl) ? needsNoteBadge('gl:' + d.gl, c.name, viewMode) : ''}${d.desc} ${noteBtnVar('gl:' + d.gl, d.desc, dVar, viewMode)}</td>
             <td>${fmtD(dMarA)}</td>
             <td>${fmtD(dMarB)}</td>
             <td>${dVarHtml}</td>
@@ -4680,31 +5000,39 @@ function renderCategories() {
   tbody.innerHTML = html;
 }
 
-function toggleDetail(idx) {
-  const row = document.getElementById('det-' + idx);
+function toggleDetail(viewMode, idx) {
+  const row = document.getElementById('det-' + viewMode + '-' + idx);
+  if (!row) return;
   const catRow = row.previousElementSibling;
   row.classList.toggle('open');
   catRow.classList.toggle('expanded');
 }
 
 function renderRevenueDetail() {
-  const tbody = document.getElementById('rev-cat-tbody');
-  if (!tbody) return;
+  renderRevenueDetailView('dollars');
+  renderRevenueDetailView('ppd');
+}
+
+function renderRevenueDetailView(viewMode) {
+  const isP = viewMode === 'ppd';
+  const tbody = document.getElementById('rev-cat-tbody-' + viewMode);
+  const thead = document.getElementById('rev-cat-thead-' + viewMode);
+  if (!tbody || !thead) return;
   const rows = DATA.revenue_detail || [];
-  const thead = document.getElementById('rev-cat-thead');
   if (!rows.length) { tbody.innerHTML = ''; return; }
 
-  const isP = view === 'ppd';
   const epd = getEffectivePatientDays();
-  const pd = epd && epd.mar_act ? epd.mar_act : 0;
-  const pdB = epd && epd.mar_bud ? epd.mar_bud : 0;
-  const pdY = epd && epd.ytd_act ? epd.ytd_act : 0;
+  const pd   = epd && epd.mar_act ? epd.mar_act : 0;
+  const pdB  = epd && epd.mar_bud ? epd.mar_bud : 0;
+  const pdY  = epd && epd.ytd_act ? epd.ytd_act : 0;
   const pdYB = epd && epd.ytd_bud ? epd.ytd_bud : 0;
   const ms = getMonthShort();
   const fmt = isP ? fmtPPD : fmt$;
-  const minVar = isP ? 1 : 100;
+  const minVar = isP ? 0.01 : 100;
+  const unitLabel = isP ? '$/PPD' : '$';
+  const _notes = getNotes();  // cached for category-row note-button visibility check
 
-  thead.innerHTML = '<tr><th>Revenue Line</th><th>' + ms + ' Actual</th><th>' + ms + ' Budget</th><th>Variance</th><th>Var %</th><th>YTD Actual</th><th>YTD Var</th><th>3-Mo Trend</th><th>Status</th></tr>';
+  thead.innerHTML = '<tr><th>Revenue Line</th><th>' + ms + ' Actual</th><th>' + ms + ' Budget</th><th>Variance (' + unitLabel + ')</th><th>Var %</th><th>YTD Actual</th><th>YTD Var</th><th>3-Mo Trend</th></tr>';
 
   // signed so positive == favorable
   const sv = (act, bud, contra) => contra ? (bud - act) : (act - bud);
@@ -4716,12 +5044,12 @@ function renderRevenueDetail() {
 
   let html = '';
   rows.forEach((c, idx) => {
-    const aMar = isP && pd ? c.mar_act/pd : c.mar_act;
+    const aMar = isP && pd  ? c.mar_act/pd  : c.mar_act;
     const bMar = isP && pdB ? c.mar_bud/pdB : c.mar_bud;
     const aYtd = isP && pdY ? c.ytd_act/pdY : c.ytd_act;
-    const bYtd = isP && pdYB ? c.ytd_bud/pdYB : c.ytd_bud;
-    const mVarRaw = sv(c.mar_act, c.mar_bud, c.contra);
-    const mVarDisp = sv(aMar, bMar, c.contra);
+    const bYtd = isP && pdYB? c.ytd_bud/pdYB: c.ytd_bud;
+    const mVarRaw  = sv(c.mar_act, c.mar_bud, c.contra);    // raw dollars (for status/pct)
+    const mVarDisp = sv(aMar, bMar, c.contra);              // view-appropriate (for display)
     const yVarDisp = sv(aYtd, bYtd, c.contra);
     const varPct = c.mar_bud !== 0 ? mVarRaw / Math.abs(c.mar_bud) * 100 : 0;
     const color = mVarRaw >= 0 ? '#5a9b6e' : '#c44536';
@@ -4734,8 +5062,16 @@ function renderRevenueDetail() {
     const pctDisplay = varPct === 0 ? '—' :
       (varPct > 0 ? `<span class="var-down">${fmtPct(varPct)}</span>` : `<span class="var-up">${fmtPct(varPct)}</span>`);
 
-    html += `<tr class="cat-row expanded" onclick="toggleRevDetail(${idx})">
-      <td><div class="cat-name"><span class="arrow">▶</span>${c.name} ${noteBtnVar('revcat:' + c.name, c.name, mVarRaw)}</div></td>
+    // Flag count for THIS view — uses view-appropriate variance per line
+    const flagCount = (c.details || []).filter(d => {
+      const dA = isP && pd  ? d.mar_act/pd  : d.mar_act;
+      const dB = isP && pdB ? d.mar_bud/pdB : d.mar_bud;
+      const dv = sv(dA, dB, d.contra);
+      return needsNote('revgl:' + d.desc, dv, viewMode, c.name, d.gl);
+    }).length;
+
+    html += `<tr class="cat-row" onclick="toggleRevDetail('${viewMode}',${idx})">
+      <td><div class="cat-name"><span class="arrow">▶</span>${c.name}<span class="cat-name-actions">${(flagCount > 0 || _notes['revcat:' + c.name]) ? noteBtn('revcat:' + c.name, c.name) : ''}${needsNoteCatBadge(c.name, flagCount, viewMode)}</span></div></td>
       <td>${fmt(aMar)}</td>
       <td>${fmt(bMar)}</td>
       <td>${varCell(mVarDisp, minVar)}</td>
@@ -4743,18 +5079,17 @@ function renderRevenueDetail() {
       <td>${fmt(aYtd)}</td>
       <td>${varCell(yVarDisp, minVar)}</td>
       <td>${sparkline(c.monthly_act, c.monthly_bud, color)}</td>
-      <td><span class="status-pill ${statusCls}">${status}</span></td>
     </tr>`;
-    html += noteCalloutRow('revcat:' + c.name, 9);
+    html += noteCalloutRow('revcat:' + c.name, 8);
 
-    html += `<tr class="detail-row open" id="rev-det-${idx}"><td colspan="9"><div class="detail-wrap">
+    html += `<tr class="detail-row" id="rev-det-${viewMode}-${idx}"><td colspan="8"><div class="detail-wrap">
       <h4>${c.name} — Component Detail <span>${c.details.length} active line items</span></h4>
       <table class="detail">
         <thead><tr>
           <th>Line Item</th>
           <th>${ms} Actual</th>
           <th>${ms} Budget</th>
-          <th>Variance</th>
+          <th>Variance (${unitLabel})</th>
           <th>$ / PPD</th>
           <th>YTD Actual</th>
           <th>YTD Budget</th>
@@ -4762,16 +5097,15 @@ function renderRevenueDetail() {
         </tr></thead>
         <tbody>
         ${c.details.map(d => {
-          const dA = isP && pd ? d.mar_act/pd : d.mar_act;
-          const dB = isP && pdB ? d.mar_bud/pdB : d.mar_bud;
+          const dA  = isP && pd  ? d.mar_act/pd  : d.mar_act;
+          const dB  = isP && pdB ? d.mar_bud/pdB : d.mar_bud;
           const dYA = isP && pdY ? d.ytd_act/pdY : d.ytd_act;
-          const dYB = isP && pdYB ? d.ytd_bud/pdYB : d.ytd_bud;
-          const dmRaw = sv(d.mar_act, d.mar_bud, d.contra);
+          const dYB = isP && pdYB? d.ytd_bud/pdYB: d.ytd_bud;
           const dmDisp = sv(dA, dB, d.contra);
           const dyDisp = sv(dYA, dYB, d.contra);
           const nk = 'revgl:' + d.desc;
           return `<tr>
-            <td><span class="gl-tag">${d.gl}</span>${d.desc}${d.contra ? ' <span class="contra-tag">contra</span>' : ''} ${noteBtnVar(nk, d.desc, dmRaw)}</td>
+            <td><span class="gl-tag">${d.gl}</span>${needsNote(nk, dmDisp, viewMode, c.name, d.gl) ? needsNoteBadge(nk, c.name, viewMode) : ''}${d.desc}${d.contra ? ' <span class="contra-tag">contra</span>' : ''} ${noteBtnVar(nk, d.desc, dmDisp, viewMode)}</td>
             <td>${fmt(dA)}</td>
             <td>${fmt(dB)}</td>
             <td>${varCell(dmDisp, minVar)}</td>
@@ -4789,8 +5123,9 @@ function renderRevenueDetail() {
   tbody.innerHTML = html;
 }
 
-function toggleRevDetail(idx) {
-  const row = document.getElementById('rev-det-' + idx);
+function toggleRevDetail(viewMode, idx) {
+  const row = document.getElementById('rev-det-' + viewMode + '-' + idx);
+  if (!row) return;
   const catRow = row.previousElementSibling;
   row.classList.toggle('open');
   catRow.classList.toggle('expanded');
@@ -5016,6 +5351,84 @@ async function buildSharePointPayload() {
     },
     volume: ['Admissions', 'Inpatient Days', 'LOS', 'ADC', 'Equivalent ADC', 'Occupancy']
       .map(volumeMetric).filter(Boolean),
+    quality_risk: (DATA.quality && DATA.quality.metrics) ? (() => {
+      const monthIdx = getCurrentMonthIdx();
+      const q = DATA.quality;
+      const monthName = getMonthName();
+      // Master metrics — emit those that have a value or a target this month
+      const master_metrics = q.metrics.map(m => {
+        const v = m.monthly[monthIdx];
+        if (v == null && m.target == null) return null;
+        const status = qStatus(v, m.target, m.direction);
+        return {
+          section: m.section,
+          label: m.label,
+          target: m.target,
+          value: v,
+          direction: m.direction,
+          status,                                  // null | 'good' | 'watch' | 'action'
+          requires_note: status === 'action',
+        };
+      }).filter(Boolean);
+      // Disciplines — flag breaches (below goal) explicitly
+      const disciplines = (q.disciplines || []).map(d => {
+        let n = 0, sum = 0;
+        const breaches = [];
+        for (const ind of d.indicators) {
+          const v = ind.monthly[monthIdx];
+          if (v != null) { n++; sum += v; }
+          const st = qStatus(v, ind.goal, 'higher');
+          if (st === 'action' || st === 'watch') {
+            breaches.push({
+              group: ind.group, label: ind.label,
+              value: v, goal: ind.goal, status: st,
+            });
+          }
+        }
+        return {
+          name: d.name,
+          indicator_count: d.indicators.length,
+          observed_count: n,
+          avg_compliance_pct: n > 0 ? +(sum / n * 100).toFixed(2) : null,
+          breach_count: breaches.length,
+          breaches,
+        };
+      }).filter(d => d.observed_count > 0);
+      return {
+        period: monthName,
+        master_metrics,
+        disciplines,
+        action_count: master_metrics.filter(m => m.status === 'action').length +
+                      disciplines.reduce((s, d) => s + d.breaches.filter(b => b.status === 'action').length, 0),
+      };
+    })() : null,
+    business_development: (DATA.bd_referrals || DATA.bd_deflections) ? {
+      referrals: DATA.bd_referrals ? {
+        sources_total:    DATA.bd_referrals.length,
+        referrals_total:  DATA.bd_referrals.reduce((s, r) => s + r.referrals, 0),
+        admissions_total: DATA.bd_referrals.reduce((s, r) => s + r.admissions, 0),
+        conversion_pct:   (() => {
+          const refs = DATA.bd_referrals.reduce((s, r) => s + r.referrals, 0);
+          const adm  = DATA.bd_referrals.reduce((s, r) => s + r.admissions, 0);
+          return refs > 0 ? +(adm / refs * 100).toFixed(2) : 0;
+        })(),
+        top_10: DATA.bd_referrals.slice().sort((a,b) => b.referrals - a.referrals).slice(0, 10).map(r => ({
+          source: r.source,
+          referrals: r.referrals,
+          admissions: r.admissions,
+          conversion_pct: +r.conversion.toFixed(2),
+        })),
+      } : null,
+      deflections: DATA.bd_deflections ? {
+        total:      DATA.bd_deflections_total != null ? DATA.bd_deflections_total
+                    : DATA.bd_deflections.reduce((s, d) => s + d.count, 0),
+        period:     DATA.bd_deflections_period || null,
+        by_reason:  DATA.bd_deflections.slice().sort((a,b) => b.count - a.count).map(d => ({
+          reason: d.reason,
+          count:  d.count,
+        })),
+      } : null,
+    } : null,
     revenue_narrative_notes: {
       net_revenue:     notes['rev:Net Revenue']     || '',
       ytd_performance: notes['rev:YTD Performance'] || '',
@@ -5028,20 +5441,6 @@ async function buildSharePointPayload() {
       bd:      mgmt.bd      || '',
       hr:      mgmt.hr      || '',
     },
-    pptx_narrative: (function() {
-      const p = getPptxData();
-      if (!p) return null;
-      return {
-        source: p.source || null,
-        period: p.period || null,
-        quality: p.quality || null,
-        volume:  p.volume  || null,
-        revenue: p.revenue || null,
-        opex:    p.opex    || null,
-        bd:      p.bd      || null,
-        hr:      p.hr      || null,
-      };
-    })(),
     categories,
     audit: {
       submitted_by:       localStorage.getItem(SUBMITTER_NAME_KEY) || null,
